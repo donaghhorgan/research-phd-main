@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* ::Title:: *)
-(*Definitions*)
+(*Q-function*)
 
 
 (* ::Subsection::Closed:: *)
@@ -9,7 +9,7 @@
 
 
 (* ::Text:: *)
-(*Mathematica cooperative energy detection and fading channel function definitions.*)
+(*Mathematica implementation of the Gaussian Q-function.*)
 (*Copyright (C) 2012 Donagh Horgan.*)
 (*Email: donaghh@rennes.ucc.ie.*)
 (**)
@@ -27,13 +27,13 @@
 (*along with this program. If not, see http://www.gnu.org/licenses.*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Version information*)
 
 
 (* ::Text:: *)
 (*27/06/2012*)
-(*1.01*)
+(*1.0*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,33 +41,54 @@
 
 
 (* ::Text:: *)
-(*Version 1.01: Grouped similar functionality into individual packages.*)
-(*Version 1.0: First working version, bug fixes to follow.*)
+(*Version 1.0: Basic implemenation of the Gaussian Q-function.*)
+
+
+(* ::Section:: *)
+(*Public*)
+
+
+BeginPackage["QFunction`"];
 
 
 (* ::Subsection::Closed:: *)
-(*Notation guide*)
+(*Q-function*)
 
 
-(* ::Text:: *)
-(*Pf: Probability of false alarm*)
-(*Pd: Probability of detection*)
-(*M: Number of samples*)
-(*\[Gamma]: Instantaneous signal to noise ratio*)
-(*\bar{\[Gamma]}: Average instantaneous signal to noise ratio*)
-(*n: Number of nodes*)
-(*m: Nakagami fading parameter*)
-(*\[Lambda]: Decision threshold at the local node or fusion center (the context will make clear which)*)
-(*k: Fusion center voting rule*)
-(*\[Rho]: Average correlation coefficient between nodes*)
+Q;
 
 
-(* ::Subsection:: *)
-(*Load packages*)
+(* ::Subsection::Closed:: *)
+(*Inverse Q-function*)
 
 
-<<QFunction`
-<<AWGN`
-<<Nakagami`
-<<Rayleigh`
-<<Network`
+InverseQ;
+
+
+(* ::Section:: *)
+(*Private*)
+
+
+Begin["`Private`"];
+
+
+(* ::Subsection::Closed:: *)
+(*Q-function*)
+
+
+Q::usage="Q[x] calculates the value of Gaussian Q-function at x.";
+Q[x_]:=1-CDF[NormalDistribution[], x]
+
+
+(* ::Subsection::Closed:: *)
+(*Inverse Q-function*)
+
+
+InverseQ::usage="InverseQ[P] calculates the value of the inverse of the Gaussian Q-function at P."
+InverseQ[P_]:=InverseCDF[NormalDistribution[], 1 - P]
+
+
+End[];
+
+
+EndPackage[];
