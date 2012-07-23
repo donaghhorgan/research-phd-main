@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*27/06/2012*)
-(*1.0*)
+(*18/07/2012*)
+(*1.1*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.1: Introduced RelevantOptions function to simplify option management, restructured ProbabilityOfDetection and SampleComplexity functions so that they carry the same options as their children.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
@@ -104,15 +105,18 @@ SampleComplexity;
 Begin["`Private`"];
 
 
+Needs["AWGN`"];
+Needs["Rayleigh`"];
+Needs["Nakagami`"];
+Needs["Rice`"];
+
+
 (* ::Subsection:: *)
 (*Decision probabilities*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Probability of false alarm (general)*)
-
-
-Needs["AWGN`"];
 
 
 Options[ProbabilityOfFalseAlarm] = {DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate"};
@@ -127,59 +131,107 @@ Method\[Rule]\"Exact\"
 
 By default, Method\[Rule]\""<>ToString[Method/.Options[ProbabilityOfFalseAlarm]]<>"\".
 
-Additionally, the number of decision bits used in fusion may be specified by the DecisionBits option. By default, DecisionBits\[Rule]"<>ToString[DecisionBits/.Options[ProbabilityOfFalseAlarm]]<>". DecisionBits \[Element] {1,\[Infinity]}.
+The number of decision bits used in fusion may be specified by the DecisionBits option. By default, DecisionBits\[Rule]"<>ToString[DecisionBits/.Options[ProbabilityOfFalseAlarm]]<>". DecisionBits \[Element] {1,\[Infinity]}.
 
-If 1 bit decision fusion is specified, then the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[ProbabilityOfFalseAlarm]]<>".";
-ProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{n=1},ProbabilityOfFalseAlarm[M,\[Lambda],n,DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->OptionValue[CorrelationCoefficient],Method->OptionValue[Method]]]
-ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},ProbabilityOfFalseAlarm[M,\[Lambda],n,k,DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->OptionValue[CorrelationCoefficient],Method->OptionValue[Method]]]
-ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=If[OptionValue[DecisionBits]==\[Infinity],
-	If[OptionValue[CorrelationCoefficient]==0,
-		AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,Method->OptionValue[Method]],
-		Undefined
-	],
-	Module[{Pf},
-		Pf = AWGNProbabilityOfFalseAlarm[M,\[Lambda],Method->OptionValue[Method]];
-		FusionCenterProbabilityOfFalseAlarm[Pf,n,k,OptionValue[CorrelationCoefficient]]
+Additionally, the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[ProbabilityOfFalseAlarm]]<>".";
+ProbabilityOfFalseAlarm::k="Error: Must specify a voting rule when DecisionBits\[Rule]`1`";
+ProbabilityOfFalseAlarm::\[Lambda]="Error: The number of thresholds (`1`) must be equal to `2` when DecisionBits->`3`";
+ProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]
+]
+ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, k = Null},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfFalseAlarm[M,\[Lambda],n,k,RelevantOptions[ProbabilityOfFalseAlarm]]
+]
+ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantOptions, \[Rho] = OptionValue[CorrelationCoefficient]},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
+	If[OptionValue[DecisionBits]==\[Infinity],
+		If[\[Rho]==0,
+			AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+			Undefined
+		],
+		If[k==Null//TrueQ,
+			Message[ProbabilityOfFalseAlarm::k,OptionValue[DecisionBits]];
+			Abort[],
+			Module[{probabilities,temp,Nb=OptionValue[DecisionBits]},
+				If[ListQ[\[Lambda]],
+					If[Length[\[Lambda]]!=2^Nb-1,
+						Message[ProbabilityOfFalseAlarm::\[Lambda],Length[\[Lambda]],2^Nb-1,Nb];
+						Abort[];
+					];
+					temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda]}];
+					probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
+					If[Nb!=1,Random
+						Message[ProbabilityOfFalseAlarm::\[Lambda],1,2^Nb-1,Nb];
+						Abort[];
+					];
+					probabilities = AWGNProbabilityOfFalseAlarm[M,\[Lambda],RelevantOptions[AWGNProbabilityOfFalseAlarm]]
+				];
+				FusionCenterProbabilityOfFalseAlarm[probabilities,n,k,\[Rho]]
+			]
+		]
 	]
 ]
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Probability of detection (general)*)
 
 
-Needs["AWGN`"];
-Needs["Rayleigh`"];
-Needs["Nakagami`"];
-
-
-Options[ProbabilityOfDetection] = {ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate"};
+Options[ProbabilityOfDetection] = {ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",Algorithm->"NGaussian",LargeMN->10,LowSNR->True,Timed->False,MaxTime->600,MaxIterations->1000,DatabaseLookup->False,DatabaseCaching->False};
 ProbabilityOfDetection::usage="ProbabilityOfDetection[M, \[Gamma], \[Lambda]] calculates the probability of detection for a single energy detector for the specified channel type.
 ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for a cooperative network of energy detectors with infinite precision decision fusion for the specified channel type.
 ProbabilityOfDetection[M, \[Gamma], \[Lambda], n, k] calculates the probability of detection for a cooperative network of energy detectors with 1 bit decision fusion for the specified channel type.
-
-The following methods may be specified:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[ProbabilityOfDetection]]<>"\".
 
 The following channel types may be specified:
 
 ChannelType\[Rule]\"AWGN\"
 ChannelType\[Rule]\"Rayleigh\"
 ChannelType\[Rule]{\"Nakagami\",m}
+ChannelType\[Rule]{\"Rice\",K}
 
 By default, ChannelType\[Rule]\""<>ToString[ChannelType/.Options[ProbabilityOfDetection]]<>"\".
 
-Additionally, the number of decision bits used in fusion may be specified by the DecisionBits option. By default, DecisionBits\[Rule]"<>ToString[DecisionBits/.Options[ProbabilityOfFalseAlarm]]<>". DecisionBits \[Element] {1,\[Infinity]}.
+For each channel type, the following methods may be specified:
 
-If 1 bit decision fusion is specified, then the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[ProbabilityOfDetection]]<>".";
-ProbabilityOfDetection::k="Error: must specify a voting rule when DecisionBits\[Rule]1";
-ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{n=1},ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,ChannelType->OptionValue[ChannelType],DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->OptionValue[CorrelationCoefficient],Method->OptionValue[Method]]]
-ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,ChannelType->OptionValue[ChannelType],DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->OptionValue[CorrelationCoefficient],Method->OptionValue[Method]]]
-ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient]},
+Method\[Rule]\"Approximate\"
+Method\[Rule]{\"Approximate\", Algorithm\[Rule]...}
+Method\[Rule]\"Exact\"
+Method\[Rule]{\"Exact\", Algorithm\[Rule]...}
+
+By default, Method\[Rule]\""<>ToString[Method/.Options[ProbabilityOfDetection]]<>"\". Check the individual channel packages for more information on algorithms.
+
+The number of decision bits transmitted to the fusion center may be specified by the DecisionBits option. By default, DecisionBits\[Rule]"<>ToString[DecisionBits/.Options[ProbabilityOfFalseAlarm]]<>".
+
+Additionally, the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[ProbabilityOfDetection]]<>"
+
+Finally, timing and database lookup/caching options may be (exclusively) specified. The timing option is specified by:
+
+Timed\[Rule]"<>ToString[Timed/.Options[ProbabilityOfDetection]]<>"
+MaxIterations\[Rule]"<>ToString[MaxIterations/.Options[ProbabilityOfDetection]]<>"
+MaxTime\[Rule]"<>ToString[MaxTime/.Options[ProbabilityOfDetection]]<>"
+
+where the above options are the defaults, if not specified. If Timed\[Rule]True, then a {Pd, time} list of values will be returned.
+
+If timing is not used, then database lookup/caching may be enabled. This requires that the sqlite.m package be loaded. By default:
+
+DatabaseLookup\[Rule]"<>ToString[DatabaseLookup/.Options[ProbabilityOfDetection]]<>"
+DatabaseCaching\[Rule]"<>ToString[DatabaseCaching/.Options[ProbabilityOfDetection]]<>"
+
+and the data is stored in the database specified in sqlite.m.";
+ProbabilityOfDetection::k="Error: must specify a voting rule when DecisionBits\[Rule]`1`";
+ProbabilityOfDetection::\[Lambda]="Error: The number of thresholds (`1`) must be equal to `2` when DecisionBits->`3`";
+ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[ProbabilityOfDetection]]
+]
+ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
+]
+ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],RelevantOptions},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	If[ListQ[OptionValue[ChannelType]],
 		{channelType,m} = OptionValue[ChannelType];,
 		channelType = OptionValue[ChannelType];
@@ -188,63 +240,107 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		If[\[Rho]==0,
 			Switch[channelType,
 				"AWGN",
-				AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,Method->OptionValue[Method]],
+				AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]],
 				"Rayleigh",
-				NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],n,Method->OptionValue[Method]],
+				NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[NRayleighProbabilityOfDetection]],
 				"Nakagami",
-				NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,Method->OptionValue[Method]],
+				NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NNakagamiProbabilityOfDetection]],
+				"Rice",
+				NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NRiceProbabilityOfDetection]],
 				_,
-				ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,ChannelType->"AWGN",CorrelationCoefficient->\[Rho],Method->OptionValue[Method]]
+				ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
 			],
 			Undefined
 		],
-		If[k==Null,
-			Message[ProbabilityOfDetection::k];
+		If[k==Null//TrueQ,
+			Message[ProbabilityOfDetection::k,OptionValue[DecisionBits]];
 			Abort[],
-			Module[{Pd},
-				Pd = Switch[channelType,
-					"AWGN",
-					AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],Method->OptionValue[Method]],
-					"Rayleigh",
-					NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],Method->OptionValue[Method]],
-					"Nakagami",
-					NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,Method->OptionValue[Method]],
-					_,
-					ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,ChannelType->"AWGN",CorrelationCoefficient->\[Rho],Method->OptionValue[Method]]
+			Module[{probabilities,temp,Nb=OptionValue[DecisionBits]},
+				If[ListQ[\[Lambda]],
+					If[Length[\[Lambda]]!=2^Nb-1,
+						Message[ProbabilityOfDetection::\[Lambda],Length[\[Lambda]],2^Nb-1,Nb];
+						Abort[];
+					];
+					temp = Table[
+						Switch[channelType,
+							"AWGN",
+							AWGNProbabilityOfDetection[M,\[Gamma],x,RelevantOptions[AWGNProbabilityOfDetection]],
+							"Rayleigh",
+							NRayleighProbabilityOfDetection[M,\[Gamma],x,RelevantOptions[NRayleighProbabilityOfDetection]],
+							"Nakagami",
+							NNakagamiProbabilityOfDetection[M,\[Gamma],x,m,RelevantOptions[NNakagamiProbabilityOfDetection]],
+							"Rice",
+							NRiceProbabilityOfDetection[M,\[Gamma],x,m,RelevantOptions[NRiceProbabilityOfDetection]],
+							_,
+							ProbabilityOfDetection[M,\[Gamma],x,n,k,RelevantOptions[ProbabilityOfDetection]]
+						],
+						{x,\[Lambda]}
+					];
+					probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
+					If[Nb!=1,
+						Message[ProbabilityOfDetection::\[Lambda],1,2^Nb-1,Nb];
+						Abort[];
+					];
+					probabilities = Switch[channelType,
+						"AWGN",
+						AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]],
+						"Rayleigh",
+						NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],RelevantOptions[NRayleighProbabilityOfDetection]],
+						"Nakagami",
+						NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,RelevantOptions[NNakagamiProbabilityOfDetection]],
+						"Rice",
+						NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,RelevantOptions[NRiceProbabilityOfDetection]],
+						_,
+						ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
+					]
 				];
-				FusionCenterProbabilityOfDetection[Pd,n,k,\[Rho]]
+				FusionCenterProbabilityOfDetection[probabilities,n,k,\[Rho]]
 			]
 		]
 	]
 ]
 
 
-(* ::Subsubsection::Closed:: *)
-(*Probability of false alarm (1 bit decision only)*)
+(* ::Subsubsection:: *)
+(*Probability of false alarm (Subscript[N, b] bit decision only)*)
 
 
 FusionCenterProbabilityOfFalseAlarm::usage="FusionCenterProbabilityOfFalseAlarm[Pf, n, k] calculates the overall probability of false alarm for a cooperative network with 1 bit decision fusion.
 FusionCenterProbabilityOfFalseAlarm[Pf, n, k, \[Rho]] calculates the overall probability of false alarm for a cooperative network with 1 bit decision fusion and correlated decisions.";
-FusionCenterProbabilityOfFalseAlarm[Pf_?NumericQ,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=If[\[Rho] == 0,
-	1 - CDF[BinomialDistribution[n, Pf], k - 1],
-	Switch[n,
-		1,
-		Pf,
-		2,
-		Undefined,
-		_,
-		Sum[Sum[(-1)^i Binomial[l,i] Pf Product[(\[Rho](s + 1 - Pf) + Pf) / (1 + s \[Rho]),{s, 0, n - l + i - 2}],{i, 0, l}],{l, 0, k - 1}]
+FusionCenterProbabilityOfFalseAlarm[P_,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=If[ListQ[P],
+	If[\[Rho] == 0,
+		Module[{decisions=Table[Unique[],{n}],probabilities,Nb=Log[2,Length[P]],p,precision=10000},
+			Total[Table[
+				probabilities=Table[Subscript[p, decisions[[x]]],{x,n}]/.FindInstance[Flatten[{Total[decisions]==x,Table[0<=decisions[[x]]<=2^Nb-1,{x,n}]}],decisions,Integers,precision];
+				Table[Product[probabilities[[x,y]],{y,Length[probabilities[[x]]]}],{x,Length[probabilities]}]//Total,
+				{x,k,n (2^Nb-1)}
+			]/.Table[Subscript[p, x]->P[[x+1]],{x,0,2^Nb-1}]]
+		],
+		If[Length[P]==2,
+			FusionCenterProbabilityOfFalseAlarm[Last[P],n,k,\[Rho]]
+		]
+	],
+	If[\[Rho] == 0,
+		1 - CDF[BinomialDistribution[n, P], k - 1],
+		Switch[n,
+			1,
+			P,
+			2,
+			Undefined,
+			_,
+			Sum[Sum[(-1)^i Binomial[l,i] P Product[(\[Rho](s + 1 - P) + P) / (1 + s \[Rho]),{s, 0, n - l + i - 2}],{i, 0, l}],{l, 0, k - 1}]
+		]
 	]
 ]
 
 
-(* ::Subsubsection::Closed:: *)
-(*Probability of detecion (1 bit decision only)*)
+(* ::Subsubsection:: *)
+(*Probability of detecion (Subscript[N, b] bit decision only)*)
 
 
 FusionCenterProbabilityOfDetection::usage="FusionCenterProbabilityOfDetection[Pd, n, k] calculates the overall probability of detection for a cooperative network with 1 bit decision fusion.
 FusionCenterProbabilityOfDetection[Pd, n, k, \[Rho]] calculates the overall probability of detection for a cooperative network with 1 bit decision fusion and correlated decisions.";
-FusionCenterProbabilityOfDetection[Pd_?NumericQ,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=FusionCenterProbabilityOfFalseAlarm[Pd,n,k,\[Rho]]
+FusionCenterProbabilityOfDetection[P_,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=FusionCenterProbabilityOfFalseAlarm[P,n,k,\[Rho]]
 
 
 (* ::Subsection::Closed:: *)
@@ -265,21 +361,9 @@ k[Pf_?NumericQ,Pd_?NumericQ,n_?NumericQ,\[Rho]_:0]:=If[\[Rho] == 0,
 (*Sample complexity*)
 
 
-Needs["AWGN`"];
-Needs["Rayleigh`"];
-Needs["Nakagami`"];
-
-
 Options[SampleComplexity]={ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",LowSNR->True,Tolerance->10^-6};
 SampleComplexity::usage="SampleComplexity[\[Gamma], Pf, Pd] calculates the number of samples required for a single energy detector to operate with the specified decision probabilities at the given signal to noise ratio.
 SampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for a cooperative network of energy detectors to operate with the specified decision probabilities at the given signal to noise ratio.
-
-The following methods may be specified for Rayleigh and Nakagami channels:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[SampleComplexity]]<>"\".
 
 The following channel types may be specified:
 
@@ -289,12 +373,25 @@ ChannelType\[Rule]{\"Nakagami\",m}
 
 By default, ChannelType\[Rule]\""<>ToString[ChannelType/.Options[SampleComplexity]]<>"\".
 
+The following methods may be specified for Rayleigh and Nakagami channels:
+
+Method\[Rule]\"Approximate\"
+Method\[Rule]\"Exact\"
+
+By default, Method\[Rule]\""<>ToString[Method/.Options[SampleComplexity]]<>"\".
+
 Additionally, the number of decision bits used in fusion may be specified by the DecisionBits option. By default, DecisionBits\[Rule]"<>ToString[DecisionBits/.Options[SampleComplexity]]<>". DecisionBits \[Element] {1,\[Infinity]}.
 
-If 1 bit decision fusion is specified, then the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[SampleComplexity]]<>".";
+If 1 bit decision fusion is specified, then the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[SampleComplexity]]<>"
+
+Finally, the tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[SampleComplexity]]<>".";
 SampleComplexity::tol="The difference between the result `1` and the constraint `2` was greater than the specified tolerance `3`.";
-SampleComplexity[\[Gamma]_,Pf_,Pd_,OptionsPattern[]]:=Module[{n=1},SampleComplexity[\[Gamma],Pf,Pd,n,ChannelType->OptionValue[ChannelType],DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->OptionValue[CorrelationCoefficient],Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]]]
-SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],x,y,tol=OptionValue[Tolerance]},
+SampleComplexity[\[Gamma]_,Pf_,Pd_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
+	SampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[SampleComplexity]]
+]
+SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],x,y,tol=OptionValue[Tolerance],RelevantOptions},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
 	If[ListQ[OptionValue[ChannelType]],
 		{channelType,m} = OptionValue[ChannelType];,
 		channelType = OptionValue[ChannelType];
@@ -305,11 +402,11 @@ SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\
 				"AWGN",
 				AWGNSampleComplexity[\[Gamma],Pf,Pd,n],
 				"Rayleigh",
-				NRayleighSampleComplexity[\[Gamma],Pf,Pd,n,Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]],
+				NRayleighSampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[NRayleighSampleComplexity]],
 				"Nakagami",
-				NNakagamiSampleComplexity[\[Gamma],Pf,Pd,m,n,Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]],
+				NNakagamiSampleComplexity[\[Gamma],Pf,Pd,m,n,RelevantOptions[NNakagamiSampleComplexity]],
 				_,
-				SampleComplexity[\[Gamma],Pf,Pd,n,k,ChannelType->"AWGN",DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->\[Rho],Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]]
+				SampleComplexity[\[Gamma],Pf,Pd,n,k,RelevantOptions[SampleComplexity]]
 			],
 			(* No solution for correlated infinite precision fusion *)
 			Undefined
@@ -327,11 +424,11 @@ SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\
 				"AWGN",
 				AWGNSampleComplexity[\[Gamma],y,x],
 				"Rayleigh",
-				NRayleighSampleComplexity[\[Gamma],y,x,Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]],
+				NRayleighSampleComplexity[\[Gamma],y,x,RelevantOptions[NRayleighSampleComplexity]],
 				"Nakagami",
-				NNakagamiSampleComplexity[\[Gamma],y,x,m,Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]],
+				NNakagamiSampleComplexity[\[Gamma],y,x,m,RelevantOptions[NNakagamiSampleComplexity]],
 				_,
-				SampleComplexity[\[Gamma],y,x,n,ChannelType->"AWGN",DecisionBits->OptionValue[DecisionBits],CorrelationCoefficient->\[Rho],Method->OptionValue[Method],LowSNR->OptionValue[LowSNR],Tolerance->OptionValue[Tolerance]]
+				SampleComplexity[\[Gamma],y,x,n,RelevantOptions[SampleComplexity]]
 			]
 		]
 	]

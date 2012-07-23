@@ -70,4 +70,5 @@
 <<AWGN`
 <<Nakagami`
 <<Rayleigh`
+<<Rice`
 <<Network`
