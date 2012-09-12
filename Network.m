@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*18/07/2012*)
-(*1.1*)
+(*05/09/2012*)
+(*1.31*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,12 +41,19 @@
 
 
 (* ::Text:: *)
+(*Version 1.31: Added support for diversity reception.*)
+(*Version 1.3: Added support for n-bit decisions.*)
+(*Version 1.2: Added basic support for single bit decision double threshold type networks - more work needs to be done on this to extend support for n-bit decision type networks.*)
+(*Version 1.11: Added database lookup and caching functionality to the SampleComplexity function.*)
 (*Version 1.1: Introduced RelevantOptions function to simplify option management, restructured ProbabilityOfDetection and SampleComplexity functions so that they carry the same options as their children.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
 (* ::Section:: *)
 (*Public*)
+
+
+Protect[ChannelType, DiversityType, DecisionBits, CorrelationCoefficient, Algorithm, LowSNR, Timed, MaxTime, DatabaseLookup, DatabaseCaching, MNSwitchingPoint];
 
 
 BeginPackage["Network`"];
@@ -64,10 +71,24 @@ ProbabilityOfFalseAlarm;
 
 
 (* ::Subsubsection::Closed:: *)
+(*Probability of acquisition (general)*)
+
+
+ProbabilityOfAcquisition;
+
+
+(* ::Subsubsection::Closed:: *)
 (*Probability of detection (general)*)
 
 
 ProbabilityOfDetection;
+
+
+(* ::Subsubsection::Closed:: *)
+(*Probability of missed detection (general)*)
+
+
+ProbabilityOfMissedDetection;
 
 
 (* ::Subsubsection::Closed:: *)
@@ -85,7 +106,14 @@ FusionCenterProbabilityOfDetection;
 
 
 (* ::Subsection::Closed:: *)
-(*Voting rule*)
+(*Optimum threshold*)
+
+
+\[Lambda]opt;
+
+
+(* ::Subsection::Closed:: *)
+(*Optimum voting rule*)
 
 
 k;
@@ -109,20 +137,21 @@ Needs["AWGN`"];
 Needs["Rayleigh`"];
 Needs["Nakagami`"];
 Needs["Rice`"];
+Needs["DBLogging`"];
 
 
 (* ::Subsection:: *)
 (*Decision probabilities*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Probability of false alarm (general)*)
 
 
-Options[ProbabilityOfFalseAlarm] = {DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate"};
+Options[ProbabilityOfFalseAlarm] = {DiversityType->"SLC", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"Approximate"};
 ProbabilityOfFalseAlarm::usage="ProbabilityOfFalseAlarm[M, \[Lambda]] calculates the probability of false alarm for a single energy detector.
 ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for a cooperative network of energy detectors with infinite precision decision fusion.
-ProbabilityOfFalseAlarm[M, \[Lambda], n, k] calculates the probability of false alarm for a cooperative network of energy detectors with 1 bit decision fusion.
+ProbabilityOfFalseAlarm[M, \[Lambda], n, k, DecisionBits->Nb] calculates the probability of false alarm for a cooperative network of energy detectors with Nb bit decision fusion.
 
 The following methods may be specified:
 
@@ -135,42 +164,101 @@ The number of decision bits used in fusion may be specified by the DecisionBits 
 
 Additionally, the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[ProbabilityOfFalseAlarm]]<>".";
 ProbabilityOfFalseAlarm::k="Error: Must specify a voting rule when DecisionBits\[Rule]`1`";
-ProbabilityOfFalseAlarm::\[Lambda]="Error: The number of thresholds (`1`) must be equal to `2` when DecisionBits->`3`";
+ProbabilityOfFalseAlarm::Nb="Error: The list `1` must be of length `2` when DecisionBits->`3`.";
+ProbabilityOfFalseAlarm::\[Lambda]="Error: The list `1` must be of length `2` when n = `2`.";
 ProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
-	ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]
+	ProbabilityOfFalseAlarm[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfFalseAlarm]]]
 ]
 ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, k = Null},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfFalseAlarm[M,\[Lambda],n,k,RelevantOptions[ProbabilityOfFalseAlarm]]
 ]
-ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantOptions, \[Rho] = OptionValue[CorrelationCoefficient]},
+ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantOptions, \[Rho] = OptionValue[CorrelationCoefficient], Nb = OptionValue[DecisionBits], diversityType = OptionValue[DiversityType]},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
-	If[OptionValue[DecisionBits]==\[Infinity],
-		If[\[Rho]==0,
-			AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
-			Undefined
-		],
-		If[k==Null//TrueQ,
-			Message[ProbabilityOfFalseAlarm::k,OptionValue[DecisionBits]];
-			Abort[],
-			Module[{probabilities,temp,Nb=OptionValue[DecisionBits]},
-				If[ListQ[\[Lambda]],
-					If[Length[\[Lambda]]!=2^Nb-1,
-						Message[ProbabilityOfFalseAlarm::\[Lambda],Length[\[Lambda]],2^Nb-1,Nb];
-						Abort[];
-					];
-					temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda]}];
-					probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
-					If[Nb!=1,Random
-						Message[ProbabilityOfFalseAlarm::\[Lambda],1,2^Nb-1,Nb];
-						Abort[];
-					];
-					probabilities = AWGNProbabilityOfFalseAlarm[M,\[Lambda],RelevantOptions[AWGNProbabilityOfFalseAlarm]]
+	Which[
+		Nb == \[Infinity],
+			Which[
+				\[Rho] == 0,
+					Which[
+						!ListQ[\[Lambda]],
+							AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+						ListQ[\[Lambda]],
+							Which[
+								Length[\[Lambda]] == 1,
+								AWGNProbabilityOfFalseAlarm[M,Last[\[Lambda]],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+								Length[\[Lambda]] == 2,
+									AWGNProbabilityOfFalseAlarm[M,Last[\[Lambda]],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+								True,
+									Undefined
+							],
+						True,
+							Undefined
+					],
+				True,
+					Undefined
+			],
+		Nb >= 1,
+			If[TrueQ[k==Null],Message[ProbabilityOfFalseAlarm::k,Nb];Abort[]];
+			Module[{probabilities,temp},
+				Which[
+					!ListQ[\[Lambda]],
+						If[Nb != 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
+						probabilities = AWGNProbabilityOfFalseAlarm[M,\[Lambda],RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+					ListQ[\[Lambda]],
+						Which[
+							!ListQ[First[\[Lambda]]],
+								If[Length[\[Lambda]] != 2^Nb - 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
+								temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda]}];
+								probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
+							ListQ[First[\[Lambda]]],
+								If[Length[\[Lambda]] != n, Message[ProbabilityOfFalseAlarm::\[Lambda], \[Lambda], n]; Abort[]];
+								Table[If[Length[\[Lambda][[i]]] != 2^Nb - 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda][[i]], 2^Nb - 1, Nb]; Abort[]],{i,Length[\[Lambda]]}];
+								probabilities = Table[temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda][[n0]]}];Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}],
+							True,
+								Undefined
+						],
+					True,
+						Undefined
 				];
 				FusionCenterProbabilityOfFalseAlarm[probabilities,n,k,\[Rho]]
+			],
+		True,
+			Undefined
+	]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Probability of acquisition (general)*)
+
+
+Options[ProbabilityOfAcquisition] = Options[ProbabilityOfFalseAlarm];
+ProbabilityOfAcquisition::usage=StringReplace[ProbabilityOfFalseAlarm::usage,"ProbabilityOfFalseAlarm"->"ProbabilityOfAcquisition"];
+ProbabilityOfAcquisition[M_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfAcquisition][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfAcquisition[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfAcquisition]]]
+]
+ProbabilityOfAcquisition[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, k = Null},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfAcquisition][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfAcquisition[M,\[Lambda],n,k,RelevantOptions[ProbabilityOfAcquisition]]
+]
+ProbabilityOfAcquisition[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantOptions},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfAcquisition][[All,1]]],Options[target][[All,1]]];
+	Which[
+		!ListQ[\[Lambda]],
+			1 - ProbabilityOfFalseAlarm[M,\[Lambda],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+		ListQ[\[Lambda]],
+			Which[
+				Length[\[Lambda]] == 1,
+					1 - ProbabilityOfFalseAlarm[M,First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+				Length[\[Lambda]] == 2,
+					1 - ProbabilityOfFalseAlarm[M,First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+				True,
+					Undefined
 			]
-		]
+		True,
+			Undefined
 	]
 ]
 
@@ -179,10 +267,10 @@ ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantO
 (*Probability of detection (general)*)
 
 
-Options[ProbabilityOfDetection] = {ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",Algorithm->"NGaussian",LargeMN->10,LowSNR->True,Timed->False,MaxTime->600,MaxIterations->1000,DatabaseLookup->False,DatabaseCaching->False};
+Options[ProbabilityOfDetection] = {ChannelType->"AWGN",DiversityType->"SLC",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",Algorithm->"NGaussian",LowSNR->True,Timed->False,MaxTime->600,MaxIterations->1000,DatabaseLookup->False,DatabaseCaching->False};
 ProbabilityOfDetection::usage="ProbabilityOfDetection[M, \[Gamma], \[Lambda]] calculates the probability of detection for a single energy detector for the specified channel type.
 ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for a cooperative network of energy detectors with infinite precision decision fusion for the specified channel type.
-ProbabilityOfDetection[M, \[Gamma], \[Lambda], n, k] calculates the probability of detection for a cooperative network of energy detectors with 1 bit decision fusion for the specified channel type.
+ProbabilityOfDetection[M, \[Gamma], \[Lambda], n, k, DecisionBits->Nb] calculates the probability of detection for a cooperative network of energy detectors with Nb bit decision fusion for the specified channel type.
 
 The following channel types may be specified:
 
@@ -214,128 +302,275 @@ MaxTime\[Rule]"<>ToString[MaxTime/.Options[ProbabilityOfDetection]]<>"
 
 where the above options are the defaults, if not specified. If Timed\[Rule]True, then a {Pd, time} list of values will be returned.
 
-If timing is not used, then database lookup/caching may be enabled. This requires that the sqlite.m package be loaded. By default:
+If timing is not used, then database lookup/caching may be enabled. This requires that the DBLogging package be loaded. By default:
 
 DatabaseLookup\[Rule]"<>ToString[DatabaseLookup/.Options[ProbabilityOfDetection]]<>"
 DatabaseCaching\[Rule]"<>ToString[DatabaseCaching/.Options[ProbabilityOfDetection]]<>"
 
-and the data is stored in the database specified in sqlite.m.";
-ProbabilityOfDetection::k="Error: must specify a voting rule when DecisionBits\[Rule]`1`";
-ProbabilityOfDetection::\[Lambda]="Error: The number of thresholds (`1`) must be equal to `2` when DecisionBits->`3`";
+and the data is stored in the database specified in DBLogging. For database caching, both the DatabaseLookup and DatabaseCaching options must be set to True.";
+ProbabilityOfDetection::opt="`1` and `2` options are mutually exclusive. Aborting...";
+ProbabilityOfDetection::k=ProbabilityOfFalseAlarm::k;
+ProbabilityOfDetection::Nb=ProbabilityOfFalseAlarm::Nb;
+ProbabilityOfDetection::\[Lambda]=ProbabilityOfFalseAlarm::\[Lambda];
+ProbabilityOfDetection::\[Gamma]=ProbabilityOfFalseAlarm::\[Lambda];
 ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[ProbabilityOfDetection]]
+	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfDetection]]]
 ]
 ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
 ]
-ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],RelevantOptions},
+ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType, m, \[Rho] = OptionValue[CorrelationCoefficient], Nb = OptionValue[DecisionBits], RelevantOptions, f, g, time, result, rationalPf},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	If[OptionValue[DatabaseLookup] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseLookup","Timed"]; Abort[]];
+	If[OptionValue[DatabaseCaching] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseCaching","Timed"]; Abort[]];
+	If[ListQ[\[Gamma]] && (Length[\[Gamma]] != n), Message[ProbabilityOfDetection::\[Gamma], \[Gamma], n]; Abort[]];
 	If[ListQ[OptionValue[ChannelType]],
-		{channelType,m} = OptionValue[ChannelType];,
+		If[Length[OptionValue[ChannelType]]==2,
+			{channelType,m} = OptionValue[ChannelType],
+			channelType = OptionValue[ChannelType][[1]]
+		],
 		channelType = OptionValue[ChannelType];
 	];
-	If[OptionValue[DecisionBits]==\[Infinity],
-		If[\[Rho]==0,
-			Switch[channelType,
-				"AWGN",
-				AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]],
-				"Rayleigh",
-				NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],n,RelevantOptions[NRayleighProbabilityOfDetection]],
-				"Nakagami",
-				NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NNakagamiProbabilityOfDetection]],
-				"Rice",
-				NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NRiceProbabilityOfDetection]],
-				_,
-				ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
+	g[\[Gamma]0_,\[Lambda]0_,n0_]:=Switch[channelType,
+		"AWGN",
+		AWGNProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[AWGNProbabilityOfDetection]],
+		"Rayleigh",
+		NRayleighProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[NRayleighProbabilityOfDetection]],
+		"Nakagami",
+		NNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NNakagamiProbabilityOfDetection]],
+		"Rice",
+		NRiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NRiceProbabilityOfDetection]],
+		_,
+		Undefined
+	];
+	f := Which[
+		Nb == \[Infinity],
+			Which[
+				\[Rho] == 0,
+					Which[
+						!ListQ[\[Lambda]],
+							g[\[Gamma],\[Lambda],n],
+						ListQ[\[Lambda]],
+							Which[
+								Length[\[Lambda]] == 1,
+									g[\[Gamma],Last[\[Lambda]],n],
+								Length[\[Lambda]] == 2,
+									g[\[Gamma],Last[\[Lambda]],n],
+								True,
+									Undefined
+							],
+						True,
+							Undefined
+					],
+				True,
+					Undefined
 			],
-			Undefined
-		],
-		If[k==Null//TrueQ,
-			Message[ProbabilityOfDetection::k,OptionValue[DecisionBits]];
-			Abort[],
-			Module[{probabilities,temp,Nb=OptionValue[DecisionBits]},
-				If[ListQ[\[Lambda]],
-					If[Length[\[Lambda]]!=2^Nb-1,
-						Message[ProbabilityOfDetection::\[Lambda],Length[\[Lambda]],2^Nb-1,Nb];
-						Abort[];
-					];
-					temp = Table[
-						Switch[channelType,
-							"AWGN",
-							AWGNProbabilityOfDetection[M,\[Gamma],x,RelevantOptions[AWGNProbabilityOfDetection]],
-							"Rayleigh",
-							NRayleighProbabilityOfDetection[M,\[Gamma],x,RelevantOptions[NRayleighProbabilityOfDetection]],
-							"Nakagami",
-							NNakagamiProbabilityOfDetection[M,\[Gamma],x,m,RelevantOptions[NNakagamiProbabilityOfDetection]],
-							"Rice",
-							NRiceProbabilityOfDetection[M,\[Gamma],x,m,RelevantOptions[NRiceProbabilityOfDetection]],
-							_,
-							ProbabilityOfDetection[M,\[Gamma],x,n,k,RelevantOptions[ProbabilityOfDetection]]
+		Nb >= 1,
+			If[TrueQ[k==Null],Message[ProbabilityOfDetection::k,Nb];Abort[]];
+			Module[{probabilities,temp},
+				Which[
+					!ListQ[\[Lambda]],
+						If[Nb != 1, Message[ProbabilityOfDetection::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
+						Which[
+							!ListQ[\[Gamma]],
+								probabilities = g[\[Gamma],\[Lambda],1],
+							ListQ[\[Gamma]],
+								If[OptionValue[Timed],
+									{temp, time} = Table[g[\[Gamma][[n0]],\[Lambda],1],{n0,n}]//Transpose,
+									temp = Table[g[\[Gamma][[n0]],\[Lambda],1],{n0,n}]
+								];
+								probabilities = Table[{1 - temp[[i]], temp[[i]]},{i,n}],
+							True,
+								Undefined
 						],
-						{x,\[Lambda]}
-					];
-					probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
-					If[Nb!=1,
-						Message[ProbabilityOfDetection::\[Lambda],1,2^Nb-1,Nb];
-						Abort[];
-					];
-					probabilities = Switch[channelType,
-						"AWGN",
-						AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]],
-						"Rayleigh",
-						NRayleighProbabilityOfDetection[M,\[Gamma],\[Lambda],RelevantOptions[NRayleighProbabilityOfDetection]],
-						"Nakagami",
-						NNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,RelevantOptions[NNakagamiProbabilityOfDetection]],
-						"Rice",
-						NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,RelevantOptions[NRiceProbabilityOfDetection]],
-						_,
-						ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
-					]
+					ListQ[\[Lambda]],
+						Which[
+							!ListQ[First[\[Lambda]]],
+								If[Length[\[Lambda]] != 2^Nb - 1, Message[ProbabilityOfDetection::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
+								Which[
+									!ListQ[\[Gamma]],
+										If[OptionValue[Timed],
+											{temp, time} = Table[g[\[Gamma],\[Lambda]0,1],{\[Lambda]0,\[Lambda]}]//Transpose,
+											temp = Table[g[\[Gamma],\[Lambda]0,1],{\[Lambda]0,\[Lambda]}]
+										];
+										probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
+									ListQ[\[Gamma]],
+										probabilities = Table[
+											If[OptionValue[Timed],
+												{temp, time} = Table[g[\[Gamma][[n0]],\[Lambda]0,1],{\[Lambda]0,\[Lambda]}]//Transpose,
+												temp = Table[g[\[Gamma][[n0]],\[Lambda]0,1],{\[Lambda]0,\[Lambda]}]
+											];
+											Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}
+										],
+									True,
+										Undefined
+								],
+							ListQ[First[\[Lambda]]],
+								If[Length[\[Lambda]] != n, Message[ProbabilityOfDetection::\[Lambda], \[Lambda], n]; Abort[]];
+								Table[If[Length[\[Lambda][[i]]] != 2^Nb - 1, Message[ProbabilityOfDetection::Nb, \[Lambda][[i]], 2^Nb - 1, Nb]; Abort[]],{i,Length[\[Lambda]]}];
+								Which[
+									!ListQ[\[Gamma]],
+										probabilities = Table[
+											If[OptionValue[Timed],
+												{temp, time} = Table[g[\[Gamma],\[Lambda]0,1],{\[Lambda]0,\[Lambda][[n0]]}]//Transpose,
+												temp = Table[g[\[Gamma],\[Lambda]0,1],{\[Lambda]0,\[Lambda][[n0]]}]
+											];
+											Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}
+										],
+									ListQ[\[Gamma]],
+										probabilities = Table[
+											If[OptionValue[Timed],
+												{temp, time} = Table[g[\[Gamma][[n0]],\[Lambda]0,1],{\[Lambda]0,\[Lambda][[n0]]}]//Transpose,
+												temp = Table[g[\[Gamma][[n0]],\[Lambda]0,1],{\[Lambda]0,\[Lambda][[n0]]}]
+											];
+											Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}
+										],
+									True,
+										Undefined
+								],
+							True,
+								Undefined
+						],
+					True,
+						Undefined
 				];
-				FusionCenterProbabilityOfDetection[probabilities,n,k,\[Rho]]
-			]
-		]
+				If[OptionValue[Timed],
+					{FusionCenterProbabilityOfDetection[probabilities,n,k,\[Rho]],Total[time]},
+					FusionCenterProbabilityOfDetection[probabilities,n,k,\[Rho]]
+				]
+			],
+		True,
+			Undefined
+	];
+	If[OptionValue[DatabaseLookup],
+		result = GetProbabilityOfDetection[OptionValue[Algorithm],channelType,M,\[Gamma],ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]//N,n,m,RelevantOptions[GetProbabilityOfDetection]];
+		If[TrueQ[result==Null],
+			result = f;
+			If[OptionValue[DatabaseCaching],
+				(* For correct retrieval of results later, attempt to convert Pf to rational form *)
+				rationalPf = Round[ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]*10^6//N]/10^6;
+				CacheProbabilityOfDetection[OptionValue[Algorithm],channelType,M,\[Gamma],rationalPf,n,m,result//N,RelevantOptions[CacheProbabilityOfDetection]];
+			];
+		];
+		result,
+		f
 	]
 ]
 
 
 (* ::Subsubsection:: *)
-(*Probability of false alarm (Subscript[N, b] bit decision only)*)
+(*Probability of missed detection (general)*)
+
+
+Options[ProbabilityOfMissedDetection] = Options[ProbabilityOfDetection];
+ProbabilityOfMissedDetection::usage=StringReplace[ProbabilityOfDetection::usage,"ProbabilityOfDetection"->"ProbabilityOfMissedDetection"];
+ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfMissedDetection][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfMissedDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfMissedDetection]]]
+]
+ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfMissedDetection][[All,1]]],Options[target][[All,1]]];
+	ProbabilityOfMissedDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfMissedDetection]]
+]
+ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],RelevantOptions,f},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfMissedDetection][[All,1]]],Options[target][[All,1]]];
+	Which[
+		!ListQ[\[Lambda]],
+			1 - ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]],
+		ListQ[\[Lambda]],
+			Which[
+				Length[\[Lambda]] == 1,
+					1 - ProbabilityOfDetection[M,\[Gamma],First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfDetection]],
+				Length[\[Lambda]] == 2,
+					1 - ProbabilityOfDetection[M,\[Gamma],First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfDetection]],
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Probability of false alarm (fusion center)*)
 
 
 FusionCenterProbabilityOfFalseAlarm::usage="FusionCenterProbabilityOfFalseAlarm[Pf, n, k] calculates the overall probability of false alarm for a cooperative network with 1 bit decision fusion.
 FusionCenterProbabilityOfFalseAlarm[Pf, n, k, \[Rho]] calculates the overall probability of false alarm for a cooperative network with 1 bit decision fusion and correlated decisions.";
-FusionCenterProbabilityOfFalseAlarm[P_,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=If[ListQ[P],
-	If[\[Rho] == 0,
-		Module[{decisions=Table[Unique[],{n}],probabilities,Nb=Log[2,Length[P]],p,precision=10000},
-			Total[Table[
-				probabilities=Table[Subscript[p, decisions[[x]]],{x,n}]/.FindInstance[Flatten[{Total[decisions]==x,Table[0<=decisions[[x]]<=2^Nb-1,{x,n}]}],decisions,Integers,precision];
-				Table[Product[probabilities[[x,y]],{y,Length[probabilities[[x]]]}],{x,Length[probabilities]}]//Total,
-				{x,k,n (2^Nb-1)}
-			]/.Table[Subscript[p, x]->P[[x+1]],{x,0,2^Nb-1}]]
+FusionCenterProbabilityOfFalseAlarm[P_,n_?IntegerQ,k_?IntegerQ,\[Rho]_:0]:=FusionCenterProbabilityOfFalseAlarm[{P},n,k,\[Rho]]
+FusionCenterProbabilityOfFalseAlarm[P_?ListQ,n_?IntegerQ,k_?IntegerQ,\[Rho]_:0]:=Which[
+	Length[P] == 1,
+		Which[
+			\[Rho] == 0,
+				1 - CDF[BinomialDistribution[n, First[P]], k - 1],
+			0 < \[Rho] <= 1,
+				Which[
+					n == 1,
+						First[P],
+					n == 2,
+						Undefined,
+					n > 2,
+						Sum[Sum[(-1)^i Binomial[l, i] First[P] Product[(\[Rho] (s + 1 - First[P]) + First[P]) / (1 + s \[Rho]),{s, 0, n - l + i - 2}],{i, 0, l}],{l, 0, k - 1}],
+					True,
+						Undefined
+				],
+			True,
+				Undefined
 		],
-		If[Length[P]==2,
-			FusionCenterProbabilityOfFalseAlarm[Last[P],n,k,\[Rho]]
-		]
-	],
-	If[\[Rho] == 0,
-		1 - CDF[BinomialDistribution[n, P], k - 1],
-		Switch[n,
-			1,
-			P,
-			2,
-			Undefined,
-			_,
-			Sum[Sum[(-1)^i Binomial[l,i] P Product[(\[Rho](s + 1 - P) + P) / (1 + s \[Rho]),{s, 0, n - l + i - 2}],{i, 0, l}],{l, 0, k - 1}]
-		]
-	]
+	Length[P] > 1,
+		Which[
+			\[Rho] == 0,
+				Which[
+					!ListQ[First[P]],
+						Which[
+							Length[P] == 2,
+								FusionCenterProbabilityOfFalseAlarm[Last[P],n,k,\[Rho]],
+							Length[P] == 3,
+								Total[Table[Binomial[n,l] P[[1]]^(n-l) P[[3]]^l / (1-P[[2]])^n,{l,k,n}]],
+							TrueQ[N[Mod[Log[2,Length[P]],1]] == 0],
+								Module[{decisions=Table[Unique[],{n}],probabilities,Nb=Log[2,Length[P]],p,precision=10000},
+									Total[
+										Table[
+											probabilities=Table[Subscript[p, decisions[[x]]],{x,n}]/.FindInstance[Flatten[{Total[decisions]==x,Table[0<=decisions[[x]]<=2^Nb-1,{x,n}]}],decisions,Integers,precision];
+											Table[Product[probabilities[[x,y]],{y,Length[probabilities[[x]]]}],{x,Length[probabilities]}]//Total,
+											{x,k,n (2^Nb-1)}
+										]/.Table[Subscript[p, x]->P[[x+1]],{x,0,2^Nb-1}]
+									]
+								],
+							True,
+								Undefined
+						],
+					ListQ[First[P]],
+						Which[
+							TrueQ[N[Mod[Log[2,Length[First[P]]],1]] == 0],
+								Module[{decisions=Table[Unique[],{n}],probabilities,Nb=Log[2,Length[First[P]]],p,precision=10000},
+									Total[
+										Table[
+											probabilities=Table[Subscript[p, x, decisions[[x]]],{x,n}]/.FindInstance[Flatten[{Total[decisions]==x,Table[0<=decisions[[x]]<=2^Nb-1,{x,n}]}],decisions,Integers,precision];
+											Table[Product[probabilities[[x,y]],{y,Length[probabilities[[x]]]}],{x,Length[probabilities]}]//Total,
+											{x,k,n (2^Nb-1)}
+										]/.Flatten[Table[Subscript[p, x, d]->P[[x, d + 1]],{x, n},{d, 0, 2^Nb - 1}]]
+									]
+								],
+							True,
+								Undefined
+						],
+					True,
+						Undefined
+				],
+			True,
+				Undefined
+		],
+	True,
+		Undefined
 ]
 
 
-(* ::Subsubsection:: *)
-(*Probability of detecion (Subscript[N, b] bit decision only)*)
+(* ::Subsubsection::Closed:: *)
+(*Probability of detecion (fusion center)*)
 
 
 FusionCenterProbabilityOfDetection::usage="FusionCenterProbabilityOfDetection[Pd, n, k] calculates the overall probability of detection for a cooperative network with 1 bit decision fusion.
@@ -344,15 +579,58 @@ FusionCenterProbabilityOfDetection[P_,n_?NumericQ,k_?NumericQ,\[Rho]_:0]:=Fusion
 
 
 (* ::Subsection::Closed:: *)
-(*Voting rule*)
+(*Optimum threshold*)
+
+
+(*\[Lambda]opt::length="Error: the list `1` should be the same length as `2`.";
+\[Lambda]opt[M_,Pf_,Pd_,threshold_,k_]:=\[Lambda]opt[{M},{Pf},{Pd},{threshold},k]
+\[Lambda]opt[M_?ListQ,Pf_?ListQ,Pd_?ListQ,thresholds_?ListQ,k_]:=Module[{n = Length[Pf]},
+	If[Length[Pf]!=Length[Pd],
+		Message[\[Lambda]opt::length,Pf,Pd];
+		Abort[];
+	];
+	If[Length[Union[Pf]] == 1 && Length[Union[Pd]] == 1,
+		,
+		FindRoot[Table[D[Sum[Exp[-I 2 Pi j k / (n + 1)] / (n + 1) Product[Pf[[x]]Exp[I 2 Pi j / (n + 1) + (1 - Pf[[x]])],{x,n}],{j,0,n}] + Sum[Exp[-I 2 Pi j k / (n + 1)] / (n + 1) Product[Pd[[x]]Exp[I 2 Pi j / (n + 1) + (1 - Pd[[x]])],{x,n}],{j,0,n}],\[Lambda]]==0,{\[Lambda],thresholds}],Table[{thresholds[[x]],M[[x]]},{x,Length[thresholds]}]]
+	]
+]*)
+
+
+(* ::Subsection::Closed:: *)
+(*Optimum voting rule*)
 
 
 k::usage="k[Pf, Pd, n] calculates the optimum fusion rule for a cooperative network with 1 bit decision fusion.
-k[Pf, Pd, n, \[Rho]] calculates the optimum fusion rule for a cooperative network with 1 bit decision fusion and correlated decisions.";
-k[Pf_?NumericQ,Pd_?NumericQ,n_?NumericQ,\[Rho]_:0]:=If[\[Rho] == 0,
-	Min[n, \[LeftCeiling](n Log[(1 - Pd) / (1 - Pf)]) / Log[((1 - Pd) Pf) / (Pd (1 - Pf))]\[RightCeiling]],
-	Module[{a = Table[FusionCenterProbabilityOfFalseAlarm[Pf,n,k,\[Rho]]+1-FusionCenterProbabilityOfDetection[Pd,n,k,\[Rho]],{k,1,n}]},
-		Position[a, Min[a]][[1, 1]]
+k[Pf, Pd, n, \[Rho]] calculates the optimum fusion rule for a cooperative network with 1 bit decision fusion and correlated decisions.
+k[{\!\(\*SubscriptBox[\(P\), \(00\)]\), \!\(\*SubscriptBox[\(P\), \(01\)]\), ...}, {\!\(\*SubscriptBox[\(P\), \(10\)]\), \!\(\*SubscriptBox[\(P\), \(11\)]\), ...}, n] calculates the optimum fusion rule for a cooperative network with arbitrary decision quantisation.
+k[{\!\(\*SubscriptBox[\(P\), \(00\)]\), \!\(\*SubscriptBox[\(P\), \(01\)]\), ...}, {\!\(\*SubscriptBox[\(P\), \(10\)]\), \!\(\*SubscriptBox[\(P\), \(11\)]\), ...}, n, \[Rho]] calculates the optimum fusion rule for a cooperative network with arbitrary decision quantisation and correlated decisions.";
+k::length="Error: the list `1` should be the same length as `2`.";
+k[Pf_?NumericQ,Pd_?NumericQ,n_?NumericQ,\[Rho]_:0]:=k[{1-Pf,Pf},{1-Pd,Pd},{n,n},\[Rho]]
+k[P0_?ListQ,P1_?ListQ,votes_?ListQ,\[Rho]_:0]:=Module[{v,n,Pa,\[CapitalDelta]0,Pf,Pm,\[CapitalDelta]1,Pd},
+	If[Length[P0]!=Length[P1],
+		Message[k::length,P0,P1];
+		Abort[];
+	];
+	If[\[Rho] == 0,
+		Switch[Length[P0],
+			2,
+			n = votes[[1]];
+			{Pa, Pf} = P0;
+			{Pm, Pd} = P1;
+			Min[n, \[LeftCeiling](n Log[Pm / Pa]) / Log[(Pf Pm) / (Pd Pa)]\[RightCeiling]],
+			3,
+			{v,n} = votes;
+			{Pa, \[CapitalDelta]0, Pf} = P0;
+			{Pm, \[CapitalDelta]1, Pd} = P1;
+			Min[v, \[LeftCeiling](v Log[Pa (1 - \[CapitalDelta]1) / (Pm (1 - \[CapitalDelta]0))]) / Log[(Pd Pa) / (Pf Pm)]\[RightCeiling]],
+			_,
+			Module[{a = Table[FusionCenterProbabilityOfFalseAlarm[Pf,n,k,\[Rho]]+1-FusionCenterProbabilityOfDetection[Pd,n,k,\[Rho]],{k,1,n}]},
+				Position[a, Min[a]][[1, 1]]
+			]
+		],
+		Module[{a = Table[FusionCenterProbabilityOfFalseAlarm[Pf,n,k,\[Rho]]+1-FusionCenterProbabilityOfDetection[Pd,n,k,\[Rho]],{k,1,n}]},
+			Position[a, Min[a]][[1, 1]]
+		]
 	]
 ]
 
@@ -361,7 +639,7 @@ k[Pf_?NumericQ,Pd_?NumericQ,n_?NumericQ,\[Rho]_:0]:=If[\[Rho] == 0,
 (*Sample complexity*)
 
 
-Options[SampleComplexity]={ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",LowSNR->True,Tolerance->10^-6};
+Options[SampleComplexity]={ChannelType->"AWGN",DecisionBits->\[Infinity],CorrelationCoefficient->0,Method->"Approximate",LowSNR->True,Tolerance->10^-6,DatabaseLookup->False,DatabaseCaching->False};
 SampleComplexity::usage="SampleComplexity[\[Gamma], Pf, Pd] calculates the number of samples required for a single energy detector to operate with the specified decision probabilities at the given signal to noise ratio.
 SampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for a cooperative network of energy detectors to operate with the specified decision probabilities at the given signal to noise ratio.
 
@@ -384,19 +662,44 @@ Additionally, the number of decision bits used in fusion may be specified by the
 
 If 1 bit decision fusion is specified, then the average correlation between nodes may be specified with the CorrelationCoefficient option. By default, CorrelationCoefficient\[Rule]"<>ToString[CorrelationCoefficient/.Options[SampleComplexity]]<>"
 
-Finally, the tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[SampleComplexity]]<>".";
+Numerical tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[SampleComplexity]]<>"
+
+Finally, database lookup/caching may be enabled. This requires that the DBLogging package be loaded. By default:
+
+DatabaseLookup\[Rule]"<>ToString[DatabaseLookup/.Options[SampleComplexity]]<>"
+DatabaseCaching\[Rule]"<>ToString[DatabaseCaching/.Options[SampleComplexity]]<>"
+
+and the data is stored in the database specified in DBLogging.  For database caching, both the DatabaseLookup and DatabaseCaching options must be set to True.";
 SampleComplexity::tol="The difference between the result `1` and the constraint `2` was greater than the specified tolerance `3`.";
+SampleComplexity::opt="`1` and `2` options are mutually exclusive. Aborting...";
 SampleComplexity[\[Gamma]_,Pf_,Pd_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
 	SampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[SampleComplexity]]
 ]
-SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],x,y,tol=OptionValue[Tolerance],RelevantOptions},
+SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{result,channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],x,y,tol=OptionValue[Tolerance],RelevantOptions,f},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
+	(*If[OptionValue[DatabaseLookup]&&OptionValue[Timed],
+		Message[SampleComplexity::opt,"DatabaseLookup","Timed"];
+		Abort[];
+	];
+	If[OptionValue[DatabaseCaching]&&OptionValue[Timed],
+		Message[SampleComplexity::opt,"DatabaseCaching","Timed"];
+		Abort[];
+	];*)
 	If[ListQ[OptionValue[ChannelType]],
-		{channelType,m} = OptionValue[ChannelType];,
+		If[Length[OptionValue[ChannelType]]==2,
+			{channelType,m} = OptionValue[ChannelType],
+			channelType = OptionValue[ChannelType][[1]]
+		],
 		channelType = OptionValue[ChannelType];
 	];
-	If[OptionValue[DecisionBits]==\[Infinity],
+	Switch[channelType,
+		"AWGN",
+		m = Null,
+		"Rayleigh",
+		m = 1;
+	];
+	f:=If[OptionValue[DecisionBits]==\[Infinity],
 		If[\[Rho]==0,
 			Switch[channelType,
 				"AWGN",
@@ -405,8 +708,10 @@ SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\
 				NRayleighSampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[NRayleighSampleComplexity]],
 				"Nakagami",
 				NNakagamiSampleComplexity[\[Gamma],Pf,Pd,m,n,RelevantOptions[NNakagamiSampleComplexity]],
+				"Rice",
+				NRiceSampleComplexity[\[Gamma],Pf,Pd,m,n,RelevantOptions[NRiceSampleComplexity]],
 				_,
-				SampleComplexity[\[Gamma],Pf,Pd,n,k,RelevantOptions[SampleComplexity]]
+				SampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[SampleComplexity]]
 			],
 			(* No solution for correlated infinite precision fusion *)
 			Undefined
@@ -427,10 +732,23 @@ SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{channelType,m,\
 				NRayleighSampleComplexity[\[Gamma],y,x,RelevantOptions[NRayleighSampleComplexity]],
 				"Nakagami",
 				NNakagamiSampleComplexity[\[Gamma],y,x,m,RelevantOptions[NNakagamiSampleComplexity]],
+				"Rice",
+				NRiceSampleComplexity[\[Gamma],Pf,Pd,m,RelevantOptions[NRiceSampleComplexity]],
 				_,
 				SampleComplexity[\[Gamma],y,x,n,RelevantOptions[SampleComplexity]]
 			]
 		]
+	];
+	If[OptionValue[DatabaseLookup],
+		result = GetSampleComplexity[{channelType,m},OptionValue[DecisionBits],n,\[Gamma],Pf,1 - Pd];
+		If[TrueQ[result==Null],
+			result = f;
+			If[OptionValue[DatabaseCaching],
+				CacheSampleComplexity[{channelType,m},OptionValue[DecisionBits],n,\[Gamma],Pf,1 - Pd,result];
+			];
+		];
+		result,
+		f
 	]
 ]
 

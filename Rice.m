@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*27/06/2012*)
-(*1.0*)
+(*02/08/2012*)
+(*1.02*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,8 @@
 
 
 (* ::Text:: *)
+(*Version 1.02: Moved database logging functions to the Network package.*)
+(*Version 1.01: Added sample complexity function.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
@@ -90,6 +92,13 @@ NHorganRiceProbabilityOfDetection;
 NGaussianRiceProbabilityOfDetection;
 
 
+(* ::Subsection::Closed:: *)
+(*Sample complexity*)
+
+
+NRiceSampleComplexity
+
+
 (* ::Section:: *)
 (*Private*)
 
@@ -100,7 +109,6 @@ Begin["`Private`"];
 <<Network`;
 <<AWGN`;
 <<ErfApprox`;
-<<DBLogging`;
 
 
 (* ::Subsection::Closed:: *)
@@ -132,67 +140,19 @@ RicePDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Switch[OptionValue[Method],
 (*Probabiity of detection*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Main function*)
 
 
-Options[NRiceProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LargeMN->OptionValue[ProbabilityOfDetection,LargeMN],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations],DatabaseLookup->OptionValue[ProbabilityOfDetection,DatabaseLookup],DatabaseCaching->OptionValue[ProbabilityOfDetection,DatabaseCaching]};
-NRiceProbabilityOfDetection::usage="NRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] calculates the probability of detection for a single energy detector operating on a Rice-K fading channel.
-NRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n] calculates the probability of detection for the fusion center of a cooperative network operating on a Rice-K fading channel.
-
-The following methods can be given:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]{\"Approximate\", Algorithm\[Rule]...}
-Method\[Rule]\"Exact\"
-Method\[Rule]{\"Exact\", Algorithm\[Rule]...}
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[NRiceProbabilityOfDetection]]<>"\".
-
-For a given method, an algorithm may be specified. If Method\[Rule]\"Approximate\", then the following algorithms may be specified:
-
-Algorithm\[Rule]\"Horgan\"
-Algorithm\[Rule]\"NGaussian\"
-
-By default, Algorithm\[Rule]\""<>ToString[Algorithm/.Options[NRiceProbabilityOfDetection]]<>"\". If Algorithm\[Rule]\"Horgan\", then the switching point between the small and large mn approximations may be specified so that Method\[Rule]{\"Approximate\", Algorithm\[Rule]\"Horgan\", LargeMN\[Rule]"<>ToString[LargeMN/.Options[NRiceProbabilityOfDetection]]<>"}. By default, LargeMN\[Rule]"<>ToString[LargeMN/.Options[NRiceProbabilityOfDetection]]<>". Similarly, if Algorithm\[Rule]\"NGaussian\", then a LowSNR boolean option may also be specified so that Method\[Rule]{\"Approximate\", Algorithm\[Rule]\"NGaussian\", LowSNR->"<>ToString[LowSNR/.Options[NRiceProbabilityOfDetection]]<>"}. By default, LowSNR\[Rule]"<>ToString[LowSNR/.Options[NRiceProbabilityOfDetection]]<>".
-
-For the exact method, the following algorithms may be specified:
-
-Algorithm\[Rule]\"Annamalai\"
-Algorithm\[Rule]\"Herath\"
-
-By default, Algorithm\[Rule]\"Annamalai\".
-
-In addition, timing and database lookup/caching options may be (exclusively) specified. The timing option is specified by:
-
-Timed\[Rule]"<>ToString[Timed/.Options[ProbabilityOfDetection]]<>"
-MaxIterations\[Rule]"<>ToString[MaxIterations/.Options[ProbabilityOfDetection]]<>"
-MaxTime\[Rule]"<>ToString[MaxTime/.Options[ProbabilityOfDetection]]<>"
-
-where the above options are the defaults, if not specified. If Timed\[Rule]True, then a {Pd, time} list of values will be returned.
-
-If timing is not used, then database lookup/caching may be enabled. This requires that the sqlite.m package be loaded. By default:
-
-DatabaseLookup\[Rule]"<>ToString[DatabaseLookup/.Options[NRiceProbabilityOfDetection]]<>"
-DatabaseCaching\[Rule]"<>ToString[DatabaseCaching/.Options[NRiceProbabilityOfDetection]]<>"
-
-and the data is stored in the database specified in sqlite.m.";
-NRiceProbabilityOfDetection::opt="`1` and `2` options are mutually exclusive. Aborting...";
+Options[NRiceProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
+NRiceProbabilityOfDetection::usage="";
 NRiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NRiceProbabilityOfDetection]]
 ]
 NRiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=Module[{f, result, time = 0, totaltime = 0, iterations = 0, channelType = "Rice", rationalPf, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	If[OptionValue[DatabaseLookup]&&OptionValue[Timed],
-		Message[NRiceProbabilityOfDetection::opt,"DatabaseLookup","Timed"];
-		Abort[];
-	];
-	If[OptionValue[DatabaseCaching]&&OptionValue[Timed],
-		Message[NRiceProbabilityOfDetection::opt,"DatabaseCaching","Timed"];
-		Abort[];
-	];
-	f := Switch[OptionValue[Method],
+	Switch[OptionValue[Method],
 		"Exact",
 		Switch[OptionValue[Algorithm],
 			"Annamalai",
@@ -213,19 +173,6 @@ NRiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=Mod
 		],
 		_,
 		Undefined
-	];
-	If[OptionValue[DatabaseLookup],
-		result = GetResult[OptionValue[Algorithm],channelType,M,\[Gamma],ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]//N,n,m];
-		If[TrueQ[result==Null],
-			result = f;
-			If[OptionValue[DatabaseCaching],
-				(* For correct retrieval of results later, attempt to convert Pf to rational form *)
-				rationalPf = Round[ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]*10^6//N]/10^6;
-				CacheResult[OptionValue[Algorithm],channelType,M,\[Gamma],rationalPf,n,m,result//N];
-			];
-		];
-		result,
-		f
 	]
 ]
 
@@ -246,7 +193,7 @@ AnnamalaiLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ
 
 
 Options[NAnnamalaiRiceProbabilityOfDetection]={Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
-NAnnamalaiRiceProbabilityOfDetection::usage="NAnnamalaiRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m, lim] calculates the exact probability of detection for a single energy detector operating in a Rice-m fading channel using Annamalai's algorithm.
+NAnnamalaiRiceProbabilityOfDetection::usage="NAnnamalaiRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m, lim] calculates the exact probability of detection for a single energy detector operating in a Rice-K fading channel using Annamalai's algorithm.
 NAnnamalaiRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n, lim] calculates the exact probability of detection for a cooperative network operating in a Rice-m fading channel using Annamalai's algorithm.
 
 Function timing may be specified using the following options:
@@ -340,11 +287,9 @@ NHerathRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?N
 (*Horgan' s method*)
 
 
-Options[NHorganRiceProbabilityOfDetection]={LargeMN->OptionValue[ProbabilityOfDetection,LargeMN],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
+Options[NHorganRiceProbabilityOfDetection]={Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 NHorganRiceProbabilityOfDetection::usage="NHorganRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the approximate probability of detection for a single energy detector operating in a Rice-m fading channel using Horgan's algorithm.
 NHorganRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the approximate probability of detection for a cooperative network operating in a Rice-m fading channel using Horgan's algorithm.
-
-The switching point between the large and small mn approximations can be specified using the LargeMN option. By default, LargeMN\[Rule]"<>ToString[LargeMN/.Options[NHorganRiceProbabilityOfDetection]]<>".
 
 Function timing may be specified using the following options:
 
@@ -363,7 +308,7 @@ NHorganRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?N
 			Module[{x = Round[m n], tol = 10^-6},
 				(* This method can only be used when m * n is an integer *)
 				If[Abs[m n - x] <= tol,
-					If[x < OptionValue[LargeMN],
+					If[x < 0 (*CHANGE THIS*),
 						(1 / 2)E^(-m n) Total[Table[((m n)^k / (k!Gamma[n+k])) (-1)^(n+k-1) (D[(1+Erf[(M n-\[Lambda])/(2 Sqrt[M n])]-E^(((1+m) t (n (t+m t+M \[Gamma])-\[Gamma] \[Lambda]))/(M \[Gamma]^2)) (-1+Erf[(n (2 (1+m) t+M \[Gamma])-\[Gamma] \[Lambda])/(2 Sqrt[M n] \[Gamma])]))/t,{t,n+k-1}]/.t->1),{k,0,lim}]],
 						(1/2 (1+Erf[((1+m) (M n (1+\[Gamma])-\[Lambda]))/(Sqrt[2] M Sqrt[n+2 m n] \[Gamma])])+(E^(-((b^2 (1+2 m) M \[Gamma]^2+4 c ((1+m)^2-a (1+2 m) M \[Gamma]^2)-(2 Sqrt[2] b (1+m)^2 (M n (1+\[Gamma])-\[Lambda]))/Sqrt[M n]+(2 a (1+m)^2 (-M n (1+\[Gamma])+\[Lambda])^2)/(M n))/(4 (-(1+m)^2+a (1+2 m) M \[Gamma]^2)))) (1+m) (-1+Erf[(-((b M)/(Sqrt[2] Sqrt[M n]))+(1+m)^2/(\[Gamma]+2 m \[Gamma])+a (M-\[Lambda]/n))/(Sqrt[2] Sqrt[-((a M)/n)+(1+m)^2/((n+2 m n) \[Gamma]^2)])]+Erfc[(M (-Sqrt[2] b (1+2 m) Sqrt[M n] \[Gamma]^2+2 (1+m)^2 n (1+\[Gamma]))-2 (1+m)^2 \[Lambda])/(2 Sqrt[2] M \[Gamma] Sqrt[(1+2 m) n ((1+m)^2-a (1+2 m) M \[Gamma]^2)])]))/(2 Sqrt[(1+m)^2-a (1+2 m) M \[Gamma]^2])+(E^(-((b^2 (1+2 m) M \[Gamma]^2+4 c ((1+m)^2-a (1+2 m) M \[Gamma]^2)+(2 Sqrt[2] b (1+m)^2 (M n (1+\[Gamma])-\[Lambda]))/Sqrt[M n]+(2 a (1+m)^2 (-M n (1+\[Gamma])+\[Lambda])^2)/(M n))/(4 (-(1+m)^2+a (1+2 m) M \[Gamma]^2)))) (1+m) (-2+Erfc[(M (Sqrt[2] b (1+2 m) Sqrt[M n] \[Gamma]^2+2 (1+m)^2 n (1+\[Gamma]))-2 (1+m)^2 \[Lambda])/(2 Sqrt[2] M \[Gamma] Sqrt[(1+2 m) n ((1+m)^2-a (1+2 m) M \[Gamma]^2)])]))/(2 Sqrt[(1+m)^2-a (1+2 m) M \[Gamma]^2]))/.LopezBenitezParameters[(-M (n+\[Gamma])+\[Lambda])/(2 Sqrt[M n])]
 					],
@@ -424,6 +369,58 @@ NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_
 		];
 		{result,totaltime/iterations},
 		f
+	]
+]
+
+
+(* ::Subsection::Closed:: *)
+(*Sample complexity*)
+
+
+Options[NRiceSampleComplexity]={Method->OptionValue[SampleComplexity,Method],LowSNR->OptionValue[SampleComplexity,LowSNR],Tolerance->OptionValue[SampleComplexity,Tolerance]};
+NRiceSampleComplexity::usage="NRiceSampleComplexity[\[Gamma], Pf, Pd, m] calculates the sample complexity for a single energy detector operating on a Rice-m fading channel.
+NRiceSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the sample complexity for a cooperative network operating on a Rice-m fading channel.
+
+The following methods can be given:
+
+Method\[Rule]\"Approximate\"
+Method\[Rule]\"Exact\"
+
+By default, Method\[Rule]\""<>ToString[Method/.Options[NRiceSampleComplexity]]<>"\".
+
+If Method\[Rule]\"Approximate\", the LowSNR option may be specified. By default, LowSNR\[Rule]"<>ToString[LowSNR/.Options[NRiceSampleComplexity]]<>".
+
+Numerical tolerance can be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[NRiceSampleComplexity]//N//InputForm]<>".";
+NRiceSampleComplexity::tol="The difference between the result `1` and the constraint `2` was greater than the specified tolerance `3`.";
+NRiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
+	NRiceSampleComplexity[\[Gamma],Pf,Pd,m,n,RelevantOptions[NRiceSampleComplexity]]
+]
+NRiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, tol = OptionValue[Tolerance], intialGuess = Max[(20 / (n m^2)), 1] * SampleComplexity[\[Gamma],Pf,Pd,n], courseGuess, fineGuess, result},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
+	(* Temporarily disable error checking - we'll do our own *)
+	Off[FindRoot::reged,FindRoot::lstol];
+	Switch[OptionValue[Method],
+		"Approximate",
+		(* Only use Gaussian method if it is valid *)
+		If[intialGuess <= 250,
+			result = NRiceSampleComplexity[\[Gamma],Pf,Pd,m,n,tol,Method->"Exact",Tolerance->OptionValue[Tolerance]];,
+			fineGuess = M/.FindRoot[NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda][M,Pf,n],m,n,RelevantOptions[NRiceProbabilityOfDetection]] == Pd, {M, intialGuess, 1, \[Infinity]}];
+			result = NRiceProbabilityOfDetection[fineGuess,\[Gamma],\[Lambda][fineGuess,Pf,n],m,n,RelevantOptions[NRiceProbabilityOfDetection]];
+		];,
+		"Exact",
+		(* If Gaussian approximation is valid, then use it to speed up the calculation *)
+		If[intialGuess <= 250,
+			courseGuess = intialGuess;,
+			courseGuess = M/.FindRoot[NRiceProbabilityOfDetection[M,\[Gamma],\[Lambda][M,Pf,n],m,n,RelevantOptions[NRiceProbabilityOfDetection]] == Pd, {M, intialGuess, 1, \[Infinity]}];
+		];
+		fineGuess = M/.FindRoot[NRiceProbabilityOfDetection[courseGuess,\[Gamma],\[Lambda][courseGuess,Pf,n,RelevantOptions[\[Lambda]]],m,n] == Pd, {M, courseGuess, 1, \[Infinity]}];
+		result = NRiceProbabilityOfDetection[fineGuess,\[Gamma],\[Lambda][fineGuess,Pf,n,RelevantOptions[\[Lambda]]],m,n];
+	];
+	On[FindRoot::reged,FindRoot::lstol];
+	If[Abs[result - Pd] <= tol//TrueQ,
+		fineGuess,
+		Message[NRiceSampleComplexity::tol, result//N, Pd//N, tol//N]
 	]
 ]
 
