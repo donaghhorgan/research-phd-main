@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*11/09/2012*)
-(*1.31*)
+(*13/09/2012*)
+(*1.32*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.32: Added SC and SSC diversity to the IntegerMN method.*)
 (*Version 1.31: Filled out all known diversity types for each exact method.*)
 (*Version 1.3: Added MRC, EGC, SLC, SSC, SC and SLS diversity cases to all methods.*)
 (*Version 1.2: Split Horgan's approximation into separate IntegerMN and LargeMN functions, so that full functionality can be accessed through the NNakagamiProbabilityOfDetection interface.*)
@@ -206,7 +207,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method=OptionValue[Met
 				!ListQ[diversityType] && diversityType == "EGC",
 					Undefined,
 				!ListQ[diversityType] && diversityType == "SC",
-					Undefined,
+					n PDF[NormalDistribution[\[Gamma], Sqrt[\[Gamma]^2 / m]], x] (CDF[NormalDistribution[2 m, 2 Sqrt[m]],2 m x / \[Gamma]]^(n - 1)),
 				ListQ[diversityType] && diversityType[[1]] == "SSC",
 					Module[{\[Gamma]t = diversityType[[2]]},
 						Which[
@@ -329,13 +330,15 @@ AnnamalaiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for
 
 The calculation tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[AnnamalaiLimit]//N//InputForm]<>".";
 AnnamalaiLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
-AnnamalaiLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{j, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
+AnnamalaiLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
 	Quiet[
 		Which[
 			!ListQ[diversityType] && diversityType == "None",
-				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, M / 2, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
+				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
 			!ListQ[diversityType] && diversityType == "MRC",
-				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, M / 2, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
+				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
 			!ListQ[diversityType] && diversityType == "EGC",
 				Undefined,
 			!ListQ[diversityType] && diversityType == "SC",
@@ -343,7 +346,8 @@ AnnamalaiLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ
 			ListQ[diversityType] && diversityType[[1]] == "SSC",
 				Undefined,
 			!ListQ[diversityType] && diversityType == "SLC",
-				j/.FindRoot[1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2] == tol,{j, M n / 2, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol];
+				j/.FindRoot[1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
 			!ListQ[diversityType] && diversityType == "SLS",
 				AnnamalaiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None"],
 			True,
@@ -477,7 +481,7 @@ NDighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Herath' s method*)
 
 
@@ -577,7 +581,7 @@ NHerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,
 ];
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Sun' s method*)
 
 
@@ -591,7 +595,7 @@ SunLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Optio
 	Which[
 		!ListQ[diversityType] && diversityType == "None",
 			j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
-			j/.FindRoot[(1 - GammaRegularized[M / 2 + j - 1, \[Lambda] / 2]) (1 - (m / (m + \[Gamma]))^(m) Total[Table[(m + k - 1)! / (Gamma[m] k!) (\[Gamma] / (m + \[Gamma]))^(k),{k, 0, j + 1}]]) == tol,{j, j0, 1, \[Infinity]}],
+			j/.FindRoot[(1 - GammaRegularized[M / 2 + j - 1, \[Lambda] / 2]) (1 - CDF[NegativeBinomialDistribution[m, (m / (m + (M / 2) \[Gamma]))^(m)], j + 1]) == tol,{j, j0, 1, \[Infinity]}],
 		!ListQ[diversityType] && diversityType == "MRC",
 			AnnamalaiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
 		!ListQ[diversityType] && diversityType == "EGC",
@@ -630,7 +634,7 @@ NSunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?
 	lim = SunLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->diversityType];
 	f:=Which[
 		!ListQ[diversityType] && diversityType == "None",
-			GammaRegularized[M / 2, \[Lambda] / 2] + Exp[-\[Lambda] / 2] Total[Table[((\[Lambda] / 2)^(j) / j!) (1 - (m / (m + (M / 2) \[Gamma]))^(m) Total[Table[(m + k - 1)! / (Gamma[m] k!) ((M / 2) \[Gamma] / (m + (M / 2) \[Gamma]))^(k),{k, 0, j - M / 2}]]),{j, M / 2, lim}]],
+			GammaRegularized[M / 2, \[Lambda] / 2] + Exp[-\[Lambda] / 2] Total[Table[((\[Lambda] / 2)^(j) / j!) (1 - (m / (m + (M / 2) \[Gamma]))^(m) Total[Table[(m + k - 1)! / (Gamma[m] k!) ((M / 2) \[Gamma] / (m + (M / 2) \[Gamma]))^(k),{k, 0, j - M / 2}]]),{j, M / 2, M / 2 + lim}]],
 		!ListQ[diversityType] && diversityType == "MRC",
 			1 - (m / (m + (M / 2) \[Gamma]))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma] / (m + (M / 2) \[Gamma]))^(j),{j, 0, lim}]],
 		!ListQ[diversityType] && diversityType == "EGC",
@@ -697,9 +701,11 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]
 			!ListQ[diversityType] && diversityType == "EGC",
 				Undefined,
 			!ListQ[diversityType] && diversityType == "SC",
-				Undefined,
+				(n / Gamma[m]) Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (D[-(-(1 / (1 + l)))^(k + m) (1 + Erf[(M - \[Lambda]) / (2 Sqrt[M])] + Exp[((1 + l) m t ((1 + l) m t + \[Gamma] (M - \[Lambda]))) / (M \[Gamma]^2)] Erfc[(2 (1 + l) m t + \[Gamma] (M - \[Lambda]))/(2 Sqrt[M] \[Gamma])]) / (2 t),{t, k + m - 1}]/.t->1),{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
 			ListQ[diversityType] && diversityType[[1]] == "SSC",
-				Undefined,
+				Module[{\[Gamma]t = diversityType[[2]]},
+					(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]]) IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,DiversityType->"None"] + D[((-1)^m E^(-((m t (2 M \[Gamma]t+\[Lambda]))/(M \[Gamma]))) (-E^(((m t (m t+M \[Gamma] (1+2 \[Gamma]t)))/(M \[Gamma]^2))) Erfc[(2 m t+\[Gamma] (M+M \[Gamma]t-\[Lambda]))/(2 Sqrt[M] \[Gamma])]+E^((m t (M \[Gamma]t+\[Lambda]))/(M \[Gamma])) (-2+Erfc[(M+M \[Gamma]t-\[Lambda])/(2 Sqrt[M])])))/(2 t Gamma[m]),{t, m - 1}]/.t->1
+				],
 			!ListQ[diversityType] && diversityType == "SLC",
 				AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2 n) / (M \[Gamma]^2)) * t^2 - ((\[Lambda] - M n) / (M (\[Gamma] / m))) * t]Erfc[(2n t - (\[Lambda] - M n) * (\[Gamma] / m)) / (2Sqrt[M n] (\[Gamma] / m))] / t, {t, x - 1}]/.t->1),
 			!ListQ[diversityType] && diversityType == "SLS",
@@ -789,7 +795,7 @@ LargeMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Numerical Gaussian method*)
 
 
@@ -903,7 +909,7 @@ NNakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeri
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Miscellaenous*)
 
 
