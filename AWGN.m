@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*05/09/2012*)
-(*1.11*)
+(*14/09/2012*)
+(*1.12*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.12: Added EGC support.*)
 (*Version 1.11: Added protection for symbols.*)
 (*Version 1.1: Added diversity types to functions.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
@@ -232,6 +233,7 @@ In addition, the following diversity reception schemes may be specified:
 
 DiversityType->\"None\"
 DiversityType->\"MRC\"
+DiversityType->\"EGC\"
 DiversityType->\"SC\"
 DiversityType->\"SSC\"
 DiversityType->\"SLC\"
@@ -268,7 +270,20 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[
 							Undefined
 					],
 				!ListQ[diversityType] && diversityType == "EGC",
-					Undefined,
+					Which[
+						ListQ[\[Gamma]],
+							If[OptionValue[LowSNR],
+								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M]],
+								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M (1 + 2 Total[\[Gamma]])]]
+							],
+						!ListQ[\[Gamma]],
+							If[OptionValue[LowSNR],
+								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M]],
+								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M (1 + 2 n \[Gamma])]]
+							],
+						True,
+							Undefined
+					],
 				!ListQ[diversityType] && diversityType == "SC",
 					Which[
 						ListQ[\[Gamma]],
