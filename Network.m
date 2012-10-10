@@ -339,7 +339,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		"Rayleigh",
 		NRayleighProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[NRayleighProbabilityOfDetection]],
 		"Nakagami",
-		NNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NNakagamiProbabilityOfDetection]],
+		NakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NakagamiProbabilityOfDetection]],
 		"Rice",
 		NRiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NRiceProbabilityOfDetection]],
 		_,
