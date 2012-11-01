@@ -129,6 +129,9 @@ IntegerMNNakagamiProbabilityOfDetection;
 (*Large mn method*)
 
 
+LargeMNError;
+
+
 LargeMNNakagamiProbabilityOfDetection;
 
 
@@ -446,8 +449,8 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 
 
 Options[AnnamalaiLimit]={DiversityType->"SLC",Tolerance->10^-6};
-AnnamalaiLimit::usage="AnnamalaiLimit[M, \[Gamma], \[Lambda], m] calculates the truncation point for use in Herath's algorithm using the default tolerance for a single energy detector.
-AnnamalaiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in Herath's algorithm using the default tolerance for a cooperative network.
+AnnamalaiLimit::usage="AnnamalaiLimit[M, \[Gamma], \[Lambda], m] calculates the truncation point for use in Annamalai's algorithm using the default tolerance for a single energy detector.
+AnnamalaiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in Annamalai's algorithm using the default tolerance for a cooperative network.
 
 The calculation tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[AnnamalaiLimit]//N//InputForm]<>".";
 AnnamalaiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
@@ -1092,35 +1095,30 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ];
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Integer mn method*)
 
 
-Options[IntegerMNLimit]={DiversityType->"EGC",Tolerance->10^-6};
-IntegerMNLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{j, j0, diversityType = OptionValue[DiversityType], tol = OptionValue[Tolerance]},
+Options[IntegerMNEGCLimit]={Tolerance->10^-6};
+IntegerMNEGCLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance]},
 	Which[
-		diversityType=="EGC",
-			Which[
-				n == 2,
-					j0 = 0;
-					j/.FindRoot[1/2 Gamma[1/2]/2^(4m-2) Sum[(Gamma[2m+k]Gamma[2m+k])/Gamma[2m+1/2+k] (1/2)^k/k!,{k, j + 1, \[Infinity]}] == tol, {j, j0, 0, \[Infinity]}],
-				n == 3,
-					Module[{l0, k0, f},
-						k0 = 0;
-						l0 = 0;
-						While[
-							(4 Sqrt[\[Pi]] Gamma[2m] / (Gamma[m]^3 2^(4m))) Sum[((Gamma[2m + l] Gamma[4m + 2l]) / (Gamma[2m + l + 1 / 2] Gamma[6m + 2l])) ((1 / 2)^l / l!) Gamma[3m + l] Sum[(Pochhammer[2m, k] Pochhammer[4m + 2l, k] / Pochhammer[3m + l + 1 / 2, k]) ((1 / 2)^k / k!), {k, k0 + 1, \[Infinity]}], {l, 0, \[Infinity]}] > tol,
-							k0++
-						];
-						f[l_?NumericQ]:=Total[Table[(Pochhammer[2m, k] Pochhammer[4m + 2l, k] / Pochhammer[3m + l + 1 / 2, k]) ((1 / 2)^k / k!), {k, 0, k0}]];
-						While[
-							(4 Sqrt[\[Pi]] Gamma[2m] / (Gamma[m]^3 2^(4m))) NSum[((Gamma[2m + l] Gamma[4m + 2l]) / (Gamma[2m + l + 1 / 2] Gamma[6m + 2l])) ((1 / 2)^l / l!) Gamma[3m + l] f[l], {l, l0 + 1, \[Infinity]}] > tol,
-							l0++
-						];
-						{l0, k0}
-					],
-				True,
-					Undefined
+		n == 2,
+			j0 = 0;
+			j/.FindRoot[1/2 Gamma[1/2]/2^(4m-2) Sum[(Gamma[2m+k]Gamma[2m+k])/Gamma[2m+1/2+k] (1/2)^k/k!,{k, j + 1, \[Infinity]}] == tol, {j, j0, 0, \[Infinity]}],
+		n == 3,
+			Module[{l0, k0, f},
+				k0 = 0;
+				l0 = 0;
+				While[
+					(4 Sqrt[\[Pi]] Gamma[2m] / (Gamma[m]^3 2^(4m))) Sum[((Gamma[2m + l] Gamma[4m + 2l]) / (Gamma[2m + l + 1 / 2] Gamma[6m + 2l])) ((1 / 2)^l / l!) Gamma[3m + l] Sum[(Pochhammer[2m, k] Pochhammer[4m + 2l, k] / Pochhammer[3m + l + 1 / 2, k]) ((1 / 2)^k / k!), {k, k0 + 1, \[Infinity]}], {l, 0, \[Infinity]}] > tol,
+					k0++
+				];
+				f[l_?NumericQ]:=Total[Table[(Pochhammer[2m, k] Pochhammer[4m + 2l, k] / Pochhammer[3m + l + 1 / 2, k]) ((1 / 2)^k / k!), {k, 0, k0}]];
+				While[
+					(4 Sqrt[\[Pi]] Gamma[2m] / (Gamma[m]^3 2^(4m))) NSum[((Gamma[2m + l] Gamma[4m + 2l]) / (Gamma[2m + l + 1 / 2] Gamma[6m + 2l])) ((1 / 2)^l / l!) Gamma[3m + l] f[l], {l, l0 + 1, \[Infinity]}] > tol,
+					l0++
+				];
+				{l0, k0}
 			],
 		True,
 			Undefined
@@ -1143,104 +1141,70 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[IntegerMNNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[IntegerMNNakagamiProbabilityOfDetection]]]
 ]
-IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
+IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, \[Gamma]0, \[Gamma]t, f, g, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
 	(* This method can only be used when m * n is an integer *)
-	lim = IntegerMNLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType];
-	If[Abs[m n - x] <= tol,
-		f:=Which[
-			!ListQ[diversityType] && diversityType == "None",
-				Which[
-					ListQ[\[Gamma]],
-						Undefined,
-					!ListQ[\[Gamma]],
-						AWGNProbabilityOfFalseAlarm[M,\[Lambda]] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2) / (M \[Gamma]^2)) * t^2 - ((\[Lambda] - M) / (M (\[Gamma] / m))) * t]Erfc[(2 t - (\[Lambda] - M) * (\[Gamma] / m)) / (2Sqrt[M] (\[Gamma] / m))] / t, {t, x - 1}]/.t->1),
-					True,
-						Undefined
-				],
-			!ListQ[diversityType] && diversityType == "MRC",
-				Which[
-					ListQ[\[Gamma]],
-						AWGNProbabilityOfFalseAlarm[M,\[Lambda]] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2) / (M Mean[\[Gamma]]^2)) * t^2 - ((\[Lambda] - M) / (M (Mean[\[Gamma]] / m))) * t]Erfc[(2 t - (\[Lambda] - M) * (Mean[\[Gamma]] / m)) / (2Sqrt[M] (Mean[\[Gamma]] / m))] / t, {t, x - 1}]/.t->1),
-					!ListQ[\[Gamma]],
-						AWGNProbabilityOfFalseAlarm[M,\[Lambda]] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2) / (M \[Gamma]^2)) * t^2 - ((\[Lambda] - M) / (M (\[Gamma] / m))) * t]Erfc[(2 t - (\[Lambda] - M) * (\[Gamma] / m)) / (2Sqrt[M] (\[Gamma] / m))] / t, {t, x - 1}]/.t->1),
-					True,
-						Undefined
-				],
-			!ListQ[diversityType] && diversityType == "EGC",
-					Which[
-					ListQ[\[Gamma]],
-						Which[
-							n == 2,
-								(Sqrt[\[Pi]] / 2^(4m - 2)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + (1 / 2)])) Total[Table[(Pochhammer[2m, k] / Pochhammer[2m + (1 / 2), k]) ((1 / 2)^k / k!) (-1)^(k+2 m -1) (D[ (1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((2 m t (2 m t+M Mean[\[Gamma]]-Mean[\[Gamma]] \[Lambda]))/(M Mean[\[Gamma]]^2)) Erfc[(4 m t+M Mean[\[Gamma]]-Mean[\[Gamma]] \[Lambda])/(2 Sqrt[M] Mean[\[Gamma]])])/(2 t),{t, 2m + k - 1}]/.t->1),{k,0,lim}]],
-							n == 3,
-								(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M Mean[\[Gamma]]-Mean[\[Gamma]] \[Lambda]))/(M Mean[\[Gamma]]^2)) Erfc[(6 m t+M Mean[\[Gamma]]-Mean[\[Gamma]] \[Lambda])/(2 Sqrt[M] Mean[\[Gamma]])])/(2 t),{t,3m+l+k-1}],{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
-							True,
-								Undefined
-						],
-					!ListQ[\[Gamma]],
-						Which[
-							n == 2,
-								(Sqrt[\[Pi]] / 2^(4m - 2)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + (1 / 2)])) Total[Table[(Pochhammer[2m, k] / Pochhammer[2m + (1 / 2), k]) ((1 / 2)^k / k!) (-1)^(k+2 m -1) (D[ (1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((2 m t (2 m t+M \[Gamma]-\[Gamma] \[Lambda]))/(M \[Gamma]^2)) Erfc[(4 m t+M \[Gamma]-\[Gamma] \[Lambda])/(2 Sqrt[M] \[Gamma])])/(2 t),{t, 2m + k - 1}]/.t->1),{k,0,lim}]],
-							n == 3,
-								(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]-\[Gamma] \[Lambda]))/(M \[Gamma]^2)) Erfc[(6 m t+M \[Gamma]-\[Gamma] \[Lambda])/(2 Sqrt[M] \[Gamma])])/(2 t),{t,3m+l+k-1}],{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
-							True,
-								Undefined
-						],
-					True,
-						Undefined
-				],
-			!ListQ[diversityType] && diversityType == "SC",
-				Which[
-					ListQ[\[Gamma]],
-						(n / Gamma[m]) Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (D[-(-(1 / (1 + l)))^(k + m) (1 + Erf[(M - \[Lambda]) / (2 Sqrt[M])] + Exp[((1 + l) m t ((1 + l) m t + Max[\[Gamma]] (M - \[Lambda]))) / (M Max[\[Gamma]]^2)] Erfc[(2 (1 + l) m t + Max[\[Gamma]] (M - \[Lambda]))/(2 Sqrt[M] Max[\[Gamma]])]) / (2 t),{t, k + m - 1}]/.t->1),{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
-					!ListQ[\[Gamma]],
-						(n / Gamma[m]) Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (D[-(-(1 / (1 + l)))^(k + m) (1 + Erf[(M - \[Lambda]) / (2 Sqrt[M])] + Exp[((1 + l) m t ((1 + l) m t + \[Gamma] (M - \[Lambda]))) / (M \[Gamma]^2)] Erfc[(2 (1 + l) m t + \[Gamma] (M - \[Lambda]))/(2 Sqrt[M] \[Gamma])]) / (2 t),{t, k + m - 1}]/.t->1),{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
-					True,
-						Undefined
-				],
-			ListQ[diversityType] && diversityType[[1]] == "SSC",
-				Which[
-					ListQ[\[Gamma]],
-						Module[{\[Gamma]t = diversityType[[2]]},
-							(1 - GammaRegularized[m, m \[Gamma]t/Mean[\[Gamma]]]) IntegerMNNakagamiProbabilityOfDetection[M,Mean[\[Gamma]],\[Lambda],m,DiversityType->"None"] + D[((-1)^m E^(-((m t (2 M \[Gamma]t+\[Lambda]))/(M Mean[\[Gamma]]))) (-E^(((m t (m t+M Mean[\[Gamma]] (1+2 \[Gamma]t)))/(M Mean[\[Gamma]]^2))) Erfc[(2 m t+Mean[\[Gamma]] (M+M \[Gamma]t-\[Lambda]))/(2 Sqrt[M] Mean[\[Gamma]])]+E^((m t (M \[Gamma]t+\[Lambda]))/(M Mean[\[Gamma]])) (-2+Erfc[(M+M \[Gamma]t-\[Lambda])/(2 Sqrt[M])])))/(2 t Gamma[m]),{t, m - 1}]/.t->1
-						],
-					!ListQ[\[Gamma]],
-						Module[{\[Gamma]t = diversityType[[2]]},
-							(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]]) IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,DiversityType->"None"] + D[((-1)^m E^(-((m t (2 M \[Gamma]t+\[Lambda]))/(M \[Gamma]))) (-E^(((m t (m t+M \[Gamma] (1+2 \[Gamma]t)))/(M \[Gamma]^2))) Erfc[(2 m t+\[Gamma] (M+M \[Gamma]t-\[Lambda]))/(2 Sqrt[M] \[Gamma])]+E^((m t (M \[Gamma]t+\[Lambda]))/(M \[Gamma])) (-2+Erfc[(M+M \[Gamma]t-\[Lambda])/(2 Sqrt[M])])))/(2 t Gamma[m]),{t, m - 1}]/.t->1
-						],
-					True,
-						Undefined
-				],
-			!ListQ[diversityType] && diversityType == "SLC",
-				Which[
-					ListQ[\[Gamma]],
-						N[AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2 n) / (M Mean[\[Gamma]]^2)) * t^2 - ((\[Lambda] - M n) / (M (Mean[\[Gamma]] / m))) * t]Erfc[(2n t - (\[Lambda] - M n) * (Mean[\[Gamma]] / m)) / (2Sqrt[M n] (Mean[\[Gamma]] / m))] / t, {t, x - 1}]/.t->1),20],
-					!ListQ[\[Gamma]],
-						N[AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] - (D[((-1)^(x) / (2 Gamma[x])) * Exp[((m^2 n) / (M \[Gamma]^2)) * t^2 - ((\[Lambda] - M n) / (M (\[Gamma] / m))) * t]Erfc[(2n t - (\[Lambda] - M n) * (\[Gamma] / m)) / (2Sqrt[M n] (\[Gamma] / m))] / t, {t, x - 1}]/.t->1),20],
-					True,
-						Undefined
-				],
-			!ListQ[diversityType] && diversityType == "SLS",
-				Which[
-					ListQ[\[Gamma]],
-						1 - Product[1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
-					!ListQ[\[Gamma]],
-						1 - (1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,DiversityType->"None"])^n,
-					True,
-						Undefined
-				],
+	If[Abs[m n - x] > tol, Return[Undefined]];
+	
+	(* If no diversity, then n must be 1 *)
+	If[ListQ[diversityType], \[Gamma]t = diversityType[[2]]; diversityType == diversityType[[1]]];
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	
+	\[Gamma]0 = Which[
+			diversityType == "None",
+				If[ListQ[\[Gamma]], Undefined, \[Gamma]],
+			diversityType == "MRC" || diversityType == "EGC" || diversityType == "SSC" || diversityType == "SLC",
+				Mean[Flatten[{\[Gamma]}]],
+			diversityType == "SC",
+				Max[Flatten[{\[Gamma]}]],
+			diversityType == "SLS",
+				\[Gamma],
 			True,
 				Undefined
-			],
-		f:=Undefined
 	];
+
+	g[A_, B_] := (1 / 2) Exp[-A^2] Total[Table[((I/(2 B))^l / l!) FaddeevaDerivative[l, N[-I (A + (1 / (2 B))),30]], {l, 0, x - 1}]] // Re;
+	
+	f := Which[
+		diversityType == "None",
+			AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (2 m Sqrt[M])],
+		diversityType == "MRC",
+			AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (2 m Sqrt[M])],
+		diversityType == "EGC",
+			lim = IntegerMNEGCLimit[M, \[Gamma], \[Lambda], m, n]
+			Which[
+				n == 2,
+					(Sqrt[\[Pi]] / 2^(4m - 2)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + (1 / 2)])) Total[Table[(Pochhammer[2m, k] / Pochhammer[2m + (1 / 2), k]) ((1 / 2)^k / k!) (-1)^(k+2 m -1) (D[ (1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((2 m t (2 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(4 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t, 2m + k - 1}]/.t->1),{k,0,lim}]],
+				n == 3,
+					(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(6 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t,3m+l+k-1}],{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
+				True,
+					Undefined
+			],
+		diversityType == "SC",
+			(n / Gamma[m]) Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (D[-(-(1 / (1 + l)))^(k + m) (1 + Erf[(M - \[Lambda]) / (2 Sqrt[M])] + Exp[((1 + l) m t ((1 + l) m t + \[Gamma]0 (M - \[Lambda]))) / (M \[Gamma]0^2)] Erfc[(2 (1 + l) m t + \[Gamma]0 (M - \[Lambda]))/(2 Sqrt[M] \[Gamma]0)]) / (2 t),{t, k + m - 1}]/.t->1),{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
+		diversityType == "SSC",
+			(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"] + D[((-1)^m E^(-((m t (2 M \[Gamma]t+\[Lambda]))/(M \[Gamma]0))) (-E^(((m t (m t+M \[Gamma]0 (1+2 \[Gamma]t)))/(M \[Gamma]0^2))) Erfc[(2 m t+\[Gamma]0 (M+M \[Gamma]t-\[Lambda]))/(2 Sqrt[M] \[Gamma]0)]+E^((m t (M \[Gamma]t+\[Lambda]))/(M \[Gamma]0)) (-2+Erfc[(M+M \[Gamma]t-\[Lambda])/(2 Sqrt[M])])))/(2 t Gamma[m]),{t, m - 1}]/.t->1,
+		diversityType == "SLC",
+			AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] + g[(\[Lambda] - M n) / (2 Sqrt[M n]), - (M \[Gamma]0) / (2 m Sqrt[M n])],
+		diversityType == "SLS",
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	];
+	
 	If[OptionValue[Timed],
 		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
 		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
 			ClearSystemCache[];
 			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
 			totaltime += time;
-			iterations++;
+				iterations++;
 		];
 		{result,totaltime/iterations},
 		f//N
@@ -1250,7 +1214,7 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Large SNR method*)
 
 
@@ -1380,6 +1344,31 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 (*Large mn method*)
 
 
+Options[LargeMNError]={DiversityType->"SLC"};
+LargeMNError::usage="LargeMNError[M, \[Gamma], \[Lambda], m, n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
+LargeMNError[Pf_,a_,OptionsPattern[]]:=Module[{g, diversityType = OptionValue[DiversityType], tol = 10^-6},
+	g[z_?NumericQ]:=Which[
+		!ListQ[diversityType] && diversityType == "None",
+			Undefined,
+		!ListQ[diversityType] && diversityType == "MRC",
+			Undefined,
+		!ListQ[diversityType] && diversityType == "EGC",
+			Undefined,
+		!ListQ[diversityType] && diversityType == "SC",
+			Undefined,
+		ListQ[diversityType] && diversityType[[1]] == "SSC",
+			Undefined,
+		!ListQ[diversityType] && diversityType == "SLC",
+			Erfc[Sqrt[a/2]] (Pf/2) + (1 - Pf) (GammaRegularized[a, z] - 1/2 Erfc[(z - a)/Sqrt[2 a]]),
+		!ListQ[diversityType] && diversityType == "SLS",
+			Undefined,
+		True,
+			Undefined
+	];
+	NMaximize[{Abs[g[z]],z>=0},{z,0,a}][[1]]
+]
+
+
 Options[LargeMNNakagamiProbabilityOfDetection]={DiversityType->"SLC",Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 LargeMNNakagamiProbabilityOfDetection::usage="LargeMNNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the approximate probability of detection for a single energy detector operating in a Nakagami-m fading channel using the large mn approximation.
 LargeMNNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the approximate probability of detection for a cooperative network operating in a Nakagami-m fading channel using the large mn approximation..
@@ -1451,7 +1440,8 @@ LargeMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeri
 				ListQ[\[Gamma]],
 					(1/2 (1+Erf[(m (M n (1+Mean[\[Gamma]])-\[Lambda]))/(Sqrt[2] M Sqrt[m n] Mean[\[Gamma]])])+1/2 E^((4 c M n (-m+a M Mean[\[Gamma]]^2)+b (-b M^2 n Mean[\[Gamma]]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+Mean[\[Gamma]])-\[Lambda]))-2 a m (-M n (1+Mean[\[Gamma]])+\[Lambda])^2)/(4 M n (-m+a M Mean[\[Gamma]]^2))) Sqrt[m/(m-a M Mean[\[Gamma]]^2)] (Erf[(b Sqrt[M^3 n] Mean[\[Gamma]]^2+Sqrt[2] m (-M n (1+Mean[\[Gamma]])+\[Lambda]))/(2 M Mean[\[Gamma]] Sqrt[n (m-a M Mean[\[Gamma]]^2)])]-Erf[(-2 m n+Mean[\[Gamma]] (-2 a M n+Sqrt[2] b Sqrt[M n]+2 a \[Lambda]))/(2 Sqrt[2] Sqrt[n (m-a M Mean[\[Gamma]]^2)])])+1/2 E^(-((4 c M n (m-a M Mean[\[Gamma]]^2)+b (b M^2 n Mean[\[Gamma]]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+Mean[\[Gamma]])-\[Lambda]))+2 a m (-M n (1+Mean[\[Gamma]])+\[Lambda])^2)/(4 M n (-m+a M Mean[\[Gamma]]^2)))) Sqrt[m/(m-a M Mean[\[Gamma]]^2)] (-2+Erfc[(b Sqrt[M^3 n] Mean[\[Gamma]]^2+Sqrt[2] m (M n (1+Mean[\[Gamma]])-\[Lambda]))/(2 M Mean[\[Gamma]] Sqrt[n (m-a M Mean[\[Gamma]]^2)])]))/.LopezBenitezParameters[(-M (n+Mean[\[Gamma]])+\[Lambda])/(2 Sqrt[M n])],
 				!ListQ[\[Gamma]],
-					(1/2 (1+Erf[(m (M n (1+\[Gamma])-\[Lambda]))/(Sqrt[2] M Sqrt[m n] \[Gamma])])+1/2 E^((4 c M n (-m+a M \[Gamma]^2)+b (-b M^2 n \[Gamma]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+\[Gamma])-\[Lambda]))-2 a m (-M n (1+\[Gamma])+\[Lambda])^2)/(4 M n (-m+a M \[Gamma]^2))) Sqrt[m/(m-a M \[Gamma]^2)] (Erf[(b Sqrt[M^3 n] \[Gamma]^2+Sqrt[2] m (-M n (1+\[Gamma])+\[Lambda]))/(2 M \[Gamma] Sqrt[n (m-a M \[Gamma]^2)])]-Erf[(-2 m n+\[Gamma] (-2 a M n+Sqrt[2] b Sqrt[M n]+2 a \[Lambda]))/(2 Sqrt[2] Sqrt[n (m-a M \[Gamma]^2)])])+1/2 E^(-((4 c M n (m-a M \[Gamma]^2)+b (b M^2 n \[Gamma]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+\[Gamma])-\[Lambda]))+2 a m (-M n (1+\[Gamma])+\[Lambda])^2)/(4 M n (-m+a M \[Gamma]^2)))) Sqrt[m/(m-a M \[Gamma]^2)] (-2+Erfc[(b Sqrt[M^3 n] \[Gamma]^2+Sqrt[2] m (M n (1+\[Gamma])-\[Lambda]))/(2 M \[Gamma] Sqrt[n (m-a M \[Gamma]^2)])]))/.LopezBenitezParameters[(-M (n+\[Gamma])+\[Lambda])/(2 Sqrt[M n])],
+					(*(1/2 (1+Erf[(m (M n (1+\[Gamma])-\[Lambda]))/(Sqrt[2] M Sqrt[m n] \[Gamma])])+1/2 E^((4 c M n (-m+a M \[Gamma]^2)+b (-b M^2 n \[Gamma]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+\[Gamma])-\[Lambda]))-2 a m (-M n (1+\[Gamma])+\[Lambda])^2)/(4 M n (-m+a M \[Gamma]^2))) Sqrt[m/(m-a M \[Gamma]^2)] (Erf[(b Sqrt[M^3 n] \[Gamma]^2+Sqrt[2] m (-M n (1+\[Gamma])+\[Lambda]))/(2 M \[Gamma] Sqrt[n (m-a M \[Gamma]^2)])]-Erf[(-2 m n+\[Gamma] (-2 a M n+Sqrt[2] b Sqrt[M n]+2 a \[Lambda]))/(2 Sqrt[2] Sqrt[n (m-a M \[Gamma]^2)])])+1/2 E^(-((4 c M n (m-a M \[Gamma]^2)+b (b M^2 n \[Gamma]^2+2 Sqrt[2] m Sqrt[M n] (M n (1+\[Gamma])-\[Lambda]))+2 a m (-M n (1+\[Gamma])+\[Lambda])^2)/(4 M n (-m+a M \[Gamma]^2)))) Sqrt[m/(m-a M \[Gamma]^2)] (-2+Erfc[(b Sqrt[M^3 n] \[Gamma]^2+Sqrt[2] m (M n (1+\[Gamma])-\[Lambda]))/(2 M \[Gamma] Sqrt[n (m-a M \[Gamma]^2)])]))/.LopezBenitezParameters[(-M (n+\[Gamma])+\[Lambda])/(2 Sqrt[M n])]*)
+					1/2-1/2 Erf[((\[Lambda]-M n(1+\[Gamma]))/(2Sqrt[M n]))/Sqrt[((M \[Gamma] Sqrt[(2n)/m])/(2Sqrt[M n]))^2+1]],
 				True,
 					Undefined
 			],
@@ -1595,8 +1585,13 @@ NNakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeri
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Miscellaenous*)
+
+
+FaddeevaDerivative[0, z_] := Exp[-z^2] Erfc[-I z];
+FaddeevaDerivative[1, z_] := -2 z FaddeevaDerivative[0, z] + (2 I)/Sqrt[\[Pi]];
+FaddeevaDerivative[k_?IntegerQ, z_] := FaddeevaDerivative[k, z] = -2 z FaddeevaDerivative[k - 1, z] - 2 (k - 1) FaddeevaDerivative[k - 2, z];
 
 
 MultinomialCoefficient[l_?NumericQ,k_?NumericQ,m_?NumericQ]:=Which[
