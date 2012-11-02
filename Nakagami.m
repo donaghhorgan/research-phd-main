@@ -27,13 +27,13 @@
 (*along with this program. If not, see http://www.gnu.org/licenses.*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Version information*)
 
 
 (* ::Text:: *)
-(*09/10/2012*)
-(*1.41*)
+(*02/11/2012*)
+(*1.45*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.45: Updated Asymptotic approximation for no diversity, MRC, SLC and SLS diversity cases.*)
 (*Version 1.44: Recoded Numerical, Sun, Herath, Digham and Annamalai's methods to use new ProcessDiversityType and ProcessSNR functions. All methods are much easier to read and understand now.*)
 (*Version 1.43: Retitled LargeMN method to Lopez-Benitez method, and recoded for speed. Also added Asymptotic method.*)
 (*Version 1.42: Changed IntegerMN method to support faster computation with FaddeevaDerivative function.*)
@@ -1228,13 +1229,13 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[n0_] := (1 / 2) (1 - Erf[((\[Lambda] - M n0 (1 + \[Gamma]0)) / (2 Sqrt[M n0])) / Sqrt[((M \[Gamma]0 Sqrt[2 n / m])/(2 Sqrt[M n0]))^2 + 1]]);
+	g[A_,B_] := Q[A Sqrt[2 / (B^2 + 1)]];
 
 	f := Which[
 		diversityType == "None",
-			g[1],
+			g[(\[Lambda] - M (1 + \[Gamma]0)) / (2 Sqrt[M]), - Sqrt[M / (2 m)] \[Gamma]0],
 		diversityType == "MRC",
-			g[1],
+			g[(\[Lambda] - M (1 + n \[Gamma]0)) / (2 Sqrt[M]), - Sqrt[M n / (2 m)] \[Gamma]0],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
@@ -1242,7 +1243,7 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 		diversityType == "SSC",
 			Undefined,
 		diversityType == "SLC",
-			g[n],
+			g[(\[Lambda] - M n (1 + \[Gamma]0)) / (2 Sqrt[M n]), - Sqrt[M / (2 m)] \[Gamma]0],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
