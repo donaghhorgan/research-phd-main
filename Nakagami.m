@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*02/11/2012*)
-(*1.45*)
+(*03/11/2012*)
+(*1.46*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.46: Finished updating IntegerMN method with FaddeevaDerivative-based algorithms.*)
 (*Version 1.45: Updated Asymptotic approximation for no diversity, MRC, SLC and SLS diversity cases.*)
 (*Version 1.44: Recoded Numerical, Sun, Herath, Digham and Annamalai's methods to use new ProcessDiversityType and ProcessSNR functions. All methods are much easier to read and understand now.*)
 (*Version 1.43: Retitled LargeMN method to Lopez-Benitez method, and recoded for speed. Also added Asymptotic method.*)
@@ -986,7 +987,7 @@ IntegerMNEGCLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,Optio
 	Which[
 		n == 2,
 			j0 = 0;
-			j/.FindRoot[1/2 Gamma[1/2]/2^(4m-2) Sum[(Gamma[2m+k]Gamma[2m+k])/Gamma[2m+1/2+k] (1/2)^k/k!,{k, j + 1, \[Infinity]}] == tol, {j, j0, 0, \[Infinity]}],
+			Quiet[j/.FindRoot[(1 - AWGNProbabilityOfFalseAlarm[M, \[Lambda]]) (1 / Gamma[m]^2) 2^(1 - 4m - j) Sqrt[\[Pi]] Gamma[2m + j + 1]^2 HypergeometricPFQRegularized[{1, 2m + j + 1, 2m + j + 1},{2 + j, 2m + 3 / 2 + j}, 1 / 2] == tol, {j, j0, 0, \[Infinity]}]],
 		n == 3,
 			Module[{l0, k0, f},
 				k0 = 0;
@@ -1041,14 +1042,20 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	
 	f := Which[
 		diversityType == "None",
-			AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (2 m Sqrt[M]), x],
+			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
+			],
 		diversityType == "MRC",
-			AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (2 m Sqrt[M]), x],
+			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
+			],
 		diversityType == "EGC",
 			lim = IntegerMNEGCLimit[M, \[Gamma], \[Lambda], m, n];
 			Which[
 				n == 2,
-					(Sqrt[\[Pi]] / 2^(4m - 2)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + (1 / 2)])) Total[Table[(Pochhammer[2m, k] / Pochhammer[2m + (1 / 2), k]) ((1 / 2)^k / k!) Gamma[x + k] (AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (4 m Sqrt[M]), x + k]), {k,0,lim}]],
+					With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m n)},
+						AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (2 Sqrt[\[Pi]] / 2^(4m - 1)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + 1 / 2])) Total[Table[(Pochhammer[2m, s] / Pochhammer[2m + 1 / 2, s]) (Gamma[2m + s] / s!) (1 / 2)^s g[A, B, 2m + s], {s, 0, lim}]]
+					],
 				n == 3,
 					(* Untested *)
 					(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) (*D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(6 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t,3m+l+k-1}]*),{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
@@ -1056,17 +1063,25 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 					Undefined
 			],
 		diversityType == "SC",
-			(n / Gamma[m]) Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (Gamma[m + k] / (1 + l)^(m+k)) (AWGNProbabilityOfFalseAlarm[M,\[Lambda]] + g[(\[Lambda] - M) / (2 Sqrt[M]), - (M \[Gamma]0) / (2 m (l + 1) Sqrt[M]), m + k]), {k, 0, l (m - 1)}]], {l, 0, n - 1}]],
+			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (n / Gamma[m]) Total[Table[(-1)^l Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (1 / (l + 1)^(m + k)) g[A, B / (l + 1), m + k], {k, 0, l (m - 1)}]], {l, 0, n - 1}]]
+			],
 		diversityType == "SSC",
-			(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"] + (((1 + Erf[(M + M \[Gamma]t - \[Lambda])/(2 Sqrt[M])]) / 2) (GammaRegularized[m, (m \[Gamma]t)/\[Gamma]0])) + (1 / 2)Total[Table[(-1)^p / p! Total[Table[Binomial[p, l] Re[((-I/(2 (-Sqrt[M] \[Gamma]0 / (2 m))))^(p - l)) FaddeevaDerivative[p - l, N[-I (((\[Lambda] - M(1 + \[Gamma]t)) / (2 Sqrt[M])) + (1 / (2 (-Sqrt[M] \[Gamma]0 / (2 m))))),30]]] (-m \[Gamma]t / \[Gamma]0)^l Exp[-((\[Lambda] - M(1 + \[Gamma]t)) / (2 Sqrt[M]))^2 - (m \[Gamma]t / \[Gamma]0)], {l, 0, p}]], {p, 0, m - 1}]],
+			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
+				With[{C = A + B (m \[Gamma]t / \[Gamma]0)},
+					(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"] + GammaRegularized[m, m \[Gamma]t / \[Gamma]0] ((1 / 2) (1 - Erf[C])) + ((1 / 2) Exp[-C^2] Total[Table[((I/(2 B))^l / l!) GammaRegularized[m - l, m \[Gamma]t / \[Gamma]0] FaddeevaDerivative[l, N[-I (C + (1 / (2 B))),30]], {l, 0, m - 1}]] // Re)
+				]
+			],
 		diversityType == "SLC",
-			AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] + g[(\[Lambda] - M n) / (2 Sqrt[M n]), - (M \[Gamma]0) / (2 m Sqrt[M n]), x],
+			With[{A = (\[Lambda] - M n) / (2 Sqrt[M n]), B = - Sqrt[M] \[Gamma]0 / (2 m Sqrt[n])},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n] + g[A, B, x]
+			],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
-					1 - Product[1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
+					1 - Product[1 - IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], m, DiversityType->"None"], {i, n}],
 				!ListQ[\[Gamma]0],
-					1 - (1 - IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
+					1 - (1 - IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
