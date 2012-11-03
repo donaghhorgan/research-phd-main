@@ -80,11 +80,11 @@ Q::usage="Q[x] calculates the value of Gaussian Q-function at x.";
 Q[x_]:=1-CDF[NormalDistribution[], x]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Inverse Q-function*)
 
 
-InverseQ::usage="InverseQ[P] calculates the value of the inverse of the Gaussian Q-function at P."
+InverseQ::usage="InverseQ[P] calculates the value of the inverse of the Gaussian Q-function at P.";
 InverseQ[P_]:=InverseCDF[NormalDistribution[], 1 - P]
 
 
