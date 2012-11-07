@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*07/11/2012*)
-(*1.22*)
+(*1.23*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.23: Moved LowSNRErrorBound to the Nakagami package.*)
 (*Version 1.22: Moved help functions to Network package.*)
 (*Version 1.21: Added generic help functions for consistent documentation.*)
 (*Version 1.2: Recoded ProbabilityOfFalseAlarm, ProbabilityOfDetection and \[Lambda] functions, so they are easier to read.*)
@@ -94,13 +95,6 @@ AWGNProbabilityOfDetection;
 
 
 AWGNSampleComplexity;
-
-
-(* ::Subsection::Closed:: *)
-(*Miscellaneous*)
-
-
-LowSNRErrorBound;
 
 
 (* ::Section:: *)
@@ -283,37 +277,6 @@ Options[\[Lambda]]={Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], Div
 AWGNSampleComplexity::usage="AWGNSampleComplexity[\[Gamma], Pf, Pd] calculates the approximate number of samples required for a single energy detector to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.
 AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the approximate number of samples required for a cooperative network to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.";
 AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1]:= (2 / n) * ((InverseQ[Pf] - InverseQ[Pd]) / \[Gamma])^2
-
-
-(* ::Subsection::Closed:: *)
-(*Miscellaneous*)
-
-
-Options[LowSNRErrorBound] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
-LowSNRErrorBound::usage="LowSNRErrorBound[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRErrorBound];
-LowSNRErrorBound[M_,\[Lambda]_] := LowSNRErrorBound[M, \[Lambda]] = Module[{n = 1},
-	LowSNRErrorBound[M, \[Lambda], n, DiversityType->"None"]
-]
-LowSNRErrorBound[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
-
-	(* Check for invalid combinations of inputs *)
-	If[diversityType == "None" && n > 1, Return[Undefined]];
-
-	g[\[Epsilon]_?NumericQ] := Which[
-		diversityType == "None" || diversityType == "SLC",
-			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
-		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
-			LowSNRErrorBound[M, \[Lambda]],
-		diversityType == "SLS",
-			Abs[(1 / 2 - LowSNRErrorBound[M, \[Lambda]])^n - (1 / 2)^n],
-		True,
-			Undefined
-	];
-
-	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
-]
 
 
 End[]
