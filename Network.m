@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*07/11/2012*)
-(*1.32*)
+(*1.33*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.33: Added TimingHelp and ToleranceHelp functions and enabled symbol protection.*)
 (*Version 1.32: Added help generation functions.*)
 (*Version 1.31: Added support for diversity reception.*)
 (*Version 1.3: Added support for n-bit decisions.*)
@@ -54,10 +55,10 @@
 (*Public*)
 
 
-Protect[ChannelType, DiversityType, DecisionBits, CorrelationCoefficient, Algorithm, LowSNR, Timed, MaxTime, DatabaseLookup, DatabaseCaching, MNSwitchingPoint];
-
-
 BeginPackage["Network`"];
+
+
+Protect[ChannelType, DiversityType, DecisionBits, CorrelationCoefficient, Algorithm, LowSNR, Timed, MaxTime, DatabaseLookup, DatabaseCaching, MNSwitchingPoint];
 
 
 (* ::Subsection:: *)
@@ -132,9 +133,21 @@ SampleComplexity;
 
 
 DefaultHelp;
+
+
 MethodHelp;
+
+
 LowSNRHelp;
+
+
 DiversityTypeHelp;
+
+
+TimingHelp;
+
+
+ToleranceHelp;
 
 
 (* ::Section:: *)
@@ -155,14 +168,41 @@ Needs["DBLogging`"];
 (*Help generation*)
 
 
-DefaultHelp[fName_,option_] := "By default, "<>ToString[option]<>"\[Rule]\""<>ToString[option/.Options[fName]]<>"\".";
+DefaultHelp[fName_,optionSpec_] := Module[{help, n, options, defaultOption},
+	If[ListQ[optionSpec], options = optionSpec, options = {optionSpec}];
+	help = "By default, ";
+	For[n = 1, n <= Length[options], n++,
+		Which[
+			1 < n < Length[options],
+				help = help <> ", ",
+			n == Length[options] && n != 1,
+				help = help <> " and "
+		];
+		defaultOption = options[[n]]/.Options[fName];
+		If[StringQ[defaultOption],
+			defaultOption = "\"" <> ToString[defaultOption] <> "\"",
+			If[NumericQ[defaultOption] && !IntegerQ[defaultOption],
+				defaultOption = ToString[defaultOption, InputForm],
+				defaultOption = ToString[defaultOption]
+			]
+		];
+		help = help <> ToString[options[[n]]] <> "\[Rule]" <> defaultOption;
+	];
+	help = help <> "."
+]
+
+
 MethodHelp[fName_] := "The following methods may be specified:
 
 Method\[Rule]\"Approximate\"
 Method\[Rule]\"Exact\"
 
-"<>DefaultHelp[fName,Method];
+" <> Evaluate[DefaultHelp[fName,Method]];
+
+
 LowSNRHelp := "If Method\[Rule]\"Approximate\", then the LowSNR option can be used to specify whether to use a low signal to noise ratio approximation. "<>DefaultHelp[AWGNProbabilityOfDetection,LowSNR];
+
+
 DiversityTypeHelp[fName_] := "The following diversity reception schemes may be specified:
 
 DiversityType\[Rule]\"None\"
@@ -174,6 +214,12 @@ DiversityType\[Rule]\"SLC\"
 DiversityType\[Rule]\"SLS\"
 
 "<>DefaultHelp[fName,DiversityType];
+
+
+TimingHelp[fName_] := "Function timing options may be specified using the Timed option. " <> DefaultHelp[fName, {Timed, MaxIterations, MaxTime}] <> " If Timed\[Rule]True, then a {Pd, time} list of values will be returned."
+
+
+ToleranceHelp[fName_] := "The calculation tolerance may be specified using the Tolerance option. " <> DefaultHelp[fName, Tolerance];
 
 
 (* ::Subsection:: *)
@@ -299,7 +345,7 @@ ProbabilityOfAcquisition[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{Relevant
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Probability of detection (general)*)
 
 
@@ -496,7 +542,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Probability of missed detection (general)*)
 
 
