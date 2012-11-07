@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*07/11/2012*)
-(*1.48*)
+(*1.49*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.49: Moved error bounds to separate section, added LowSNRAssumptionErrorNakagami from AWGN package.*)
 (*Version 1.48: Updated all function help definitions and fixed bug where LargeSNR algorithm was not publicly accessible.*)
 (*Version 1.47: Moved ProcessDiversityType and ProcessSNR functions to the Extras package.*)
 (*Version 1.46: Finished updating IntegerMN method with FaddeevaDerivative-based algorithms.*)
@@ -77,7 +78,7 @@ Protect[Resolution];
 NakagamiPDF;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Detection probability*)
 
 
@@ -137,9 +138,6 @@ IntegerMNNakagamiProbabilityOfDetection;
 (*Asymptotic method*)
 
 
-AsymptoticErrorNakagami;
-
-
 AsymptoticNakagamiProbabilityOfDetection;
 
 
@@ -162,6 +160,16 @@ LopezBenitezNakagamiProbabilityOfDetection;
 
 
 NGaussianNakagamiProbabilityOfDetection;
+
+
+(* ::Subsection::Closed:: *)
+(*Detection probability error bounds*)
+
+
+LowSNRAssumptionErrorNakagami;
+
+
+AsymptoticErrorNakagami;
 
 
 (* ::Subsection::Closed:: *)
@@ -311,7 +319,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Detection probability*)
 
 
@@ -554,6 +562,8 @@ HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 	HerathNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[HerathNakagamiProbabilityOfDetection]]
 ]
 HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, \[Psi], totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
+	lim = HerathNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType];
+
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -563,8 +573,6 @@ HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 	(* Check for invalid combinations of inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
-
-	lim = HerathNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->diversityType];
 
 	f := Which[
 		diversityType == "None",
@@ -625,7 +633,7 @@ HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Opt
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
 	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
-	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType]//N;
 
 	(* Check for invalid combinations of inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
@@ -1089,35 +1097,6 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 ]
 
 
-Options[AsymptoticErrorNakagami]={DiversityType->OptionValue[AsymptoticNakagamiProbabilityOfDetection,DiversityType]};
-AsymptoticErrorNakagami::usage="AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
-AsymptoticErrorNakagami[Pf_,a_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, z},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
-
-	g[z_?NumericQ]:=Which[
-		diversityType == "None",
-			Undefined,
-		diversityType == "MRC",
-			Undefined,
-		diversityType == "EGC",
-			Undefined,
-		diversityType == "SC",
-			Undefined,
-		diversityType == "SSC",
-			Undefined,
-		diversityType == "SLC",
-			Erfc[Sqrt[a/2]] (Pf/2) + (1 - Pf) (GammaRegularized[a, z] - 1/2 Erfc[(z - a)/Sqrt[2 a]]),
-		diversityType == "SLS",
-			Undefined,
-		True,
-			Undefined
-	];
-
-	NMaximize[{Abs[g[z]],z>=0},{z,0,a}][[1]]
-]
-
-
 (* ::Subsubsection::Closed:: *)
 (*Lopez-Benitez asymptotic method*)
 
@@ -1186,7 +1165,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Numerical Gaussian method*)
 
 
@@ -1246,6 +1225,74 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 		{result,totaltime/iterations},
 		f
 	]
+]
+
+
+(* ::Subsection::Closed:: *)
+(*Detection probability error bounds*)
+
+
+(* ::Subsubsection::Closed:: *)
+(*Low SNR assumption error*)
+
+
+Options[LowSNRAssumptionErrorNakagami] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
+LowSNRAssumptionErrorNakagami::usage="LowSNRAssumptionErrorNakagami[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorNakagami];
+LowSNRAssumptionErrorNakagami[M_,\[Lambda]_] := LowSNRAssumptionErrorNakagami[M, \[Lambda]] = Module[{n = 1},
+	LowSNRAssumptionErrorNakagami[M, \[Lambda], n, DiversityType->"None"]
+]
+LowSNRAssumptionErrorNakagami[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	g[\[Epsilon]_?NumericQ] := Which[
+		diversityType == "None" || diversityType == "SLC",
+			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
+		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+			LowSNRAssumptionErrorNakagami[M, \[Lambda]],
+		diversityType == "SLS",
+			Abs[(1 / 2 - LowSNRAssumptionErrorNakagami[M, \[Lambda]])^n - (1 / 2)^n],
+		True,
+			Undefined
+	];
+
+	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Asymptotic approximation error*)
+
+
+Options[AsymptoticErrorNakagami]={DiversityType->OptionValue[AsymptoticNakagamiProbabilityOfDetection,DiversityType]};
+AsymptoticErrorNakagami::usage="AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
+AsymptoticErrorNakagami[Pf_,a_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, z},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	g[z_?NumericQ]:=Which[
+		diversityType == "None",
+			Undefined,
+		diversityType == "MRC",
+			Undefined,
+		diversityType == "EGC",
+			Undefined,
+		diversityType == "SC",
+			Undefined,
+		diversityType == "SSC",
+			Undefined,
+		diversityType == "SLC",
+			Erfc[Sqrt[a/2]] (Pf/2) + (1 - Pf) (GammaRegularized[a, z] - 1/2 Erfc[(z - a)/Sqrt[2 a]]),
+		diversityType == "SLS",
+			Undefined,
+		True,
+			Undefined
+	];
+
+	NMaximize[{Abs[g[z]],z>=0},{z,0,a}][[1]]
 ]
 
 
