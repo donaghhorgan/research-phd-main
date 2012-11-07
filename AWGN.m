@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*06/11/2012*)
-(*1.2*)
+(*07/11/2012*)
+(*1.21*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.21: Added generic help functions for consistent documentation.*)
 (*Version 1.2: Recoded ProbabilityOfFalseAlarm, ProbabilityOfDetection and \[Lambda] functions, so they are easier to read.*)
 (*Version 1.12: Added EGC support.*)
 (*Version 1.11: Added protection for symbols.*)
@@ -80,9 +81,6 @@ AWGNProbabilityOfFalseAlarm;
 (*Probability of detection*)
 
 
-LowSNRErrorBound;
-
-
 AWGNProbabilityOfDetection;
 
 
@@ -100,6 +98,13 @@ AWGNProbabilityOfDetection;
 AWGNSampleComplexity;
 
 
+(* ::Subsection::Closed:: *)
+(*Miscellaneous*)
+
+
+LowSNRErrorBound;
+
+
 (* ::Section:: *)
 (*Private*)
 
@@ -109,22 +114,41 @@ Begin["`Private`"];
 
 <<QFunction`;
 <<Extras`;
+<<Network`;
+
+
+(* ::Subsection::Closed:: *)
+(*Help*)
+
+
+DefaultHelp[fName_,option_] := "By default, "<>ToString[option]<>"\[Rule]\""<>ToString[option/.Options[fName]]<>"\".";
+MethodHelp[fName_] := "The following methods may be specified:
+
+Method\[Rule]\"Approximate\"
+Method\[Rule]\"Exact\"
+
+"<>DefaultHelp[fName,Method];
+LowSNRHelp := "If Method\[Rule]\"Approximate\", then the LowSNR option can be used to specify whether to use a low signal to noise ratio approximation. "<>DefaultHelp[AWGNProbabilityOfDetection,LowSNR];
+DiversityTypeHelp[fName_] := "The following diversity reception schemes may be specified:
+
+DiversityType\[Rule]\"None\"
+DiversityType\[Rule]\"MRC\"
+DiversityType\[Rule]\"EGC\"
+DiversityType\[Rule]\"SC\"
+DiversityType\[Rule]{\"SSC\", \[Gamma]t} (where \[Gamma]t is the threshold switching value)
+DiversityType\[Rule]\"SLC\"
+DiversityType\[Rule]\"SLS\"
+
+"<>DefaultHelp[fName,DiversityType];
 
 
 (* ::Subsection::Closed:: *)
 (*PDF of the recieved energy*)
 
 
-Options[AWGNPDF] = {Method->"Exact"};
-AWGNPDF::usage="AWGNPDF[M, \!\(\*OverscriptBox[\(\[Gamma]\), \(_\)]\), x] evaluates the probability density function of the recieved energy at a single energy detector operating on an AWGN channel at x.
-AWGNPDF[M, \!\(\*OverscriptBox[\(\[Gamma]\), \(_\)]\), x, n] evaluates the probability density function of the recieved energy at the fusion center of a cooperative network operating on an AWGN fading channel at x.
-
-The following methods can be given:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[AWGNPDF]]<>"\".";
+Options[AWGNPDF] = {Method->OptionValue[ProbabilityOfDetection,Method]};
+AWGNPDF::usage="AWGNPDF[M, \[Gamma], x] evaluates the probability density function of the recieved energy at a single energy detector operating on an AWGN channel at x.
+AWGNPDF[M, \[Gamma], x, n] evaluates the probability density function of the recieved energy at the fusion center of a cooperative network operating on an AWGN fading channel at x.\n\n"<>MethodHelp[AWGNPDF];
 AWGNPDF[M_,\[Gamma]_,x_,OptionsPattern[]]:=Module[{n = 1},AWGNPDF[M,\[Gamma],x,n,Method->OptionValue[Method]]]
 AWGNPDF[M_,\[Gamma]_,x_,n_,OptionsPattern[]]:=Switch[OptionValue[Method],
 	"Exact",
@@ -144,28 +168,9 @@ AWGNPDF[M_,\[Gamma]_,x_,n_,OptionsPattern[]]:=Switch[OptionValue[Method],
 (*Probability of false alarm*)
 
 
-Options[AWGNProbabilityOfFalseAlarm]={Method->"Approximate", DiversityType->"SLC"};
+Options[AWGNProbabilityOfFalseAlarm]={Method->OptionValue[ProbabilityOfFalseAlarm,Method], DiversityType->OptionValue[ProbabilityOfFalseAlarm,DiversityType]};
 AWGNProbabilityOfFalseAlarm::usage="AWGNProbabilityOfFalseAlarm[M, \[Lambda]] calculates the probability of false alarm for a single energy detector operating on an AWGN channel.
-AWGNProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for a cooperative network operating on an AWGN channel.
-
-The following methods may be specified:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[AWGNProbabilityOfFalseAlarm]]<>"\".
-
-In addition, the following diversity reception schemes may be specified:
-
-DiversityType->\"None\"
-DiversityType->\"MRC\"
-DiversityType->\"EGC\"
-DiversityType->\"SC\"
-DiversityType->\"SSC\"
-DiversityType->\"SLC\"
-DiversityType->\"SLS\"
-
-By default, DiversityType->"<>ToString[DiversityType/.Options[AWGNProbabilityOfFalseAlarm]]<>" if n is specified and DiversityType->\"None\" otherwise.";
+AWGNProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for energy detection with diversity reception in an AWGN channel.\n\n"<>MethodHelp[AWGNProbabilityOfFalseAlarm]<>"\n\n"<>DiversityTypeHelp[AWGNProbabilityOfFalseAlarm];
 AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfFalseAlarm]]]
@@ -203,57 +208,9 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversit
 (*Probability of detection*)
 
 
-Options[LowSNRErrorBound] = {DiversityType->"SLC"};
-LowSNRErrorBound::usage="LowSNRErrorBound[M, \[Lambda], n] gives the upper bound for the error due to the low SNR approximation.";
-LowSNRErrorBound[M_,\[Lambda]_] := LowSNRErrorBound[M, \[Lambda]] = Module[{n = 1},
-	LowSNRErrorBound[M, \[Lambda], n, DiversityType->"None"]
-]
-LowSNRErrorBound[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
-
-	(* Check for invalid combinations of inputs *)
-	If[diversityType == "None" && n > 1, Return[Undefined]];
-
-	g[\[Epsilon]_?NumericQ] := Which[
-		diversityType == "None" || diversityType == "SLC",
-			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
-		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
-			LowSNRErrorBound[M, \[Lambda]],
-		diversityType == "SLS",
-			Abs[(1 / 2 - LowSNRErrorBound[M, \[Lambda]])^n - (1 / 2)^n],
-		True,
-			Undefined
-	];
-
-	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
-]
-
-
-Options[AWGNProbabilityOfDetection]={Method->"Approximate", LowSNR->True, DiversityType->"SLC"};
+Options[AWGNProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method], LowSNR->OptionValue[ProbabilityOfDetection,LowSNR], DiversityType->OptionValue[ProbabilityOfDetection,DiversityType]};
 AWGNProbabilityOfDetection::usage="AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda]] calculates the approximate probability of detection for a single energy detector operating on an AWGN channel.
-AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the approximate probability of detection for a cooperative network operating on an AWGN channel.
-
-The following methods may be specified:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[AWGNProbabilityOfDetection]]<>"\".
-
-If the approximate method is specified, the LowSNR option can be used to specify whether to use a low signal to noise ratio approximation. By default, LowSNR\[Rule]"<>ToString[LowSNR/.Options[AWGNProbabilityOfDetection]]<>".
-
-In addition, the following diversity reception schemes may be specified:
-
-DiversityType->\"None\"
-DiversityType->\"MRC\"
-DiversityType->\"EGC\"
-DiversityType->\"SC\"
-DiversityType->\"SSC\"
-DiversityType->\"SLC\"
-DiversityType->\"SLS\"
-
-By default, DiversityType->"<>ToString[DiversityType/.Options[AWGNProbabilityOfDetection]]<>" if n is specified and DiversityType->\"None\" otherwise.";
+AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the approximate probability of detection for energy detection with diversity reception in an AWGN channel.\n\n"<>MethodHelp[AWGNProbabilityOfDetection]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[AWGNProbabilityOfDetection];
 AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfDetection]]]
@@ -313,28 +270,9 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[
 (*Threshold*)
 
 
-Options[\[Lambda]]={Method->"Approximate", DiversityType->"SLC"};
+Options[\[Lambda]]={Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], DiversityType->OptionValue[AWGNProbabilityOfFalseAlarm,DiversityType]};
 \[Lambda]::usage="\[Lambda][M, Pf] calculates a threshold suitable for use in the calculation of the decision probabilities for a single energy detector.
-\[Lambda][M, Pf, n] calculates a threshold suitable for use in the calculation of the fusion center decision probabilities when Nb = \[Infinity].
-
-The following methods may be specified:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[\[Lambda]]]<>"\".
-
-In addition, the following diversity reception schemes may be specified:
-
-DiversityType->\"None\"
-DiversityType->\"MRC\"
-DiversityType->\"EGC\"
-DiversityType->\"SC\"
-DiversityType->\"SSC\"
-DiversityType->\"SLC\"
-DiversityType->\"SLS\"
-
-By default, DiversityType->"<>ToString[DiversityType/.Options[\[Lambda]]]<>" if n is specified and DiversityType->\"None\" otherwise.";
+\[Lambda][M, Pf, n] calculates a threshold suitable for use in the calculation of the decision probabilities for energy detection with diversity reception.\n\n"<>MethodHelp[\[Lambda]]<>"\n\n"<>DiversityTypeHelp[\[Lambda]];
 \[Lambda][M_,Pf_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[\[Lambda]][[All,1]]],Options[target][[All,1]]];
 	\[Lambda][M,Pf,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[\[Lambda]]]]
@@ -372,6 +310,37 @@ By default, DiversityType->"<>ToString[DiversityType/.Options[\[Lambda]]]<>" if 
 AWGNSampleComplexity::usage="AWGNSampleComplexity[\[Gamma], Pf, Pd] calculates the approximate number of samples required for a single energy detector to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.
 AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the approximate number of samples required for a cooperative network to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.";
 AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1]:= (2 / n) * ((InverseQ[Pf] - InverseQ[Pd]) / \[Gamma])^2
+
+
+(* ::Subsection::Closed:: *)
+(*Miscellaneous*)
+
+
+Options[LowSNRErrorBound] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
+LowSNRErrorBound::usage="LowSNRErrorBound[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRErrorBound];
+LowSNRErrorBound[M_,\[Lambda]_] := LowSNRErrorBound[M, \[Lambda]] = Module[{n = 1},
+	LowSNRErrorBound[M, \[Lambda], n, DiversityType->"None"]
+]
+LowSNRErrorBound[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	g[\[Epsilon]_?NumericQ] := Which[
+		diversityType == "None" || diversityType == "SLC",
+			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
+		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+			LowSNRErrorBound[M, \[Lambda]],
+		diversityType == "SLS",
+			Abs[(1 / 2 - LowSNRErrorBound[M, \[Lambda]])^n - (1 / 2)^n],
+		True,
+			Undefined
+	];
+
+	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+]
 
 
 End[]
