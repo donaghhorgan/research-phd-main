@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*07/11/2012*)
-(*1.21*)
+(*1.22*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.22: Moved help functions to Network package.*)
 (*Version 1.21: Added generic help functions for consistent documentation.*)
 (*Version 1.2: Recoded ProbabilityOfFalseAlarm, ProbabilityOfDetection and \[Lambda] functions, so they are easier to read.*)
 (*Version 1.12: Added EGC support.*)
@@ -115,31 +116,6 @@ Begin["`Private`"];
 <<QFunction`;
 <<Extras`;
 <<Network`;
-
-
-(* ::Subsection::Closed:: *)
-(*Help*)
-
-
-DefaultHelp[fName_,option_] := "By default, "<>ToString[option]<>"\[Rule]\""<>ToString[option/.Options[fName]]<>"\".";
-MethodHelp[fName_] := "The following methods may be specified:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-"<>DefaultHelp[fName,Method];
-LowSNRHelp := "If Method\[Rule]\"Approximate\", then the LowSNR option can be used to specify whether to use a low signal to noise ratio approximation. "<>DefaultHelp[AWGNProbabilityOfDetection,LowSNR];
-DiversityTypeHelp[fName_] := "The following diversity reception schemes may be specified:
-
-DiversityType\[Rule]\"None\"
-DiversityType\[Rule]\"MRC\"
-DiversityType\[Rule]\"EGC\"
-DiversityType\[Rule]\"SC\"
-DiversityType\[Rule]{\"SSC\", \[Gamma]t} (where \[Gamma]t is the threshold switching value)
-DiversityType\[Rule]\"SLC\"
-DiversityType\[Rule]\"SLS\"
-
-"<>DefaultHelp[fName,DiversityType];
 
 
 (* ::Subsection::Closed:: *)
