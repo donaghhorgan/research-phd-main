@@ -54,9 +54,6 @@
 (*Public*)
 
 
-Protect[LowSNR, DiversityType];
-
-
 BeginPackage["AWGN`"];
 
 
