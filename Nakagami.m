@@ -1190,7 +1190,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 (*Numerical Gaussian method*)
 
 
-Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations],LowSNR->OptionValue[NakagamiProbabilityOfDetection,LowSNR]};
 NGaussianNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NGaussianNakagamiProbabilityOfDetection, "NGaussian"];
 NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
