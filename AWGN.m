@@ -27,20 +27,21 @@
 (*along with this program. If not, see http://www.gnu.org/licenses.*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Version information*)
 
 
 (* ::Text:: *)
-(*14/09/2012*)
-(*1.12*)
+(*06/11/2012*)
+(*1.2*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Changelog*)
 
 
 (* ::Text:: *)
+(*Version 1.2: Recoded ProbabilityOfFalseAlarm, ProbabilityOfDetection and \[Lambda] functions, so they are easier to read.*)
 (*Version 1.12: Added EGC support.*)
 (*Version 1.11: Added protection for symbols.*)
 (*Version 1.1: Added diversity types to functions.*)
@@ -79,6 +80,9 @@ AWGNProbabilityOfFalseAlarm;
 (*Probability of detection*)
 
 
+LowSNRErrorBound;
+
+
 AWGNProbabilityOfDetection;
 
 
@@ -103,7 +107,8 @@ AWGNSampleComplexity;
 Begin["`Private`"];
 
 
-Needs["QFunction`"];
+<<QFunction`;
+<<Extras`;
 
 
 (* ::Subsection::Closed:: *)
@@ -165,47 +170,29 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{n = 1, Rele
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfFalseAlarm]]]
 ]
-AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, diversityType = OptionValue[DiversityType], method = OptionValue[Method]},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
-	Which[
+AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, method = OptionValue[Method], g},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	g[a_] := Which[
 		method == "Approximate",
-			Which[
-				!ListQ[diversityType] && diversityType == "None",
-					Q[(\[Lambda] - M) / Sqrt[2M]],
-				!ListQ[diversityType] && diversityType == "MRC",
-					Q[(\[Lambda] - M) / Sqrt[2M]],
-				!ListQ[diversityType] && diversityType == "EGC",
-					Q[(\[Lambda] - M) / Sqrt[2M]],
-				!ListQ[diversityType] && diversityType == "SC",
-					Q[(\[Lambda] - M) / Sqrt[2M]],
-				ListQ[diversityType] && diversityType[[1]] == "SSC",
-					Q[(\[Lambda] - M) / Sqrt[2M]],
-				!ListQ[diversityType] && diversityType == "SLC",
-					Q[(\[Lambda] - M n) / Sqrt[2M n]],
-				!ListQ[diversityType] && diversityType == "SLS",
-					1 - (1 - Q[(\[Lambda] - M) / Sqrt[2M]])^n,
-				True,
-					Undefined
-			],
+			Q[(\[Lambda] - M a) / Sqrt[2M a]],
 		method == "Exact",
-			Which[
-				!ListQ[diversityType] && diversityType == "None",
-					GammaRegularized[M / 2, \[Lambda] / 2],
-				!ListQ[diversityType] && diversityType == "MRC",
-					GammaRegularized[M / 2, \[Lambda] / 2],
-				!ListQ[diversityType] && diversityType == "EGC",
-					GammaRegularized[M / 2, \[Lambda] / 2],
-				!ListQ[diversityType] && diversityType == "SC",
-					GammaRegularized[M / 2, \[Lambda] / 2],
-				ListQ[diversityType] && diversityType[[1]] == "SSC",
-					GammaRegularized[M / 2, \[Lambda] / 2],
-				!ListQ[diversityType] && diversityType == "SLC",
-					GammaRegularized[M n / 2, \[Lambda] / 2],
-				!ListQ[diversityType] && diversityType == "SLS",
-					1 - (1 - GammaRegularized[M / 2, \[Lambda] / 2])^n,
-				True,
-					Undefined
-			],
+			GammaRegularized[M a / 2, \[Lambda] / 2],
+		True,
+			Undefined
+	];
+
+	Which[
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+			g[1],
+		diversityType == "SLC",
+			g[n],
+		diversityType == "SLS",
+			1 - (1 - g[1])^n,
 		True,
 			Undefined
 	]
@@ -216,7 +203,34 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{Relevant
 (*Probability of detection*)
 
 
-Options[AWGNProbabilityOfDetection]={Method->"Approximate", LowSNR->True, DiversityType->"SLC"}
+Options[LowSNRErrorBound] = {DiversityType->"SLC"};
+LowSNRErrorBound::usage="LowSNRErrorBound[M, \[Lambda], n] gives the upper bound for the error due to the low SNR approximation.";
+LowSNRErrorBound[M_,\[Lambda]_] := LowSNRErrorBound[M, \[Lambda]] = Module[{n = 1},
+	LowSNRErrorBound[M, \[Lambda], n, DiversityType->"None"]
+]
+LowSNRErrorBound[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	g[\[Epsilon]_?NumericQ] := Which[
+		diversityType == "None" || diversityType == "SLC",
+			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
+		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+			LowSNRErrorBound[M, \[Lambda]],
+		diversityType == "SLS",
+			Abs[(1 / 2 - LowSNRErrorBound[M, \[Lambda]])^n - (1 / 2)^n],
+		True,
+			Undefined
+	];
+
+	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+]
+
+
+Options[AWGNProbabilityOfDetection]={Method->"Approximate", LowSNR->True, DiversityType->"SLC"};
 AWGNProbabilityOfDetection::usage="AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda]] calculates the approximate probability of detection for a single energy detector operating on an AWGN channel.
 AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the approximate probability of detection for a cooperative network operating on an AWGN channel.
 
@@ -244,162 +258,48 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{n 
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfDetection]]]
 ]
-AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, diversityType = OptionValue[DiversityType], method = OptionValue[Method], \[Gamma]t},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	Which[
+AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, method = OptionValue[Method], g},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	g[a_,b_] := Which[
 		method == "Approximate",
-			Which[
-				!ListQ[diversityType] && (diversityType == "None") && !ListQ[\[Gamma]],
-					If[OptionValue[LowSNR],
-						Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M]],
-						Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M (1 + 2 \[Gamma])]]
-					],
-				!ListQ[diversityType] && diversityType == "MRC",
-					Which[
-						ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M (1 + 2 Total[\[Gamma]])]]
-							],
-						!ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M (1 + 2 n \[Gamma])]]
-							],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "EGC",
-					Which[
-						ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + Total[\[Gamma]])) / Sqrt[2M (1 + 2 Total[\[Gamma]])]]
-							],
-						!ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + n \[Gamma])) / Sqrt[2M (1 + 2 n \[Gamma])]]
-							],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "SC",
-					Which[
-						ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + Max[\[Gamma]])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + Max[\[Gamma]])) / Sqrt[2M (1 + 2 Max[\[Gamma]])]]
-							],
-						!ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M (1 + 2 \[Gamma])]]
-							],
-						True,
-							Undefined
-					],
-				ListQ[diversityType] && (diversityType[[1]] == "SSC") && ListQ[\[Gamma]] && (Length[\[Gamma]] == 2),
-					\[Gamma]t = diversityType[[2]];
-					Which[
-						\[Gamma][[1]] < \[Gamma]t,
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + \[Gamma][[1]])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + \[Gamma][[1]])) / Sqrt[2M (1 + 2 \[Gamma][[1]])]]
-							],
-						\[Gamma][[1]] >= \[Gamma]t,
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (1 + \[Gamma][[2]])) / Sqrt[2M]],
-								Q[(\[Lambda] - M (1 + \[Gamma][[2]])) / Sqrt[2M (1 + 2 \[Gamma][[2]])]]
-							],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "SLC",
-					Which[
-						ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M (n + Total[\[Gamma]])) / Sqrt[2M n]],
-								Q[(\[Lambda] - M (n + Total[\[Gamma]])) / Sqrt[2M (n + 2 Total[\[Gamma]])]]
-							],
-						!ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								Q[(\[Lambda] - M n (1 + \[Gamma])) / Sqrt[2M n]],
-								Q[(\[Lambda] - M n (1 + \[Gamma])) / Sqrt[2M n (1 + 2\[Gamma])]]
-							],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "SLS",
-					Which[
-						ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								1 - Product[1 - Q[(\[Lambda] - M (1 + \[Gamma][[i]])) / Sqrt[2M]],{i,n}],
-								1 - Product[1 - Q[(\[Lambda] - M (1 + \[Gamma][[i]])) / Sqrt[2M (1 + 2\[Gamma][[i]])]],{i,n}]
-							],
-						!ListQ[\[Gamma]],
-							If[OptionValue[LowSNR],
-								1 - (1 - Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M]])^n,
-								1 - (1 - Q[(\[Lambda] - M (1 + \[Gamma])) / Sqrt[2M (1 + 2\[Gamma])]])^n
-							],
-						True,
-							Undefined
-					],
-				True,
-					Undefined
+			If[OptionValue[LowSNR],
+				Q[(\[Lambda] - M (a + b \[Gamma]0)) / Sqrt[2M a]],
+				Q[(\[Lambda] - M (a + b \[Gamma]0)) / Sqrt[2M (a + b 2 \[Gamma]0)]]
 			],
 		method == "Exact",
+			MarcumQ[M a / 2, Sqrt[M b \[Gamma]0], Sqrt[\[Lambda]]],
+		True,
+			Undefined
+	];
+
+	Which[
+		diversityType == "None" || diversityType == "SC",
+			g[1, 1],
+		diversityType == "MRC" || diversityType == "EGC",
+			g[1, n],
+		diversityType == "SSC" && ListQ[\[Gamma]] && (Length[\[Gamma]] == 2),
+			(* No \[Gamma]0 here - this is a special case *)
+			If[\[Gamma][[1]] >= \[Gamma]t,
+				AWGNProbabilityOfDetection[M, \[Gamma][[1]], \[Lambda], DiversityType->"None", Method->OptionValue[Method], LowSNR->OptionValue[LowSNR]],
+				AWGNProbabilityOfDetection[M, \[Gamma][[2]], \[Lambda], DiversityType->"None", Method->OptionValue[Method], LowSNR->OptionValue[LowSNR]]
+			],
+		diversityType == "SLC",
+			g[n, n],
+		diversityType == "SLS",
 			Which[
-				!ListQ[diversityType] && diversityType == "None" && !ListQ[\[Gamma]],
-					MarcumQ[M / 2, Sqrt[M \[Gamma]], Sqrt[\[Lambda]]],
-				!ListQ[diversityType] && diversityType == "MRC",
-					Which[
-						ListQ[\[Gamma]],
-							MarcumQ[M / 2, Sqrt[M Total[\[Gamma]]], Sqrt[\[Lambda]]],
-						!ListQ[\[Gamma]],
-							MarcumQ[M / 2, Sqrt[M \[Gamma]], Sqrt[\[Lambda]]],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "EGC",
-					Undefined,
-				!ListQ[diversityType] && diversityType == "SC",
-					Which[
-						ListQ[\[Gamma]],
-							MarcumQ[M / 2, Sqrt[M Max[\[Gamma]]], Sqrt[\[Lambda]]],
-						!ListQ[\[Gamma]],
-							MarcumQ[M / 2, Sqrt[M \[Gamma]], Sqrt[\[Lambda]]],
-						True,
-							Undefined
-					],
-				ListQ[diversityType] && (diversityType[[1]] == "SSC") && ListQ[\[Gamma]] && (Length[\[Gamma]] == 2),
-					\[Gamma]t = diversityType[[2]];
-					Which[
-						\[Gamma][[1]] < \[Gamma]t,
-							MarcumQ[M / 2, Sqrt[M \[Gamma][[1]]], Sqrt[\[Lambda]]],
-						\[Gamma][[1]] >= \[Gamma]t,
-							MarcumQ[M / 2, Sqrt[M \[Gamma][[2]]], Sqrt[\[Lambda]]],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "SLC",
-					Which[
-						ListQ[\[Gamma]],
-							MarcumQ[M n / 2, Sqrt[M Total[\[Gamma]]], Sqrt[\[Lambda]]],
-						!ListQ[\[Gamma]],
-							MarcumQ[M n / 2, Sqrt[M n \[Gamma]], Sqrt[\[Lambda]]],
-						True,
-							Undefined
-					],
-				!ListQ[diversityType] && diversityType == "SLS",
-					Which[
-						ListQ[\[Gamma]],
-							1 - Product[1 - MarcumQ[M / 2, Sqrt[M \[Gamma][[i]]], Sqrt[\[Lambda]]],{i,n}],
-						!ListQ[\[Gamma]],
-							1 - (1 - MarcumQ[M / 2, Sqrt[M \[Gamma]], Sqrt[\[Lambda]]])^n,
-						True,
-							Undefined
-					],
+				ListQ[\[Gamma]0],
+					1 - Product[1 - AWGNProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], DiversityType->"None", Method->OptionValue[Method], LowSNR->OptionValue[LowSNR]],{i,n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - AWGNProbabilityOfDetection[M, \[Gamma]0, \[Lambda], DiversityType->"None", Method->OptionValue[Method], LowSNR->OptionValue[LowSNR]])^n,
 				True,
 					Undefined
 			],
@@ -439,71 +339,26 @@ By default, DiversityType->"<>ToString[DiversityType/.Options[\[Lambda]]]<>" if 
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[\[Lambda]][[All,1]]],Options[target][[All,1]]];
 	\[Lambda][M,Pf,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[\[Lambda]]]]
 ]
-\[Lambda][M_,Pf_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Method], diversityType = OptionValue[DiversityType]},
+\[Lambda][M_,Pf_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Method], diversityType = OptionValue[DiversityType], \[Gamma]t, g},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	g[a_,b_] := Which[
+		method == "Exact",
+			2 InverseGammaRegularized[M a / 2, b],
+		method == "Approximate",
+			Sqrt[2M a] InverseQ[b] + M a,
+		True,
+			Undefined
+	];
+
 	Which[
-		!ListQ[diversityType] && diversityType == "None",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[Pf] + M,
-				True,
-				Undefined
-			],
-		!ListQ[diversityType] && diversityType == "MRC",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[Pf] + M,
-				True,
-				Undefined
-			],
-		!ListQ[diversityType] && diversityType == "EGC",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[Pf] + M,
-				True,
-				Undefined
-			],
-		!ListQ[diversityType] && diversityType == "SC",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[Pf] + M,
-				True,
-				Undefined
-			],
-		ListQ[diversityType] && diversityType[[1]] == "SSC",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[Pf] + M,
-				True,
-				Undefined
-			],
-		!ListQ[diversityType] && diversityType == "SLC",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M n / 2, Pf],
-				method == "Approximate",
-					Sqrt[2M n] InverseQ[Pf] + M n,
-				True,
-				Undefined
-			],
-		!ListQ[diversityType] && diversityType == "SLS",
-			Which[
-				method == "Exact",
-					2 InverseGammaRegularized[M / 2, 1 - (1 - Pf)^(1 / n)],
-				method == "Approximate",
-					Sqrt[2M] InverseQ[1 - (1 - Pf)^(1 / n)] + M,
-				True,
-				Undefined
-			],
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+			g[1, Pf],
+		diversityType == "SLC",
+			g[n, Pf],
+		diversityType == "SLS",
+			g[1, 1 - (1 - Pf)^(1 / n)],
 		True,
 			Undefined
 	]
