@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*07/11/2012*)
-(*1.49*)
+(*09/11/2012*)
+(*1.5*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.5: Finished polishing up error bound functions. SLS bound is very loose, but works.*)
 (*Version 1.49: Moved error bounds to separate section, added LowSNRAssumptionErrorNakagami from AWGN package.*)
 (*Version 1.48: Updated all function help definitions and fixed bug where LargeSNR algorithm was not publicly accessible.*)
 (*Version 1.47: Moved ProcessDiversityType and ProcessSNR functions to the Extras package.*)
@@ -319,7 +320,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Detection probability*)
 
 
@@ -1238,10 +1239,10 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 Options[LowSNRAssumptionErrorNakagami] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
 LowSNRAssumptionErrorNakagami::usage="LowSNRAssumptionErrorNakagami[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorNakagami];
-LowSNRAssumptionErrorNakagami[M_,\[Lambda]_] := LowSNRAssumptionErrorNakagami[M, \[Lambda]] = Module[{n = 1},
-	LowSNRAssumptionErrorNakagami[M, \[Lambda], n, DiversityType->"None"]
+LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_] := LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m] = Module[{n = 1},
+	LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m, n, DiversityType->"None"]
 ]
-LowSNRAssumptionErrorNakagami[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
+LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, \[Epsilon], \[Epsilon]max = 10},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 
@@ -1252,14 +1253,18 @@ LowSNRAssumptionErrorNakagami[M_,\[Lambda]_,n_,OptionsPattern[]] := Module[{dive
 		diversityType == "None" || diversityType == "SLC",
 			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
 		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
-			LowSNRAssumptionErrorNakagami[M, \[Lambda]],
-		diversityType == "SLS",
-			Abs[(1 / 2 - LowSNRAssumptionErrorNakagami[M, \[Lambda]])^n - (1 / 2)^n],
+			LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m],
 		True,
 			Undefined
 	];
 
-	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+	If[diversityType == "SLS",
+		(* This bound is VERY loose *)
+		With[{Pm = (1 - ProbabilityOfDetection[M, \[Gamma], \[Lambda], ChannelType -> {"Nakagami", m}, Method -> "Approximate", Algorithm -> "NGaussian", DiversityType -> "None", LowSNR -> False])},
+			Min[Abs[{Pm^n - (Pm - LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n, Pm^n - (Pm + LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n}]]
+		],
+		NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+	]
 ]
 
 
