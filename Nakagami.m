@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*09/11/2012*)
-(*1.5*)
+(*13/11/2012*)
+(*1.51*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.51: Improved exact numerical method with smooth kernel distributions and caching.*)
 (*Version 1.5: Finished polishing up error bound functions. SLS bound is very loose, but works.*)
 (*Version 1.49: Moved error bounds to separate section, added LowSNRAssumptionErrorNakagami from AWGN package.*)
 (*Version 1.48: Updated all function help definitions and fixed bug where LargeSNR algorithm was not publicly accessible.*)
@@ -61,7 +62,7 @@
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Public*)
 
 
@@ -79,7 +80,7 @@ Protect[Resolution];
 NakagamiPDF;
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Detection probability*)
 
 
@@ -126,6 +127,9 @@ SunNakagamiProbabilityOfDetection;
 
 
 NumericalNakagamiProbabilityOfDetection;
+
+
+NumericalDistribution;
 
 
 (* ::Subsubsection::Closed:: *)
@@ -784,13 +788,15 @@ SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Option
 (*Numerical method*)
 
 
-Options[NumericalNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations],Resolution->1000};
+Options[NumericalNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
 NumericalNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NumericalNakagamiProbabilityOfDetection, "Numerical"];
 NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NumericalNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NumericalNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NumericalNakagamiProbabilityOfDetection]]
 ]
-NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], resolution = OptionValue[Resolution], pdf, x},
+NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
+	\[ScriptCapitalD] = NumericalDistribution[M, \[Gamma], m, n, diversityType];
+
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -801,23 +807,9 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[a_,b_] := Table[RandomVariate[NoncentralChiSquareDistribution[M a, M RandomVariate[GammaDistribution[m b, \[Gamma]0 / m]]]],{resolution}];
-
 	f := Which[
-		diversityType == "None",
-			Length[Select[g[1, 1], # > \[Lambda] &]] / resolution,
-		diversityType == "MRC",
-			Length[Select[g[1, n], # > \[Lambda] &]] / resolution,
-		diversityType == "EGC",
-			Undefined,
-		diversityType == "SC",
-			pdf = Table[RandomVariate[NoncentralChiSquareDistribution[M, M RandomVariate[ProbabilityDistribution[Piecewise[{{(n / Gamma[m]) (m / \[Gamma]0)^m x^(m - 1) Exp[-m x / \[Gamma]0] (1 - GammaRegularized[m, m x / \[Gamma]0])^(n - 1), x > 0}}], {x, 0, \[Infinity]}]]]],{resolution}];
-			Length[Select[pdf, # > \[Lambda] &]] / resolution,
-		diversityType == "SSC",
-			pdf = Table[RandomVariate[NoncentralChiSquareDistribution[M, M RandomVariate[ProbabilityDistribution[Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], 0 <= x < \[Gamma]t}, {(2 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], x >= \[Gamma]t}}], {x, 0, \[Infinity]}]]]],{resolution}];
-			Length[Select[pdf, # > \[Lambda] &]] / resolution,
-		diversityType == "SLC",
-			Length[Select[g[n, n], # > \[Lambda] &]] / resolution,
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC" || diversityType == "SLC",
+			1 - CDF[\[ScriptCapitalD], \[Lambda]],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
@@ -843,6 +835,42 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 		f
 	]
 ];
+
+
+NumericalDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, diversityType0_] := NumericalDistribution[M, \[Gamma], m, n, diversityType0] = Module[{\[Gamma]t, \[Gamma]0, g, numberOfPoints = 100000, x, diversityType},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType0];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	g[a_,b_] := SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M a, M x], x \[Distributed] GammaDistribution[m b, \[Gamma]0 / m]], numberOfPoints]];
+
+	Which[
+		diversityType == "None",
+			g[1, 1],
+		diversityType == "MRC",
+			g[1, n],
+		diversityType == "EGC",
+			x = Table[Unique[], {n}];
+			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M Sum[Sqrt[x[[i]]], {i, n}]^2/n], Table[x[[i]] \[Distributed] GammaDistribution[m, \[Gamma]0 / m], {i, n}]], numberOfPoints]],
+		diversityType == "SC",
+			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M x], x \[Distributed] ProbabilityDistribution[Piecewise[{{(n / Gamma[m]) (m / \[Gamma]0)^m x^(m - 1) Exp[-m x / \[Gamma]0] (1 - GammaRegularized[m, m x / \[Gamma]0])^(n - 1), x > 0}}], {x, 0, \[Infinity]}]], numberOfPoints]],
+		diversityType == "SSC",
+			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M x], x \[Distributed] ProbabilityDistribution[Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], 0 <= x < \[Gamma]t}, {(2 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], x >= \[Gamma]t}}], {x, 0, \[Infinity]}]], numberOfPoints]],
+		diversityType == "SLC",
+			g[n, n],
+		diversityType == "SLS",
+			(* We don't need the SLS PDF here, the master function will use the no diversity PDF instead *)
+			Null,
+		True,
+			Undefined
+	]
+]
 
 
 (* ::Subsubsection::Closed:: *)
