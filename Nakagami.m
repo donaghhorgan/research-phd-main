@@ -225,7 +225,7 @@ GenerateTruncationHelp[fName_,algorithmName_] := ToString[fName] <> "[M, \[Gamma
 " <> ToString[fName] <> "[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the " <> algorithmName <> " algorithm for energy detection with diversity reception in a Nakagami-m channel."<>"\n\n"<>DiversityTypeHelp[fName]<>"\n\n"<>ToleranceHelp[AnnamalaiNakagamiLimit];
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*PDF of the signal to noise ratio*)
 
 
@@ -259,14 +259,17 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 				diversityType == "MRC",
 					g[n],
 				diversityType == "EGC",
-					Which[
+					(* Dharmawansa's exact PDF *)
+					(*Which[
 						n == 2,
 							(2 Sqrt[\[Pi]] x^(2m - 1) Exp[-2m x / \[Gamma]0] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + (1 / 2)])) (2m / \[Gamma]0)^(2m) Hypergeometric1F1[2m, 2m + (1 / 2), m x / \[Gamma]0],
 						n == 3,
 							(4 Sqrt[\[Pi]] Gamma[2m] Exp[-3m x / \[Gamma]0] / (Gamma[m]^3 2^(4m - 1))) Sum[((Gamma[2m+l] Gamma[4m+2l]) / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] 2^l)) x^(3m+l-1) (3m / \[Gamma]0)^(3m+l) HypergeometricPFQ[{2m,4m+2l},{3m+l+1/2,3m+l},3m x / (2\[Gamma]0)],{l,0,\[Infinity]}],
 						True,
 							Undefined
-					],
+					],*)
+					(* Nakagami's approximate PDF *)
+					PDF[GammaDistribution[m n, (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2) / (m n)], x],
 				diversityType == "SC",
 					(n / Gamma[m]) Sum[(-1)^(l) Binomial[n - 1, l] Sum[MultinomialCoefficient[l, k, m] (m / \[Gamma]0)^(m + k) x^(m + k - 1) Exp[-m (l + 1) x / \[Gamma]0],{k, 0, l (m - 1)}],{l, 0, n - 1}],
 				diversityType == "SSC",
@@ -299,7 +302,8 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 				diversityType == "MRC",
 					g[n],
 				diversityType == "EGC",
-					Undefined,
+					(* Nakagami's approximate PDF *)
+					PDF[NormalDistribution[(\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2), (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2)/Gamma[1 + m]^2) Sqrt[m n]], x],
 				diversityType == "SC",
 					Undefined,
 				diversityType == "SSC",
@@ -909,7 +913,8 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
 			],
 		diversityType == "EGC",
-			lim = IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], m, n];
+			(* Dharmawansa's exact method *)
+			(*lim = IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], m, n];
 			Which[
 				n == 2,
 					With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m n)},
@@ -920,6 +925,12 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 					(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) (*D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(6 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t,3m+l+k-1}]*),{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
 				True,
 					Undefined
+			],*)
+			(* Nakagami's approximate method *)
+			With[{c = Gamma[m + 1]^2 / (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2)},
+				With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 c m n)},
+					AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
+				]
 			],
 		diversityType == "SC",
 			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
@@ -964,6 +975,7 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 
 
+(* This function applies to Dharmawansa's method only *)
 Options[IntegerMNNakagamiLimit]={DiversityType->OptionValue[IntegerMNNakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
 IntegerMNNakagamiLimit::usage = GenerateTruncationHelp[IntegerMNNakagamiLimit, "IntegerMN"];
 IntegerMNNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance]},
@@ -1060,7 +1072,7 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Asymptotic method*)
 
 
@@ -1092,7 +1104,9 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 		diversityType == "MRC",
 			g[(\[Lambda] - M (1 + n \[Gamma]0)) / (2 Sqrt[M]), - Sqrt[M n / (2 m)] \[Gamma]0],
 		diversityType == "EGC",
-			Undefined,
+			With[{c = Gamma[m + 1]^2 / (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2)},
+				g[(\[Lambda] - M (1 + \[Gamma]0 / c)) / (2 Sqrt[M]), - Sqrt[M / (2 m n)] \[Gamma]0 / c]
+			],
 		diversityType == "SC",
 			Undefined,
 		diversityType == "SSC",
@@ -1194,7 +1208,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 ]
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Numerical Gaussian method*)
 
 
