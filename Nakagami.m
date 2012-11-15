@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*15/11/2012*)
-(*1.53*)
+(*1.54*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.54: Added asymptotic error bound functions for EGC and MRC.*)
 (*Version 1.53: Added SEC support to IntegerMN, NGaussian and Numerical methods. Herath's method supports SEC with n = 2, i.e. SSC.*)
 (*Version 1.52: Added new EGC methods to IntegerMN and Asymptotic algorithms, based on Nakagami's approximation for the sum of iid Nakagami rvs. Dharmawansa's exact PDF-based method is no longer enabled.*)
 (*Version 1.51: Improved exact numerical method with smooth kernel distributions and caching.*)
@@ -246,20 +247,20 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[a_] := Which[
+	g[a_, b_] := Which[
 		method == "Approximate",
-			PDF[NormalDistribution[a \[Gamma]0, Sqrt[a \[Gamma]0^2 / m]], x],
+			PDF[NormalDistribution[a b, Sqrt[a b^2 / m]], x],
 		method == "Exact",
-			PDF[GammaDistribution[m a, \[Gamma]0 / m], x]
+			PDF[GammaDistribution[m a, b / m], x]
 	];
 
 	Which[
 		method == "Exact",
 			Which[
 				diversityType == "None",
-					g[1],
+					g[1, \[Gamma]0],
 				diversityType == "MRC",
-					g[n],
+					g[n, \[Gamma]0],
 				diversityType == "EGC",
 					(* Dharmawansa's exact PDF *)
 					(*Which[
@@ -270,20 +271,20 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 						True,
 							Undefined
 					],*)
-					(* Nakagami's approximate PDF *)
-					PDF[GammaDistribution[m n, (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2) / (m n)], x],
+					(* Nakagami's approximate PDF *)					
+					g[n, \[Gamma]0 (1 + (m (-1 + n) Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2) / n],
 				diversityType == "SC",
 					(n / Gamma[m]) Sum[(-1)^(l) Binomial[n - 1, l] Sum[MultinomialCoefficient[l, k, m] (m / \[Gamma]0)^(m + k) x^(m + k - 1) Exp[-m (l + 1) x / \[Gamma]0],{k, 0, l (m - 1)}],{l, 0, n - 1}],
 				diversityType == "SEC",
-					Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^(n - 1) g[1], x < \[Gamma]t}, {Sum[(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^j, {j, 0, n - 1}] g[1], x >= \[Gamma]t}}],
+					Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^(n - 1) g[1, \[Gamma]0], x < \[Gamma]t}, {Sum[(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^j, {j, 0, n - 1}] g[1, \[Gamma]0], x >= \[Gamma]t}}],
 				diversityType == "SLC",
-					g[n],
+					g[n, \[Gamma]0],
 				diversityType == "SLS",
 					Which[
 						ListQ[\[Gamma]0],
 							Product[NakagamiPDF[\[Gamma]0[[i]], m, x, n, DiversityType->"None"], {i, n}],
 						!ListQ[\[Gamma]0],
-							g[1]^n,
+							g[1, \[Gamma]0]^n,
 						True,
 							Undefined
 					],
@@ -1309,30 +1310,32 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 
 Options[AsymptoticErrorNakagami]={DiversityType->OptionValue[AsymptoticNakagamiProbabilityOfDetection,DiversityType]};
 AsymptoticErrorNakagami::usage="AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
-AsymptoticErrorNakagami[Pf_,a_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, g, z},
+AsymptoticErrorNakagami[Pf_,m_,n_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, f, g, z},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 
-	g[z_?NumericQ]:=Which[
+	g[a_] := Erfc[Sqrt[a m / 2]] (Pf / 2) + (1 - Pf) (GammaRegularized[a m, z] - 1/2 Erfc[(z - a m)/Sqrt[2 a m]]);
+
+	f[z_?NumericQ]:=Which[
 		diversityType == "None",
-			Undefined,
+			g[1],
 		diversityType == "MRC",
-			Undefined,
+			g[n],
 		diversityType == "EGC",
-			Undefined,
+			g[n],
 		diversityType == "SC",
 			Undefined,
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			Erfc[Sqrt[a/2]] (Pf/2) + (1 - Pf) (GammaRegularized[a, z] - 1/2 Erfc[(z - a)/Sqrt[2 a]]),
+			g[n],
 		diversityType == "SLS",
 			Undefined,
 		True,
 			Undefined
 	];
 
-	NMaximize[{Abs[g[z]],z>=0},{z,0,a}][[1]]
+	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, a}][[1]]
 ]
 
 
