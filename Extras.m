@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*05/11/2012*)
-(*1.0*)
+(*15/11/2012*)
+(*1.01*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.01: Added SEC support, and removed SSC support.*)
 (*Version 1.0: First working version.*)
 
 
@@ -68,7 +69,7 @@ ProcessSNR::usage="ProcessSNR[\[Gamma], diversityType] converts lists of SNR val
 ProcessSNR[\[Gamma]_,diversityType_:"SLC"]:=Which[
 	diversityType == "None",
 		If[ListQ[\[Gamma]], Undefined, \[Gamma]],
-	diversityType == "MRC" || diversityType == "EGC" || diversityType == "SSC" || diversityType == "SLC",
+	diversityType == "MRC" || diversityType == "EGC" || diversityType == "SEC" || diversityType == "SLC",
 		Mean[Flatten[{\[Gamma]}]],
 	diversityType == "SC",
 		Max[Flatten[{\[Gamma]}]],
@@ -79,7 +80,7 @@ ProcessSNR[\[Gamma]_,diversityType_:"SLC"]:=Which[
 ]
 
 
-ProcessDiversityType::usage="ProcessDiversityType[x] either returns the list {\"SSC\", \[Gamma]t} or {diversityType, Null}.";
+ProcessDiversityType::usage="ProcessDiversityType[x] either returns the list {\"SEC\", \[Gamma]t} or {diversityType, Null}.";
 ProcessDiversityType[diversityType_]:=If[ListQ[diversityType], {diversityType[[1]], diversityType[[2]]}, {diversityType, Null}, Undefined]
 
 
