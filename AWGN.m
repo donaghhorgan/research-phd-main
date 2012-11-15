@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*07/11/2012*)
-(*1.23*)
+(*15/11/2012*)
+(*1.24*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.24: Added SEC support, and removed SSC support.*)
 (*Version 1.23: Moved LowSNRErrorBound to the Nakagami package.*)
 (*Version 1.22: Moved help functions to Network package.*)
 (*Version 1.21: Added generic help functions for consistent documentation.*)
@@ -159,7 +160,7 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversit
 	];
 
 	Which[
-		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC",
 			g[1],
 		diversityType == "SLC",
 			g[n],
@@ -210,7 +211,7 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[
 			g[1, 1],
 		diversityType == "MRC" || diversityType == "EGC",
 			g[1, n],
-		diversityType == "SSC" && ListQ[\[Gamma]] && (Length[\[Gamma]] == 2),
+		diversityType == "SEC" && ListQ[\[Gamma]] && (Length[\[Gamma]] == 2),
 			(* No \[Gamma]0 here - this is a special case *)
 			If[\[Gamma][[1]] >= \[Gamma]t,
 				AWGNProbabilityOfDetection[M, \[Gamma][[1]], \[Lambda], DiversityType->"None", Method->OptionValue[Method], LowSNR->OptionValue[LowSNR]],
@@ -258,7 +259,7 @@ Options[\[Lambda]]={Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], Div
 	];
 
 	Which[
-		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC",
 			g[1, Pf],
 		diversityType == "SLC",
 			g[n, Pf],
