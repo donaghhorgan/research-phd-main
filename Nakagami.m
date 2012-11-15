@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*13/11/2012*)
-(*1.51*)
+(*15/11/2012*)
+(*1.53*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,8 @@
 
 
 (* ::Text:: *)
+(*Version 1.53: Added SEC support to IntegerMN, NGaussian and Numerical methods. Herath's method supports SEC with n = 2, i.e. SSC.*)
+(*Version 1.52: Added new EGC methods to IntegerMN and Asymptotic algorithms, based on Nakagami's approximation for the sum of iid Nakagami rvs. Dharmawansa's exact PDF-based method is no longer enabled.*)
 (*Version 1.51: Improved exact numerical method with smooth kernel distributions and caching.*)
 (*Version 1.5: Finished polishing up error bound functions. SLS bound is very loose, but works.*)
 (*Version 1.49: Moved error bounds to separate section, added LowSNRAssumptionErrorNakagami from AWGN package.*)
@@ -225,7 +227,7 @@ GenerateTruncationHelp[fName_,algorithmName_] := ToString[fName] <> "[M, \[Gamma
 " <> ToString[fName] <> "[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the " <> algorithmName <> " algorithm for energy detection with diversity reception in a Nakagami-m channel."<>"\n\n"<>DiversityTypeHelp[fName]<>"\n\n"<>ToleranceHelp[AnnamalaiNakagamiLimit];
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*PDF of the signal to noise ratio*)
 
 
@@ -272,15 +274,8 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 					PDF[GammaDistribution[m n, (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2) / (m n)], x],
 				diversityType == "SC",
 					(n / Gamma[m]) Sum[(-1)^(l) Binomial[n - 1, l] Sum[MultinomialCoefficient[l, k, m] (m / \[Gamma]0)^(m + k) x^(m + k - 1) Exp[-m (l + 1) x / \[Gamma]0],{k, 0, l (m - 1)}],{l, 0, n - 1}],
-				diversityType == "SSC",
-					Which[
-						x < \[Gamma]t,
-							(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])g[1],
-						x >= \[Gamma]t,
-							(2 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])g[1],
-						True,
-							Undefined
-					],
+				diversityType == "SEC",
+					Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^(n - 1) g[1], x < \[Gamma]t}, {Sum[(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^j, {j, 0, n - 1}] g[1], x >= \[Gamma]t}}],
 				diversityType == "SLC",
 					g[n],
 				diversityType == "SLS",
@@ -306,7 +301,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 					PDF[NormalDistribution[(\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2), (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2)/Gamma[1 + m]^2) Sqrt[m n]], x],
 				diversityType == "SC",
 					Undefined,
-				diversityType == "SSC",
+				diversityType == "SEC",
 					Undefined,
 				diversityType == "SLC",
 					g[n],
@@ -422,7 +417,7 @@ AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			Undefined,
 		diversityType == "SC",
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) (1 - GammaRegularized[M n/2, \[Lambda] / 2]) - Total[Table[Gamma[m n+k]/(Gamma[m n]Gamma[k+1]) (m/(m+M/2 \[Gamma]0))^(m n) (((M/2 \[Gamma]0)/(m+M/2 \[Gamma]0))^k) (1-GammaRegularized[M n/2+k, \[Lambda] / 2]),{k,1,lim}]],
@@ -475,7 +470,7 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 				Undefined,
 			diversityType == "SC",
 				Undefined,
-			diversityType == "SSC",
+			diversityType == "SEC",
 				Undefined,
 			diversityType == "SLC",
 				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol];
@@ -525,7 +520,7 @@ DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 			Undefined,
 		diversityType == "SC",
 			Undefined,
-		diversityType[[1]] == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			Module[{A1, \[Beta]},
@@ -603,7 +598,7 @@ HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 			(* Untested *)
 			(*1 - n Exp[-\[Lambda] / 2] (m / \[Gamma]0)^(m) Total[Table[Total[Table[Binomial[n - 1, k] (-1)^(k) ((\[Lambda] / 2)^(j) / (j!)) Total[Table[MultinomialCoefficient[k, i, m] Pochhammer[m, i] (\[Gamma]0 / (\[Gamma]0 + m (k + 1)))^(i + m) Hypergeometric1F1[i + m, j + 1, \[Lambda] \[Gamma]0 / (2 (\[Gamma]0 + m (k + 1)))],{i, 0, k*(m - 1)}]],{k, 0, n - 1}]],{j, M / 2, lim}]],*)
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC" && n == 2,
 			(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) (1 - Exp[-\[Lambda] / 2] (m / (m + (M / 2) \[Gamma]0))^(m) Total[Table[((\[Lambda] / 2)^(j) / j!) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, M / 2, lim[[1]]}]]) + (m / ((M / 2) \[Gamma]0 + m))^(m) (Exp[-\[Lambda] / 2] / Gamma[m]) Total[Table[Total[Table[((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m))^(j) Gamma[j + m, (1 + m / ((M / 2) \[Gamma]0)) (M / 2) \[Gamma]t] (\[Lambda] / 2)^(k) / (j! k!),{k, 0, j + (M / 2) - 1}]],{j, 0, lim[[2]]}]],
 		diversityType == "SLC",
 			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(n m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M n / 2), lim}]],
@@ -673,7 +668,7 @@ HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Opt
 			(*j0 = (\[Lambda] / 2) - 1 - InverseQ[1 - tol];
 			j/.FindRoot[n (m / \[Gamma]0)^(m) (1 - GammaRegularized[j + 1, \[Lambda] / 2]) Total[Table[Binomial[n - 1, k] Total[Table[MultinomialCoefficient[k, i, m] Pochhammer[m, i] (\[Gamma]0 / (\[Gamma]0 + m (k + 1)))^(i + m) Hypergeometric1F1[i + m, j + 1, \[Lambda] \[Gamma]0 / (2 (\[Gamma]0 + m (k + 1)))],{i, 0, k*(m - 1)}]],{k, 0, n - 1}]] == tol,{j, j0, 1, \[Infinity]}]*)
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			j0 = {(\[Lambda] / 2) - 1 - InverseQ[1 - tol], Null};
 			{j/.FindRoot[(1 - GammaRegularized[m, m (M / 2) \[Gamma]t / ((M / 2) \[Gamma]0)]) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]) (m / (m + (M / 2) \[Gamma]0))^(m) == tol,{j, j0[[1]], 1, \[Infinity]}], InverseCDF[NegativeBinomialDistribution[m, m / ((M / 2) \[Gamma]0 + m)], 1 - tol]},
 		diversityType == "SLC",
@@ -727,7 +722,7 @@ SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n
 			Undefined,
 		diversityType == "SC",
 			1 - n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (m / ((M / 2) \[Gamma]0))^(m + k) Total[Table[(1 - GammaRegularized[i + M / 2, \[Lambda] / 2]) Pochhammer[m, i + k] / i! ((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m (l + 1)))^(i + m + k),{i, 0, lim}]],{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) n + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(j),{j, 0, lim}]],
@@ -776,7 +771,7 @@ SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Option
 		diversityType == "SC",
 			j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
 			j/.FindRoot[n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (Gamma[m + k] / Gamma[m]) (1 - GammaRegularized[M / 2 + j, \[Lambda] / 2]) (1 / (l + 1))^(m + k), {k, 0, l (m - 1)}]], {l, 0, n - 1}]] == tol, {j, j0, 1, \[Infinity]}],
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
@@ -799,7 +794,7 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	NumericalNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NumericalNakagamiProbabilityOfDetection]]
 ]
 NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
-	\[ScriptCapitalD] = NumericalDistribution[M, \[Gamma], m, n, diversityType];
+	\[ScriptCapitalD] = NumericalNakagamiDistribution[M, \[Gamma], m, n, diversityType];
 
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
@@ -812,7 +807,7 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
 	f := Which[
-		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC" || diversityType == "SLC",
+		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC" || diversityType == "SLC",
 			1 - CDF[\[ScriptCapitalD], \[Lambda]],
 		diversityType == "SLS",
 			Which[
@@ -841,7 +836,7 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ];
 
 
-NumericalDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, diversityType0_] := NumericalDistribution[M, \[Gamma], m, n, diversityType0] = Module[{\[Gamma]t, \[Gamma]0, g, numberOfPoints = 100000, x, diversityType},
+NumericalNakagamiDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, diversityType0_] := NumericalNakagamiDistribution[M, \[Gamma], m, n, diversityType0] = Module[{\[Gamma]t, \[Gamma]0, g, numberOfPoints = 100000, x, diversityType},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType0];
 	
@@ -864,8 +859,8 @@ NumericalDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, diversit
 			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M Sum[Sqrt[x[[i]]], {i, n}]^2/n], Table[x[[i]] \[Distributed] GammaDistribution[m, \[Gamma]0 / m], {i, n}]], numberOfPoints]],
 		diversityType == "SC",
 			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M x], x \[Distributed] ProbabilityDistribution[Piecewise[{{(n / Gamma[m]) (m / \[Gamma]0)^m x^(m - 1) Exp[-m x / \[Gamma]0] (1 - GammaRegularized[m, m x / \[Gamma]0])^(n - 1), x > 0}}], {x, 0, \[Infinity]}]], numberOfPoints]],
-		diversityType == "SSC",
-			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M x], x \[Distributed] ProbabilityDistribution[Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], 0 <= x < \[Gamma]t}, {(2 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0]) PDF[GammaDistribution[m, \[Gamma]0/m], x], x >= \[Gamma]t}}], {x, 0, \[Infinity]}]], numberOfPoints]],
+		diversityType == "SEC",
+			SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M, M x], x \[Distributed] ProbabilityDistribution[Piecewise[{{(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0])^(n - 1) PDF[GammaDistribution[m, \[Gamma]0/m], x], 0 <= x < \[Gamma]t}, {Sum[(1 - GammaRegularized[m, m \[Gamma]t/\[Gamma]0])^j, {j, 0, n - 1}] PDF[GammaDistribution[m, \[Gamma]0/m], x], x >= \[Gamma]t}}], {x, 0, \[Infinity]}]], numberOfPoints]],
 		diversityType == "SLC",
 			g[n, n],
 		diversityType == "SLS",
@@ -936,11 +931,9 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
 				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (n / Gamma[m]) Total[Table[(-1)^l Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (1 / (l + 1)^(m + k)) g[A, B / (l + 1), m + k], {k, 0, l (m - 1)}]], {l, 0, n - 1}]]
 			],
-		diversityType == "SSC",
-			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
-				With[{C = A + B (m \[Gamma]t / \[Gamma]0)},
-					(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"] + GammaRegularized[m, m \[Gamma]t / \[Gamma]0] ((1 / 2) (1 - Erf[C])) + ((1 / 2) Exp[-C^2] Total[Table[((I/(2 B))^l / l!) GammaRegularized[m - l, m \[Gamma]t / \[Gamma]0] FaddeevaDerivative[l, N[-I (C + (1 / (2 B))),30]], {l, 0, m - 1}]] // Re)
-				]
+		diversityType == "SEC",
+			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m), C = (\[Lambda] - M (1 + \[Gamma]t)) / (2 Sqrt[M])},
+				(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^(n - 1) IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"] + Sum[(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^j, {j, 0, n - 2}] (GammaRegularized[m, m \[Gamma]t / \[Gamma]0] ((1 / 2) (1 - Erf[C])) + ((1 / 2) Exp[-C^2] Total[Table[((I/(2 B))^l / l!) GammaRegularized[m - l, m \[Gamma]t / \[Gamma]0] FaddeevaDerivative[l, N[-I (C + (1 / (2 B))),30]], {l, 0, m - 1}]] // Re))
 			],
 		diversityType == "SLC",
 			With[{A = (\[Lambda] - M n) / (2 Sqrt[M n]), B = - Sqrt[M] \[Gamma]0 / (2 m Sqrt[n])},
@@ -1039,7 +1032,7 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 			Undefined,
 		diversityType == "SC",
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			g[n],
@@ -1072,7 +1065,7 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Asymptotic method*)
 
 
@@ -1109,7 +1102,7 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 			],
 		diversityType == "SC",
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			g[(\[Lambda] - M n (1 + \[Gamma]0)) / (2 Sqrt[M n]), - Sqrt[M / (2 m)] \[Gamma]0],
@@ -1170,7 +1163,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 			Undefined,
 		diversityType == "SC",
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Which[
 				-((M-\[Lambda])/M) < \[Gamma]t,
 					(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) LopezBenitezNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m] + (-(1/(2 Sqrt[2])) E^(-((b^2 M^2 \[Gamma]0^2+4 c M (m-a M \[Gamma]0^2)+2 Sqrt[2] b m Sqrt[M] (M+M \[Gamma]0-\[Lambda])+2 a m (M+M \[Gamma]0-\[Lambda])^2)/(4 M (-m+a M \[Gamma]0^2)))) Sqrt[m] ((Sqrt[2] (1+Erf[(Sqrt[2] m+\[Gamma]0 (b Sqrt[M]+Sqrt[2] a (M-\[Lambda])))/(2 Sqrt[m-a M \[Gamma]0^2])]))/Sqrt[m-a M \[Gamma]0^2]+((2 m (\[Gamma]0-\[Gamma]t)+\[Gamma]0^2 (Sqrt[2] b Sqrt[M]+2 a (M+M \[Gamma]t-\[Lambda]))) Erf[Abs[2 m (\[Gamma]0-\[Gamma]t)+\[Gamma]0^2 (Sqrt[2] b Sqrt[M]+2 a (M+M \[Gamma]t-\[Lambda]))]/(2 Sqrt[2] \[Gamma]0 Sqrt[m-a M \[Gamma]0^2])])/Sqrt[(m-a M \[Gamma]0^2) (2 m^2 (\[Gamma]0-\[Gamma]t)^2-2 m \[Gamma]0^2 (-\[Gamma]0+\[Gamma]t) (Sqrt[2] b Sqrt[M]+2 a (M+M \[Gamma]t-\[Lambda]))+\[Gamma]0^4 (b^2 M+2 Sqrt[2] a b Sqrt[M] (M+M \[Gamma]t-\[Lambda])+2 a^2 (M+M \[Gamma]t-\[Lambda])^2))]-(Sqrt[2] (2 m+\[Gamma]0 (Sqrt[2] b Sqrt[M]+2 a (M-\[Lambda]))) Erf[Abs[2 m+Sqrt[2] b Sqrt[M] \[Gamma]0+2 a M \[Gamma]0-2 a \[Gamma]0 \[Lambda]]/(2 Sqrt[2] Sqrt[m-a M \[Gamma]0^2])])/(Sqrt[m-a M \[Gamma]0^2] Abs[2 m+Sqrt[2] b Sqrt[M] \[Gamma]0+2 a M \[Gamma]0-2 a \[Gamma]0 \[Lambda]]))+1/2 Erfc[(Sqrt[m] (-\[Gamma]0+\[Gamma]t))/(Sqrt[2] \[Gamma]0)])/.LopezBenitezParameters[(-M (1+\[Gamma]0)+\[Lambda])/(2 Sqrt[M])],
@@ -1208,7 +1201,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Numerical Gaussian method*)
 
 
@@ -1240,8 +1233,8 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			NIntegrate[AWGNProbabilityOfDetection[M,x/n,\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
 		diversityType == "SC",
 			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
-		diversityType == "SSC",
-			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,DiversityType->{diversityType, \[Gamma]t}],{x,0,\[Infinity]}],
+		diversityType == "SEC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->{diversityType, \[Gamma]t}],{x,0,\[Infinity]}],
 		diversityType == "SLC",
 			NIntegrate[AWGNProbabilityOfDetection[M,x/n,\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
 		diversityType == "SLS",
@@ -1271,7 +1264,7 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Detection probability error bounds*)
 
 
@@ -1294,7 +1287,7 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 	g[\[Epsilon]_?NumericQ] := Which[
 		diversityType == "None" || diversityType == "SLC",
 			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->False] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, LowSNR->True]],
-		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SSC",
+		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC",
 			LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m],
 		True,
 			Undefined
@@ -1329,7 +1322,7 @@ AsymptoticErrorNakagami[Pf_,a_,OptionsPattern[]]:=Module[{diversityType = Option
 			Undefined,
 		diversityType == "SC",
 			Undefined,
-		diversityType == "SSC",
+		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
 			Erfc[Sqrt[a/2]] (Pf/2) + (1 - Pf) (GammaRegularized[a, z] - 1/2 Erfc[(z - a)/Sqrt[2 a]]),
