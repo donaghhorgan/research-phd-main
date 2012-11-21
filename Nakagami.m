@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*15/11/2012*)
-(*1.54*)
+(*21/11/2012*)
+(*1.55*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.55: Fixed a bug in the asymptotic error bound function.*)
 (*Version 1.54: Added asymptotic error bound functions for EGC and MRC.*)
 (*Version 1.53: Added SEC support to IntegerMN, NGaussian and Numerical methods. Herath's method supports SEC with n = 2, i.e. SSC.*)
 (*Version 1.52: Added new EGC methods to IntegerMN and Asymptotic algorithms, based on Nakagami's approximation for the sum of iid Nakagami rvs. Dharmawansa's exact PDF-based method is no longer enabled.*)
@@ -1304,7 +1305,7 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 ]
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Asymptotic approximation error*)
 
 
@@ -1335,7 +1336,7 @@ AsymptoticErrorNakagami[Pf_,m_,n_,OptionsPattern[]]:=Module[{diversityType = Opt
 			Undefined
 	];
 
-	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, a}][[1]]
+	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, m n}][[1]]
 ]
 
 
