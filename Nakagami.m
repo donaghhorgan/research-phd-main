@@ -1309,34 +1309,11 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 (*Asymptotic approximation error*)
 
 
-Options[AsymptoticErrorNakagami]={DiversityType->OptionValue[AsymptoticNakagamiProbabilityOfDetection,DiversityType]};
 AsymptoticErrorNakagami::usage="AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
-AsymptoticErrorNakagami[Pf_,m_,n_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, f, g, z},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+AsymptoticErrorNakagami[Pf_,mn_]:=Module[{f, z},
+	f[z_] := (Pf / 2) Erfc[Sqrt[mn / 2]] + (1 - Pf) (GammaRegularized[mn, z] - (1 / 2) Erfc[(z - mn)/Sqrt[2 mn]]);
 
-	g[a_] := Erfc[Sqrt[a m / 2]] (Pf / 2) + (1 - Pf) (GammaRegularized[a m, z] - 1/2 Erfc[(z - a m)/Sqrt[2 a m]]);
-
-	f[z_?NumericQ]:=Which[
-		diversityType == "None",
-			g[1],
-		diversityType == "MRC",
-			g[n],
-		diversityType == "EGC",
-			g[n],
-		diversityType == "SC",
-			Undefined,
-		diversityType == "SEC",
-			Undefined,
-		diversityType == "SLC",
-			g[n],
-		diversityType == "SLS",
-			Undefined,
-		True,
-			Undefined
-	];
-
-	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, m n}][[1]]
+	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, mn}][[1]]
 ]
 
 
