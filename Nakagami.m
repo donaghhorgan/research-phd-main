@@ -1305,7 +1305,7 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Asymptotic approximation error*)
 
 
