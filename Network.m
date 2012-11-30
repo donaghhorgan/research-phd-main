@@ -346,7 +346,7 @@ ProbabilityOfAcquisition[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{Relevant
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Probability of detection (general)*)
 
 
@@ -424,7 +424,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		"Nakagami",
 		NakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NakagamiProbabilityOfDetection]],
 		"Rice",
-		RiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NRiceProbabilityOfDetection]],
+		RiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[RiceProbabilityOfDetection]],
 		_,
 		Undefined
 	];
