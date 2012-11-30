@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.56: Added approximaton error for Nakagami's PDF for EGC diversity.*)
 (*Version 1.55: Fixed a bug in the asymptotic error bound function.*)
 (*Version 1.54: Added asymptotic error bound functions for EGC and MRC.*)
 (*Version 1.53: Added SEC support to IntegerMN, NGaussian and Numerical methods. Herath's method supports SEC with n = 2, i.e. SSC.*)
@@ -178,6 +179,9 @@ NGaussianNakagamiProbabilityOfDetection;
 LowSNRAssumptionErrorNakagami;
 
 
+NakagamiEGCPDFApproximationError;
+
+
 AsymptoticErrorNakagami;
 
 
@@ -226,7 +230,7 @@ GenerateAlgorithmHelp[fName_, algorithmName_] := ToString[fName] <> "[M, \[Gamma
 
 
 GenerateTruncationHelp[fName_,algorithmName_] := ToString[fName] <> "[M, \[Gamma], \[Lambda], m] calculates the truncation point for use in the " <> algorithmName <> " algorithm for a single energy detector operating on a Nakagami-m channel.
-" <> ToString[fName] <> "[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the " <> algorithmName <> " algorithm for energy detection with diversity reception in a Nakagami-m channel."<>"\n\n"<>DiversityTypeHelp[fName]<>"\n\n"<>ToleranceHelp[AnnamalaiNakagamiLimit];
+" <> ToString[fName] <> "[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the " <> algorithmName <> " algorithm for energy detection with diversity reception in a Nakagami-m channel."<>"\n\n"<>DiversityTypeHelp[fName]<>"\n\n"<>ToleranceHelp[fName];
 
 
 (* ::Subsection::Closed:: *)
@@ -898,7 +902,7 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[A_, B_, k_] := (1 / 2) Exp[-A^2] Total[Table[((I/(2 B))^l / l!) FaddeevaDerivative[l, N[-I (A + (1 / (2 B))),30]], {l, 0, k - 1}]] // Re;
+	g[A_, B_, k_] := (1 / 2) Exp[-A^2] Total[Table[((I/(2 B))^l / l!) FaddeevaDerivative[l, -I (A + (1 / (2 B)))], {l, 0, k - 1}]] // Re;
 	
 	f := Which[
 		diversityType == "None",
@@ -1302,6 +1306,33 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 		],
 		NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
 	]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Approximaton error for Nakagami's PDF for EGC diversity*)
+
+
+NakagamiEGCPDFApproximationError::usage="LowSNRAssumptionErrorNakagami[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorNakagami];
+NakagamiEGCPDFApproximationError[Pf_,\[Gamma]_,m_] := NakagamiEGCPDFApproximationError[Pf, \[Gamma], m] = Module[{n = 1},
+	NakagamiEGCPDFApproximationError[Pf, \[Gamma], m, n]
+]
+NakagamiEGCPDFApproximationError[Pf_,\[Gamma]_,m_,n_] := Module[{diversityType = "EGC", \[Gamma]0, g, \[Epsilon], \[Epsilon]max = 10},
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	g[\[Epsilon]_?NumericQ] := (1 - Pf) Abs[Integrate[PDF[NakagamiEGCSumDistribution[\[Gamma], m , n], z], {z, 0, \[Epsilon]}] - Integrate[NakagamiPDF[\[Gamma], m, z, n, DiversityType->diversityType], {z, 0, \[Epsilon]}]];
+
+	NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
+]
+
+
+NakagamiEGCSumDistribution[\[Gamma]_,m_,n_] := NakagamiEGCSumDistribution[\[Gamma], m, n] = Module[{diversityType = "EGC", \[Gamma]0, x, pdf, numberOfPoints = 100000},
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	x = Table[Unique[], {n}];
+	SmoothKernelDistribution[RandomVariate[TransformedDistribution[Sum[Sqrt[x[[i]]], {i, n}]^2 / n, Table[x[[i]] \[Distributed] GammaDistribution[m, \[Gamma]0 / m], {i, n}]], numberOfPoints]]
 ]
 
 
