@@ -41,7 +41,7 @@
 
 
 (* ::Text:: *)
-(*Version 1.34: Changed "NRice" to "Rice" - minor bug fix.*)
+(*Version 1.34: Changed "NRice" to "Rice", changed SSC to SEC.*)
 (*Version 1.33: Added TimingHelp and ToleranceHelp functions and enabled symbol protection.*)
 (*Version 1.32: Added help generation functions.*)
 (*Version 1.31: Added support for diversity reception.*)
@@ -210,7 +210,7 @@ DiversityType\[Rule]\"None\"
 DiversityType\[Rule]\"MRC\"
 DiversityType\[Rule]\"EGC\"
 DiversityType\[Rule]\"SC\"
-DiversityType\[Rule]{\"SSC\", \[Gamma]t} (where \[Gamma]t is the threshold switching value)
+DiversityType\[Rule]{\"SEC\", \[Gamma]t} (where \[Gamma]t is the threshold switching value)
 DiversityType\[Rule]\"SLC\"
 DiversityType\[Rule]\"SLS\"
 
