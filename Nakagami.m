@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*21/11/2012*)
-(*1.55*)
+(*30/11/2012*)
+(*1.57*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.57: Moved FaddeevaDerivative function to the Extras package.*)
 (*Version 1.56: Added approximaton error for Nakagami's PDF for EGC diversity.*)
 (*Version 1.55: Fixed a bug in the asymptotic error bound function.*)
 (*Version 1.54: Added asymptotic error bound functions for EGC and MRC.*)
@@ -1402,12 +1403,6 @@ NNakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeri
 
 (* ::Subsection::Closed:: *)
 (*Miscellaneous*)
-
-
-FaddeevaDerivative::usage="Computes the \!\(\*SuperscriptBox[\(k\), \(th\)]\) derivative of the Faddeeva function w(z).";
-FaddeevaDerivative[0, z_] := Exp[-z^2] Erfc[-I z];
-FaddeevaDerivative[1, z_] := -2 z FaddeevaDerivative[0, z] + (2 I)/Sqrt[\[Pi]];
-FaddeevaDerivative[k_?IntegerQ, z_] := FaddeevaDerivative[k, z] = -2 z FaddeevaDerivative[k - 1, z] - 2 (k - 1) FaddeevaDerivative[k - 2, z];
 
 
 MultinomialCoefficient::usage="Computes the multinomial coefficient for the specified inputs.";
