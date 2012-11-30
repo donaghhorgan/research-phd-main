@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*07/11/2012*)
-(*1.33*)
+(*30/11/2012*)
+(*1.34*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.34: Changed "NRice" to "Rice" - minor bug fix.*)
 (*Version 1.33: Added TimingHelp and ToleranceHelp functions and enabled symbol protection.*)
 (*Version 1.32: Added help generation functions.*)
 (*Version 1.31: Added support for diversity reception.*)
@@ -345,7 +346,7 @@ ProbabilityOfAcquisition[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{Relevant
 ]
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Probability of detection (general)*)
 
 
@@ -423,7 +424,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		"Nakagami",
 		NakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NakagamiProbabilityOfDetection]],
 		"Rice",
-		NRiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NRiceProbabilityOfDetection]],
+		RiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NRiceProbabilityOfDetection]],
 		_,
 		Undefined
 	];
