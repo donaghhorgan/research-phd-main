@@ -262,7 +262,7 @@ RiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,K_,n_,OptionsPattern[]]:=Modu
 ]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Annamalai's method*)
 
 
@@ -530,7 +530,7 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?Nu
 	f := Which[
 		diversityType == "None",
 			With[{a = (\[Lambda] - M) / (2 Sqrt[M]), b = - Sqrt[M] / 2, c = (K + 1) / \[Gamma]0},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K] Total[Table[K^k / k! Total[Table[J[p, a, b, c], {p, 0, k}]], {k, 0, lim}]]
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K] (J[0, a, b, c] + Total[Table[K^k / k! Total[Table[J[p, a, b, c], {p, 0, k}]], {k, 1, lim}]])
 			],
 		diversityType == "MRC",
 			Undefined,
