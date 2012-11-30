@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*15/11/2012*)
-(*1.01*)
+(*30/11/2012*)
+(*1.02*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.02: Moved FaddeevaDerivative function from the Nakagami package.*)
 (*Version 1.01: Added SEC support, and removed SSC support.*)
 (*Version 1.0: First working version.*)
 
@@ -56,6 +57,9 @@ ProcessSNR;
 
 
 ProcessDiversityType;
+
+
+FaddeevaDerivative;
 
 
 (* ::Section:: *)
@@ -82,6 +86,12 @@ ProcessSNR[\[Gamma]_,diversityType_:"SLC"]:=Which[
 
 ProcessDiversityType::usage="ProcessDiversityType[x] either returns the list {\"SEC\", \[Gamma]t} or {diversityType, Null}.";
 ProcessDiversityType[diversityType_]:=If[ListQ[diversityType], {diversityType[[1]], diversityType[[2]]}, {diversityType, Null}, Undefined]
+
+
+FaddeevaDerivative::usage="Computes the \!\(\*SuperscriptBox[\(k\), \(th\)]\) derivative of the Faddeeva function w(z).";
+FaddeevaDerivative[0, z_] := Exp[-z^2] Erfc[-I z];
+FaddeevaDerivative[1, z_] := -2 z FaddeevaDerivative[0, z] + (2 I)/Sqrt[\[Pi]];
+FaddeevaDerivative[k_?IntegerQ, z_] := FaddeevaDerivative[k, z] = -2 z FaddeevaDerivative[k - 1, z] - 2 (k - 1) FaddeevaDerivative[k - 2, z];
 
 
 End[];
