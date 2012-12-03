@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.58: Moved timing functions to the main function, and minor bug fixes.*)
 (*Version 1.57: Moved FaddeevaDerivative function to the Extras package.*)
 (*Version 1.56: Added approximaton error for Nakagami's PDF for EGC diversity.*)
 (*Version 1.55: Fixed a bug in the asymptotic error bound function.*)
@@ -68,7 +69,7 @@
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Public*)
 
 
@@ -101,7 +102,6 @@ NakagamiProbabilityOfDetection;
 (*Annamalai' s method*)
 
 
-AnnamalaiNakagamiLimit;
 AnnamalaiNakagamiProbabilityOfDetection;
 
 
@@ -116,7 +116,6 @@ DighamNakagamiProbabilityOfDetection;
 (*Herath' s method*)
 
 
-HerathNakagamiLimit;
 HerathNakagamiProbabilityOfDetection;
 
 
@@ -124,7 +123,6 @@ HerathNakagamiProbabilityOfDetection;
 (*Sun' s method*)
 
 
-SunNakagamiLimit;
 SunNakagamiProbabilityOfDetection;
 
 
@@ -340,24 +338,27 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 
 Options[NakagamiProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 NakagamiProbabilityOfDetection::usage="NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the probability of detection for a single energy detector operating on a Nakagami-m fading channel.
-NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[NakagamiProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"IntegerMN\"", "\"Asymptotic\"", {"\"SwitchedMN\"", "SwitchingPoint"}, "\"LargeSNR\"", "\"NGaussian\""},{"\"Annamalai\"", "\"Digham\"", "\"Herath\"", "\"Sun\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
+NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[NakagamiProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"IntegerMN\"", "\"Asymptotic\"", {"\"SwitchedMN\"", "SwitchingPoint"}, "\"LargeSNR\"", "\"Numerical\""},{"\"Annamalai\"", "\"Digham\"", "\"Herath\"", "\"Sun\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
 NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[NakagamiProbabilityOfDetection]]]
 ]
-NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=Module[{RelevantOptions, method = OptionValue[Method], algorithm = OptionValue[Algorithm]},
+NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=Module[{RelevantOptions, method = OptionValue[Method], algorithm = OptionValue[Algorithm], limit, f, totaltime = 0, iterations = 0, time, result},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	Which[
+
+	limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Algorithm->algorithm, RelevantOptions[NakagamiLimit]];
+
+	f := Which[
 		method == "Exact",
 			Which[
 				algorithm == "Annamalai",
-					AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[AnnamalaiNakagamiProbabilityOfDetection]],
+					AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,Limit->limit,RelevantOptions[AnnamalaiNakagamiProbabilityOfDetection]],
 				algorithm == "Digham",
 					DighamNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[DighamNakagamiProbabilityOfDetection]],
 				algorithm == "Herath",
-					HerathNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[HerathNakagamiProbabilityOfDetection]],
+					HerathNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,Limit->limit,RelevantOptions[HerathNakagamiProbabilityOfDetection]],
 				algorithm == "Sun",
-					SunNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[HerathNakagamiProbabilityOfDetection]],
+					SunNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,Limit->limit,RelevantOptions[HerathNakagamiProbabilityOfDetection]],
 				algorithm == "Numerical",
 					NumericalNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NumericalNakagamiProbabilityOfDetection]],
 				True,
@@ -381,59 +382,9 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 						AsymptoticNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[AsymptoticNakagamiProbabilityOfDetection]],
 						IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[IntegerMNNakagamiProbabilityOfDetection]]
 					],
-				!ListQ[algorithm] && algorithm == "NGaussian",
+				(* This method has two names for legacy reasons *)
+				!ListQ[algorithm] && (algorithm == "Numerical" || algorithm == "NGaussian"),
 					NGaussianNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NGaussianNakagamiProbabilityOfDetection]],
-				True,
-					Undefined
-			],
-		True,
-			Undefined
-	]
-]
-
-
-(* ::Subsubsection::Closed:: *)
-(*Annamalai' s method*)
-
-
-Options[AnnamalaiNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
-AnnamalaiNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[AnnamalaiNakagamiProbabilityOfDetection, "Annamalai"];
-AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AnnamalaiNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AnnamalaiNakagamiProbabilityOfDetection]]]
-]
-AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
-	
-	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
-	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
-
-	(* Check for invalid combinations of inputs *)
-	If[diversityType == "None" && n > 1, Return[Undefined]];
-	If[\[Gamma]0 == Undefined, Return[Undefined]];
-
-	lim = AnnamalaiNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->diversityType];
-
-	f := Which[
-		diversityType == "None",
-			1 - ((m / (m + (M / 2) \[Gamma]0))^m) (1 - GammaRegularized[M / 2, \[Lambda] / 2]) - Total[Table[(Gamma[m + k] / (Gamma[m] Gamma[k+1])) ((m / (m + (M / 2) \[Gamma]0))^m) ((((M / 2) \[Gamma]0) / (m + (M / 2) \[Gamma]0))^k) (1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k, 1, lim}]],
-		diversityType == "MRC",
-			1 - (2m / (2m + M \[Gamma]0))^(m n) (1 - GammaRegularized[M / 2, \[Lambda] / 2]) - Total[Table[Gamma[m n+k]/(Gamma[m n]Gamma[k+1]) (m/(m+M/2 \[Gamma]0))^(m n) (((M/2 \[Gamma]0)/(m+M/2 \[Gamma]0))^k) (1-GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k,1,lim}]],
-		diversityType == "EGC",
-			Undefined,
-		diversityType == "SC",
-			Undefined,
-		diversityType == "SEC",
-			Undefined,
-		diversityType == "SLC",
-			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) (1 - GammaRegularized[M n/2, \[Lambda] / 2]) - Total[Table[Gamma[m n+k]/(Gamma[m n]Gamma[k+1]) (m/(m+M/2 \[Gamma]0))^(m n) (((M/2 \[Gamma]0)/(m+M/2 \[Gamma]0))^k) (1-GammaRegularized[M n/2+k, \[Lambda] / 2]),{k,1,lim}]],
-		diversityType == "SLS",
-			Which[
-				ListQ[\[Gamma]0],
-					1 - Product[1 - AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
-				!ListQ[\[Gamma]0],
-					1 - (1 - AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
@@ -455,7 +406,86 @@ AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ]
 
 
-Options[AnnamalaiNakagamiLimit] = {DiversityType->OptionValue[AnnamalaiNakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
+Options[NakagamiLimit] = {Algorithm->"Annamalai", DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
+NakagamiLimit::usage = "NakagamiLimit[M, \[Gamma], \[Lambda], K] calculates the truncation point for use in the specified algorithm for a single energy detector operating on a Rice channel.
+NakagamiLimit[M, \[Gamma], \[Lambda], K, n] calculates the truncation point for use in the specified algorithm for energy detection with diversity reception in a Rice channel.";
+NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{n = 1}, NakagamiLimit[M, \[Gamma], \[Lambda], K, n, DiversityType->"None", Algorithm->OptionValue[Algorithm], Tolerance->OptionValue[Tolerance]]]
+NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, \[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], algorithm = OptionValue[Algorithm]},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiLimit][[All,1]]],Options[target][[All,1]]];
+
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	Which[
+		algorithm == "Annamalai",
+			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[AnnamalaiNakagamiLimit]],
+		algorithm == "Herath",
+			HerathNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[HerathNakagamiLimit]],
+		algorithm == "Sun",
+			SunNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[SunNakagamiLimit]],
+		algorithm == "IntegerMN",
+			IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[IntegerMNNakagamiLimit]],
+		True,
+			Undefined
+	]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Annamalai' s method*)
+
+
+Options[AnnamalaiNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Limit->Null};
+AnnamalaiNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[AnnamalaiNakagamiProbabilityOfDetection, "Annamalai"];
+AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AnnamalaiNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AnnamalaiNakagamiProbabilityOfDetection]]]
+]
+AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	If[limit==Null, limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Algorithm->"Annamalai", DiversityType->diversityType]];
+
+	Which[
+		diversityType == "None",
+			1 - ((m / (m + (M / 2) \[Gamma]0))^m) (1 - GammaRegularized[M / 2, \[Lambda] / 2]) - Total[Table[(Gamma[m + k] / (Gamma[m] Gamma[k+1])) ((m / (m + (M / 2) \[Gamma]0))^m) ((((M / 2) \[Gamma]0) / (m + (M / 2) \[Gamma]0))^k) (1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k, 1, limit}]],
+		diversityType == "MRC",
+			1 - (2m / (2m + M \[Gamma]0))^(m n) (1 - GammaRegularized[M / 2, \[Lambda] / 2]) - Total[Table[Gamma[m n+k]/(Gamma[m n]Gamma[k+1]) (m/(m+M/2 \[Gamma]0))^(m n) (((M/2 \[Gamma]0)/(m+M/2 \[Gamma]0))^k) (1-GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k,1,limit}]],
+		diversityType == "EGC",
+			Undefined,
+		diversityType == "SC",
+			Undefined,
+		diversityType == "SEC",
+			Undefined,
+		diversityType == "SLC",
+			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) (1 - GammaRegularized[M n/2, \[Lambda] / 2]) - Total[Table[Gamma[m n+k]/(Gamma[m n]Gamma[k+1]) (m/(m+M/2 \[Gamma]0))^(m n) (((M/2 \[Gamma]0)/(m+M/2 \[Gamma]0))^k) (1-GammaRegularized[M n/2+k, \[Lambda] / 2]),{k,1,limit}]],
+		diversityType == "SLS",
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,Limit->limit[[i]],DiversityType->"None"],{i,n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,Limit->limit,DiversityType->"None"])^n,
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	]
+]
+
+
+Options[AnnamalaiNakagamiLimit] = {DiversityType->OptionValue[AnnamalaiNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
 AnnamalaiNakagamiLimit::usage = GenerateTruncationHelp[AnnamalaiNakagamiLimit, "Annamalai"];
 AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
 AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
@@ -483,7 +513,7 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol];
 				j/.FindRoot[1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
 			diversityType == "SLS",
-				AnnamalaiNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None"],
+				Table[AnnamalaiNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
 			True,
 				Undefined
 		]//N//Ceiling
@@ -495,13 +525,13 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 (*Digham' s method*)
 
 
-Options[DighamNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[DighamNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
 DighamNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[DighamNakagamiProbabilityOfDetection, "Digham"];
 DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[DighamNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	DighamNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[DighamNakagamiProbabilityOfDetection]]
 ]
-DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], RelevantOptions},
+DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{limit, \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -512,9 +542,7 @@ DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[DighamNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-
-	f := Which[
+	Which[
 		diversityType == "None",
 			Module[{A1, \[Beta]},
 				A1 = Exp[-\[Lambda] \[Beta] / (2 m)] (\[Beta]^(m - 1) LaguerreL[m - 1, -\[Lambda] (1 - \[Beta]) / 2] + (1 - \[Beta]) Total[Table[\[Beta]^i LaguerreL[i,-\[Lambda] (1 - \[Beta]) / 2], {i, 0, m - 2}]]);
@@ -546,18 +574,6 @@ DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
 ]
 
@@ -566,14 +582,14 @@ DighamNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 (*Herath' s method*)
 
 
-Options[HerathNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[HerathNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Limit->Null};
 HerathNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[HerathNakagamiProbabilityOfDetection, "Herath"];
 HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[HerathNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	HerathNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[HerathNakagamiProbabilityOfDetection]]
 ]
-HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, \[Psi], totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
-	lim = HerathNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType];
+HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], \[Gamma]0, \[Gamma]t, \[Psi], diversityType = OptionValue[DiversityType]},
+	limit = HerathNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType];
 
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
@@ -585,58 +601,48 @@ HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	f := Which[
+	If[limit==Null, limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Algorithm->"Herath", DiversityType->diversityType]];
+
+	Which[
 		diversityType == "None",
-			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M / 2), lim}]],
+			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M / 2), limit}]],
 		diversityType == "MRC",
-			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(n m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M / 2), lim}]],
+			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(n m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M / 2), limit}]],
 		!ListQ[diversityType] && diversityType == "EGC",
 			Which[
 				n == 2,
-					1 - (2 Sqrt[\[Pi]] Gamma[2m] (m)^(2m) / (Gamma[m]^(2) Gamma[2m + (1 / 2)] 2^(4m - 1))) Exp[-\[Lambda] / 2] (2 / ((M / 2) \[Gamma]0))^(2m) Total[Table[(\[Lambda] / 2)^(j / 2) NIntegrate[x^(2m - (j / 2) - 1) Exp[-(2m / ((M / 2) \[Gamma]0) + 1) x] BesselI[j, Sqrt[2 \[Lambda] x]] Hypergeometric1F1[2m, 2m + (1 / 2), m x / ((M / 2) \[Gamma]0)],{x, 0, \[Infinity]}],{j, M / 2, lim}]],
+					1 - (2 Sqrt[\[Pi]] Gamma[2m] (m)^(2m) / (Gamma[m]^(2) Gamma[2m + (1 / 2)] 2^(4m - 1))) Exp[-\[Lambda] / 2] (2 / ((M / 2) \[Gamma]0))^(2m) Total[Table[(\[Lambda] / 2)^(j / 2) NIntegrate[x^(2m - (j / 2) - 1) Exp[-(2m / ((M / 2) \[Gamma]0) + 1) x] BesselI[j, Sqrt[2 \[Lambda] x]] Hypergeometric1F1[2m, 2m + (1 / 2), m x / ((M / 2) \[Gamma]0)],{x, 0, \[Infinity]}],{j, M / 2, limit}]],
 				n == 3,
 					(* Untested *)
-					(*1 - Sqrt[\[Pi]] Exp[-\[Lambda] / 2] Total[Table[Total[Table[Total[Table[(\[Lambda] / 2)^j (3m / ((M / 2) \[Gamma]0 + 3m))^(3m + p + k) ((Gamma[2m + p] Gamma[2m + k] Gamma[3m + p] Gamma[3m + p + 1 / 2] Gamma[4m + 2p + k]) / (Gamma[m]^3 Gamma[n + 1] Gamma[p + 1] Gamma[2m + p + 1 / 2] Gamma[3m + p + k + 1 / 2] Gamma[6m + 2p])) (1 / (2^(4m + p + k - 3) k!)) Hypergeometric1F1[3m + p + k, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + 3m))], {k, 0, lim[[1]]}]], {p, 0, lim[[2]]}]], {j, M / 2, lim[[3]]}]]*)
+					(*1 - Sqrt[\[Pi]] Exp[-\[Lambda] / 2] Total[Table[Total[Table[Total[Table[(\[Lambda] / 2)^j (3m / ((M / 2) \[Gamma]0 + 3m))^(3m + p + k) ((Gamma[2m + p] Gamma[2m + k] Gamma[3m + p] Gamma[3m + p + 1 / 2] Gamma[4m + 2p + k]) / (Gamma[m]^3 Gamma[n + 1] Gamma[p + 1] Gamma[2m + p + 1 / 2] Gamma[3m + p + k + 1 / 2] Gamma[6m + 2p])) (1 / (2^(4m + p + k - 3) k!)) Hypergeometric1F1[3m + p + k, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + 3m))], {k, 0, limit[[1]]}]], {p, 0, limit[[2]]}]], {j, M / 2, limit[[3]]}]]*)
 					Undefined,
 				True,
 					Undefined
 			],
 		diversityType == "SC",
 			(* Untested *)
-			(*1 - n Exp[-\[Lambda] / 2] (m / \[Gamma]0)^(m) Total[Table[Total[Table[Binomial[n - 1, k] (-1)^(k) ((\[Lambda] / 2)^(j) / (j!)) Total[Table[MultinomialCoefficient[k, i, m] Pochhammer[m, i] (\[Gamma]0 / (\[Gamma]0 + m (k + 1)))^(i + m) Hypergeometric1F1[i + m, j + 1, \[Lambda] \[Gamma]0 / (2 (\[Gamma]0 + m (k + 1)))],{i, 0, k*(m - 1)}]],{k, 0, n - 1}]],{j, M / 2, lim}]],*)
+			(*1 - n Exp[-\[Lambda] / 2] (m / \[Gamma]0)^(m) Total[Table[Total[Table[Binomial[n - 1, k] (-1)^(k) ((\[Lambda] / 2)^(j) / (j!)) Total[Table[MultinomialCoefficient[k, i, m] Pochhammer[m, i] (\[Gamma]0 / (\[Gamma]0 + m (k + 1)))^(i + m) Hypergeometric1F1[i + m, j + 1, \[Lambda] \[Gamma]0 / (2 (\[Gamma]0 + m (k + 1)))],{i, 0, k*(m - 1)}]],{k, 0, n - 1}]],{j, M / 2, limit}]],*)
 			Undefined,
 		diversityType == "SEC" && n == 2,
-			(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) (1 - Exp[-\[Lambda] / 2] (m / (m + (M / 2) \[Gamma]0))^(m) Total[Table[((\[Lambda] / 2)^(j) / j!) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, M / 2, lim[[1]]}]]) + (m / ((M / 2) \[Gamma]0 + m))^(m) (Exp[-\[Lambda] / 2] / Gamma[m]) Total[Table[Total[Table[((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m))^(j) Gamma[j + m, (1 + m / ((M / 2) \[Gamma]0)) (M / 2) \[Gamma]t] (\[Lambda] / 2)^(k) / (j! k!),{k, 0, j + (M / 2) - 1}]],{j, 0, lim[[2]]}]],
+			(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0]) (1 - Exp[-\[Lambda] / 2] (m / (m + (M / 2) \[Gamma]0))^(m) Total[Table[((\[Lambda] / 2)^(j) / j!) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, M / 2, limit[[1]]}]]) + (m / ((M / 2) \[Gamma]0 + m))^(m) (Exp[-\[Lambda] / 2] / Gamma[m]) Total[Table[Total[Table[((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m))^(j) Gamma[j + m, (1 + m / ((M / 2) \[Gamma]0)) (M / 2) \[Gamma]t] (\[Lambda] / 2)^(k) / (j! k!),{k, 0, j + (M / 2) - 1}]],{j, 0, limit[[2]]}]],
 		diversityType == "SLC",
-			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(n m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M n / 2), lim}]],
+			1 - Exp[-\[Lambda] / 2] (m / ((M / 2) \[Gamma]0 + m))^(n m) Total[Table[((\[Lambda] / 2)^j / j!) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))],{j, (M n / 2), limit}]],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
-					1 - Product[1 - HerathNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
+					1 - Product[1 - HerathNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,Limit->limit[[i]],DiversityType->"None"],{i,n}],
 				!ListQ[\[Gamma]0],
-					1 - (1 - HerathNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
+					1 - (1 - HerathNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,Limit->limit,DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
-];
+]
 
 
-Options[HerathNakagamiLimit] = {DiversityType->OptionValue[HerathNakagamiProbabilityOfDetection,DiversityType],Tolerance->10^-6};
+Options[HerathNakagamiLimit] = {DiversityType->OptionValue[HerathNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
 HerathNakagamiLimit::usage = GenerateTruncationHelp[HerathNakagamiLimit, "Herath"];
 HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},HerathNakagamiLimit[M,\[Gamma],\[Lambda],m,n,Tolerance->OptionValue[Tolerance]]]
 HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], \[Psi]},
@@ -682,15 +688,7 @@ HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Opt
 			j0 = (\[Lambda] / 2) - 1 - InverseQ[1 - tol];
 			j/.FindRoot[(m / ((M / 2) \[Gamma]0 + m))^(m n) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]) == tol,{j, j0, 1, \[Infinity]}],
 		diversityType == "SLS",
-			j0 = (\[Lambda] / 2) - 1 - InverseQ[1 - tol];
-			Which[
-				ListQ[\[Gamma]0],
-					j/.FindRoot[(m / ((M / 2) Mean[\[Gamma]0] + m))^(m) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) Mean[\[Gamma]0] / (2 ((M / 2) Mean[\[Gamma]0] + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]) == tol,{j, M / 2}],
-				!ListQ[\[Gamma]0],
-					j/.FindRoot[(m / ((M / 2) \[Gamma]0 + m))^(m) Hypergeometric1F1[m, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]) == tol,{j, M / 2}],
-				True,
-					Undefined
-			],
+			Table[HerathNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
 		True,
 			Undefined
 	]//Ceiling
@@ -701,13 +699,13 @@ HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Opt
 (*Sun' s method*)
 
 
-Options[SunNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[SunNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Limit->Null};
 SunNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[SunNakagamiProbabilityOfDetection, "Sun"];
 SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SunNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	SunNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[SunNakagamiProbabilityOfDetection]]
 ]
-SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
+SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -718,75 +716,65 @@ SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	lim = SunNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType];
+	If[limit==Null, limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Algorithm->"Sun", DiversityType->diversityType]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
-			GammaRegularized[M / 2, \[Lambda] / 2] + Exp[-\[Lambda] / 2] Total[Table[((\[Lambda] / 2)^(j) / j!) (1 - (m / (m + (M / 2) \[Gamma]0))^(m) Total[Table[(m + k - 1)! / (Gamma[m] k!) ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(k),{k, 0, j - M / 2}]]),{j, M / 2, M / 2 + lim}]],
+			GammaRegularized[M / 2, \[Lambda] / 2] + Exp[-\[Lambda] / 2] Total[Table[((\[Lambda] / 2)^(j) / j!) (1 - (m / (m + (M / 2) \[Gamma]0))^(m) Total[Table[(m + k - 1)! / (Gamma[m] k!) ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(k),{k, 0, j - M / 2}]]),{j, M / 2, M / 2 + limit}]],
 		diversityType == "MRC",
-			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(j),{j, 0, lim}]],
+			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(j),{j, 0, limit}]],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
-			1 - n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (m / ((M / 2) \[Gamma]0))^(m + k) Total[Table[(1 - GammaRegularized[i + M / 2, \[Lambda] / 2]) Pochhammer[m, i + k] / i! ((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m (l + 1)))^(i + m + k),{i, 0, lim}]],{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
+			1 - n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (m / ((M / 2) \[Gamma]0))^(m + k) Total[Table[(1 - GammaRegularized[i + M / 2, \[Lambda] / 2]) Pochhammer[m, i + k] / i! ((M / 2) \[Gamma]0 / ((M / 2) \[Gamma]0 + m (l + 1)))^(i + m + k),{i, 0, limit}]],{k, 0, l (m - 1)}]],{l, 0, n - 1}]],
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) n + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(j),{j, 0, lim}]],
+			1 - (m / (m + (M / 2) \[Gamma]0))^(m n) Total[Table[(1 - GammaRegularized[(M / 2) n + j, \[Lambda] / 2]) Pochhammer[m n, j] / j! ((M / 2) \[Gamma]0 / (m + (M / 2) \[Gamma]0))^(j),{j, 0, limit}]],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
-					1 - Product[1 - SunNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
+					1 - Product[1 - SunNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,Limit->limit[[i]],DiversityType->"None"],{i,n}],
 				!ListQ[\[Gamma]0],
-					1 - (1 - SunNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
+					1 - (1 - SunNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,Limit->limit,DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
-];
+]
 
 
-Options[SunNakagamiLimit] = {DiversityType->OptionValue[SunNakagamiProbabilityOfDetection,DiversityType],Tolerance->10^-6};
+Options[SunNakagamiLimit] = {DiversityType->OptionValue[SunNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
 SunNakagamiLimit::usage = GenerateTruncationHelp[SunNakagamiLimit, "Sun"];
 SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},SunNakagamiLimit[M,\[Gamma],\[Lambda],m,n,Tolerance->OptionValue[Tolerance]]]
 SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 
-	Which[
-		diversityType == "None",
-			j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
-			j/.FindRoot[(1 - GammaRegularized[M / 2 + j - 1, \[Lambda] / 2]) (1 - CDF[NegativeBinomialDistribution[m, (m / (m + (M / 2) \[Gamma]))^(m)], j + 1]) == tol,{j, j0, 1, \[Infinity]}],
-		diversityType == "MRC",
-			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
-		diversityType == "EGC",
-			Undefined,
-		diversityType == "SC",
-			j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
-			j/.FindRoot[n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (Gamma[m + k] / Gamma[m]) (1 - GammaRegularized[M / 2 + j, \[Lambda] / 2]) (1 / (l + 1))^(m + k), {k, 0, l (m - 1)}]], {l, 0, n - 1}]] == tol, {j, j0, 1, \[Infinity]}],
-		diversityType == "SEC",
-			Undefined,
-		diversityType == "SLC",
-			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
-		diversityType == "SLS",
-			SunNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->"None"],
-		True,
-			Undefined
-	]//N//Ceiling
+	Quiet[
+		Which[
+			diversityType == "None",
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
+				j/.FindRoot[(1 - GammaRegularized[M / 2 + j - 1, \[Lambda] / 2]) (1 - CDF[NegativeBinomialDistribution[m, (m / (m + (M / 2) \[Gamma]))^(m)], j + 1]) == tol,{j, j0, 1, \[Infinity]}],
+			diversityType == "MRC",
+				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
+			diversityType == "EGC",
+				Undefined,
+			diversityType == "SC",
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
+				j/.FindRoot[n Total[Table[(-1)^(l) Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (Gamma[m + k] / Gamma[m]) (1 - GammaRegularized[M / 2 + j, \[Lambda] / 2]) (1 / (l + 1))^(m + k), {k, 0, l (m - 1)}]], {l, 0, n - 1}]] == tol, {j, j0, 1, \[Infinity]}],
+			diversityType == "SEC",
+				Undefined,
+			diversityType == "SLC",
+				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
+			diversityType == "SLS",
+				Table[SunNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
+			True,
+				Undefined
+		]//Ceiling
+	]
 ]
 
 
@@ -794,13 +782,13 @@ SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Option
 (*Numerical method*)
 
 
-Options[NumericalNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[NumericalNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
 NumericalNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NumericalNakagamiProbabilityOfDetection, "Numerical"];
 NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NumericalNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NumericalNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NumericalNakagamiProbabilityOfDetection]]
 ]
-NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
+NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
 	\[ScriptCapitalD] = NumericalNakagamiDistribution[M, \[Gamma], m, n, diversityType];
 
 	(* Handle both lists and scalar values for diversityType *)
@@ -813,7 +801,7 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	f := Which[
+	Which[
 		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC" || diversityType == "SLC",
 			1 - CDF[\[ScriptCapitalD], \[Lambda]],
 		diversityType == "SLS",
@@ -827,20 +815,8 @@ NumericalNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
-];
+]
 
 
 NumericalNakagamiDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, diversityType0_] := NumericalNakagamiDistribution[M, \[Gamma], m, n, diversityType0] = Module[{\[Gamma]t, \[Gamma]0, g, numberOfPoints = 100000, x, diversityType},
@@ -883,13 +859,13 @@ NumericalNakagamiDistribution[M_?NumericQ, \[Gamma]_, m_?NumericQ, n_?IntegerQ, 
 (*Integer mn method*)
 
 
-Options[IntegerMNNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[IntegerMNNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Limit->Null};
 IntegerMNNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[IntegerMNNakagamiProbabilityOfDetection, "IntegerMN"];
 IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[IntegerMNNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[IntegerMNNakagamiProbabilityOfDetection]]]
 ]
-IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, \[Gamma]0, \[Gamma]t, f, g, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
+IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], \[Gamma]0, \[Gamma]t, g, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
 	(* This method can only be used when m * n is an integer *)
 	If[Abs[m n - x] > tol, Return[Undefined]];
 	
@@ -905,7 +881,7 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 	g[A_, B_, k_] := (1 / 2) Exp[-A^2] Total[Table[((I/(2 B))^l / l!) FaddeevaDerivative[l, -I (A + (1 / (2 B)))], {l, 0, k - 1}]] // Re;
 	
-	f := Which[
+	Which[
 		diversityType == "None",
 			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
 				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
@@ -916,15 +892,15 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			],
 		diversityType == "EGC",
 			(* Dharmawansa's exact method *)
-			(*lim = IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], m, n];
+			(*If[limit==Null, limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Algorithm->"IntegerMN", DiversityType->diversityType]];
 			Which[
 				n == 2,
 					With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m n)},
-						AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (2 Sqrt[\[Pi]] / 2^(4m - 1)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + 1 / 2])) Total[Table[(Pochhammer[2m, s] / Pochhammer[2m + 1 / 2, s]) (Gamma[2m + s] / s!) (1 / 2)^s g[A, B, 2m + s], {s, 0, lim}]]
+						AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (2 Sqrt[\[Pi]] / 2^(4m - 1)) (Gamma[2m] / (Gamma[m]^2 Gamma[2m + 1 / 2])) Total[Table[(Pochhammer[2m, s] / Pochhammer[2m + 1 / 2, s]) (Gamma[2m + s] / s!) (1 / 2)^s g[A, B, 2m + s], {s, 0, limit}]]
 					],
 				n == 3,
 					(* Untested *)
-					(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) (*D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(6 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t,3m+l+k-1}]*),{k,0,lim[[2]]}]],{l,0,lim[[1]]}]],
+					(4 Sqrt[\[Pi]] / (2^(4m - 1))) (Gamma[2m] / (Gamma[m]^3)) Total[Table[(Gamma[2m+l] Gamma[4m+2l] / (Gamma[2m+l+1/2] Gamma[6m+2l] Gamma[l+1] (2^l))) Total[Table[(Pochhammer[2m,k] Pochhammer[4m+2l,k] / (Pochhammer[3m+l+1/2,k] Pochhammer[3m+l,k]))((1/2)^k/k!)(-1)^(k+2+3 m) (*D[(1+Erf[(M-\[Lambda])/(2 Sqrt[M])]+E^((3 m t (3 m t+M \[Gamma]0-\[Gamma]0 \[Lambda]))/(M \[Gamma]0^2)) Erfc[(6 m t+M \[Gamma]0-\[Gamma]0 \[Lambda])/(2 Sqrt[M] \[Gamma]0)])/(2 t),{t,3m+l+k-1}]*),{k,0,limit[[2]]}]],{l,0,limit[[1]]}]],
 				True,
 					Undefined
 			],*)
@@ -957,18 +933,6 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			],
 		True,
 			Undefined
-	];
-	
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-				iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
@@ -976,7 +940,7 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 
 (* This function applies to Dharmawansa's method only *)
-Options[IntegerMNNakagamiLimit]={DiversityType->OptionValue[IntegerMNNakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
+Options[IntegerMNNakagamiLimit]={DiversityType->OptionValue[IntegerMNNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
 IntegerMNNakagamiLimit::usage = GenerateTruncationHelp[IntegerMNNakagamiLimit, "IntegerMN"];
 IntegerMNNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance]},
 	Which[
@@ -1008,13 +972,13 @@ IntegerMNNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,
 (*Large SNR method*)
 
 
-Options[LargeSNRNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[LargeSNRNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
 LargeSNRNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[LargeSNRNakagamiProbabilityOfDetection, "LargeSNR"];
 LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[LargeSNRNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	LargeSNRNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[LargeSNRNakagamiProbabilityOfDetection]]]
 ]
-LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
+LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{limit, g, \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType], x = Round[m n], tol = 10^-6},
 	(* This method can only be used when m * n is an integer *)
 	If[Abs[m n - x] > tol, Return[Undefined]];
 	
@@ -1030,7 +994,7 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 
 	g[n0_] := AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] + (1 - AWGNProbabilityOfFalseAlarm[M,\[Lambda],n]) ( Gamma[m n,(m (-M n+\[Lambda]))/(M \[Gamma]0)]/Gamma[m n]);
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			g[1],
 		diversityType == "MRC",
@@ -1054,18 +1018,6 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
@@ -1076,13 +1028,13 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 (*Asymptotic method*)
 
 
-Options[AsymptoticNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[AsymptoticNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
 AsymptoticNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[AsymptoticNakagamiProbabilityOfDetection, "Asymptotic"];
 AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AsymptoticNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	AsymptoticNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AsymptoticNakagamiProbabilityOfDetection]]]
 ]
-AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
+AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{g, \[Gamma]0, \[Gamma]t, time, result, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -1095,7 +1047,7 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 
 	g[A_,B_] := Q[A Sqrt[2 / (B^2 + 1)]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			g[(\[Lambda] - M (1 + \[Gamma]0)) / (2 Sqrt[M]), - Sqrt[M / (2 m)] \[Gamma]0],
 		diversityType == "MRC",
@@ -1121,18 +1073,6 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
@@ -1141,13 +1081,13 @@ AsymptoticNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Num
 (*Lopez-Benitez asymptotic method*)
 
 
-Options[LopezBenitezNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations]};
+Options[LopezBenitezNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
 LopezBenitezNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[LopezBenitezNakagamiProbabilityOfDetection, "LopezBenitez"];
 LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[LopezBenitezNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	LopezBenitezNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[LopezBenitezNakagamiProbabilityOfDetection]]]
 ]
-LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
+LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{\[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -1158,7 +1098,7 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			(1/2 (1+Erf[(m (M (1+\[Gamma]0)-\[Lambda]))/(Sqrt[2] M Sqrt[m] \[Gamma]0)])+1/2 E^((4 c M (-m+a M \[Gamma]0^2)+b (-b M^2 \[Gamma]0^2+2 Sqrt[2] m Sqrt[M] (M (1+\[Gamma]0)-\[Lambda]))-2 a m (-M (1+\[Gamma]0)+\[Lambda])^2)/(4 M (-m+a M \[Gamma]0^2))) Sqrt[m/(m-a M \[Gamma]0^2)] (Erf[(b Sqrt[M^3] \[Gamma]0^2+Sqrt[2] m (-M (1+\[Gamma]0)+\[Lambda]))/(2 M \[Gamma]0 Sqrt[(m-a M \[Gamma]0^2)])]-Erf[(-2 m+\[Gamma]0 (-2 a M+Sqrt[2] b Sqrt[M]+2 a \[Lambda]))/(2 Sqrt[2] Sqrt[(m-a M \[Gamma]0^2)])])+1/2 E^(-((4 c M (m-a M \[Gamma]0^2)+b (b M^2 \[Gamma]0^2+2 Sqrt[2] m Sqrt[M] (M (1+\[Gamma]0)-\[Lambda]))+2 a m (-M (1+\[Gamma]0)+\[Lambda])^2)/(4 M (-m+a M \[Gamma]0^2)))) Sqrt[m/(m-a M \[Gamma]0^2)] (-2+Erfc[(b Sqrt[M^3] \[Gamma]0^2+Sqrt[2] m (M (1+\[Gamma]0)-\[Lambda]))/(2 M \[Gamma]0 Sqrt[(m-a M \[Gamma]0^2)])]))/.LopezBenitezParameters[(-M (1+\[Gamma]0)+\[Lambda])/(2 Sqrt[M])],
 		diversityType == "MRC",
@@ -1189,18 +1129,6 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
@@ -1209,13 +1137,13 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 (*Numerical Gaussian method*)
 
 
-Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType],Timed->OptionValue[NakagamiProbabilityOfDetection,Timed],MaxTime->OptionValue[NakagamiProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[NakagamiProbabilityOfDetection,MaxIterations],LowSNR->OptionValue[NakagamiProbabilityOfDetection,LowSNR]};
+Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], LowSNR->OptionValue[NakagamiProbabilityOfDetection,LowSNR]};
 NGaussianNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NGaussianNakagamiProbabilityOfDetection, "NGaussian"];
 NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NGaussianNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[NGaussianNakagamiProbabilityOfDetection]]]
 ]
-NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, \[Gamma]t, \[Gamma]0, f, totaltime = 0, iterations = 0, time, result, RelevantOptions, diversityType = OptionValue[DiversityType]},
+NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, RelevantOptions, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -1228,7 +1156,7 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,DiversityType->diversityType],{x,0,\[Infinity]}],
 		diversityType == "MRC",
@@ -1252,18 +1180,6 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
 ]
 
