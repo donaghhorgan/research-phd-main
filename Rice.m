@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*03/12/2012*)
-(*1.21*)
+(*1.22*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.22: Finished MRC and SLC implementations.*)
 (*Version 1.21: Finished SLS implementations.*)
 (*Version 1.2: Moved timing functions to RiceProbabilityOfDetection and added RiceLimit function for public access to truncation points. More minor bug fixes.*)
 (*Version 1.1: Major clean up of code, added approximations and numerical methods for no diversity Rice channels.*)
@@ -178,7 +179,7 @@ RicePDF[\[Gamma]_,K_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Metho
 				diversityType == "None",
 					((2 (K + 1)) / \[Gamma]) PDF[NoncentralChiSquareDistribution[2, 2K], (2 (K + 1) x) / \[Gamma]],
 				diversityType == "MRC",
-					Undefined,
+					((2 (K + 1)) / \[Gamma]) PDF[NoncentralChiSquareDistribution[2n, 2K n], (2 (K + 1) x) / \[Gamma]],
 				diversityType == "EGC",
 					Undefined,
 				diversityType == "SC",
@@ -186,18 +187,25 @@ RicePDF[\[Gamma]_,K_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Metho
 				diversityType == "SEC",
 					Undefined,
 				diversityType == "SLC",
-					(K + 1) / \[Gamma] Exp[-K n - (K + 1) x / \[Gamma]]((K + 1) x / (K n \[Gamma]))^((n - 1) / 2) BesselI[n - 1, 2 Sqrt[K n (K + 1)x / \[Gamma]]],
-				!ListQ[diversityType] && diversityType == "SLS",
-					Undefined,
+					((2 (K + 1)) / \[Gamma]) PDF[NoncentralChiSquareDistribution[2n, 2K n], (2 (K + 1) x) / \[Gamma]],
+				diversityType == "SLS",
+					Which[
+						ListQ[\[Gamma]0],
+							Product[RicePDF[\[Gamma]0[[i]], K, x, DiversityType->"None", Method->"Exact"], {i, n}],
+						!ListQ[\[Gamma]0],
+							RicePDF[\[Gamma]0, K, x, DiversityType->"None", Method->"Exact"]^n,
+						True,
+							Undefined
+					],
 				True,
 					Undefined
 			],
 		method == "Approximate",
 			Which[
 				diversityType == "None",
-					PDF[NormalDistribution[\[Gamma], Sqrt[2K + 1](\[Gamma] / (K + 1))], x],
+					PDF[NormalDistribution[\[Gamma], Sqrt[2K + 1] (\[Gamma] / (K + 1))], x],
 				diversityType == "MRC",
-					Undefined,
+					PDF[NormalDistribution[n \[Gamma], Sqrt[(1 + 2K) n] (\[Gamma] / (K + 1))], x],
 				diversityType == "EGC",
 					Undefined,
 				diversityType == "SC",
@@ -205,9 +213,16 @@ RicePDF[\[Gamma]_,K_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Metho
 				diversityType == "SEC",
 					Undefined,
 				diversityType == "SLC",
-					2 (K + 1) / \[Gamma] PDF[NormalDistribution[2 n + 2 K n, Sqrt[4 n + 8 K n]], 2 (K + 1) x / \[Gamma]],
+					PDF[NormalDistribution[n \[Gamma], Sqrt[(1 + 2K) n] (\[Gamma] / (K + 1))], x],
 				diversityType == "SLS",
-					Undefined,
+					Which[
+						ListQ[\[Gamma]0],
+							Product[RicePDF[\[Gamma]0[[i]], K, x, DiversityType->"None", Method->"Approximate"], {i, n}],
+						!ListQ[\[Gamma]0],
+							RicePDF[\[Gamma]0, K, x, DiversityType->"None", Method->"Approximate"]^n,
+						True,
+							Undefined
+					],
 				True,
 					Undefined
 			],
@@ -448,13 +463,13 @@ NumericalRiceDistribution[M_?NumericQ, \[Gamma]_, K_?NumericQ, n_?IntegerQ, dive
 
 	\[ScriptCapitalD] = ProbabilityDistribution[RicePDF[\[Gamma]0, K, y, n, DiversityType->diversityType, Method->"Exact"], {y, 0, \[Infinity]}];
 
-	g[a_,b_] := SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M a, M x], x \[Distributed] \[ScriptCapitalD]], numberOfPoints]];
+	g[a_] := SmoothKernelDistribution[RandomVariate[ParameterMixtureDistribution[NoncentralChiSquareDistribution[M a, M x], x \[Distributed] \[ScriptCapitalD]], numberOfPoints]];
 
 	Which[
 		diversityType == "None",
-			g[1, 1],
+			g[1],
 		diversityType == "MRC",
-			Undefined,
+			g[1],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
@@ -462,7 +477,7 @@ NumericalRiceDistribution[M_?NumericQ, \[Gamma]_, K_?NumericQ, n_?IntegerQ, dive
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			Undefined,
+			g[n],
 		diversityType == "SLS",
 			(* We don't need the SLS PDF here, the master function will use the no diversity PDF instead *)
 			Null,
@@ -495,7 +510,8 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_
 
 	If[limit==Null, limit = RiceLimit[M, \[Gamma], \[Lambda], K, n, Algorithm->"SmallK", DiversityType->diversityType]];
 
-	J[k_, a_, b_, c_] := (Exp[-a^2] / 2) ((I c / (2 b))^k / k!) FaddeevaDerivative[k, -I (a + (c / (2b)))] // Re;
+	(* Precision is set to 40 here - seems to be what's required for FaddeevaDerivative to be stable *)
+	J[k_, a_, b_, c_] := (Exp[-a^2] / 2) ((I c / (2 b))^k / k!) FaddeevaDerivative[k, N[-I (a + (c / (2b))), 40]] // Re;
 
 	Which[
 		diversityType == "None",
@@ -503,7 +519,9 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_
 				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K] (J[0, a, b, c] + Total[Table[K^k / k! Total[Table[J[p, a, b, c], {p, 0, k}]], {k, 1, limit}]])
 			],
 		diversityType == "MRC",
-			Undefined,
+			With[{a = (\[Lambda] - M) / (2 Sqrt[M]), b = - Sqrt[M] / 2, c = (K + 1) / \[Gamma]0},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K n] (Total[Table[J[p, a, b, c], {p, 0, n - 1}]] + Total[Table[(K n)^k / k! Total[Table[J[p, a, b, c], {p, 0, n + k - 1}]], {k, 1, limit}]])
+			],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
@@ -511,7 +529,9 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			Undefined,
+			With[{a = (\[Lambda] - M n) / (2 Sqrt[M n]), b = - Sqrt[M / n] / 2, c = (K + 1) / \[Gamma]0},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K n] (Total[Table[J[p, a, b, c], {p, 0, n - 1}]] + Total[Table[(K n)^k / k! Total[Table[J[p, a, b, c], {p, 0, n + k - 1}]], {k, 1, limit}]])
+			],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
@@ -542,7 +562,8 @@ SmallKRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?NumericQ,Options
 			j0 = 1;
 			j/.FindRoot[(1 - GammaRegularized[j + 1, K]) (1 - AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType]) == tol, {j, j0, 1, \[Infinity]}],
 		diversityType == "MRC",
-			Undefined,
+			j0 = 1;
+			j/.FindRoot[(1 - GammaRegularized[j + 1, K n]) (1 - AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType]) == tol, {j, j0, 1, \[Infinity]}],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
@@ -550,7 +571,8 @@ SmallKRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?NumericQ,Options
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			Undefined,
+			j0 = 1;
+			j/.FindRoot[(1 - GammaRegularized[j + 1, K n]) (1 - AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType]) == tol, {j, j0, 1, \[Infinity]}],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]],
@@ -593,7 +615,7 @@ AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?Numeric
 		diversityType == "None",
 			g[(\[Lambda] - M) / Sqrt[2 M], - Sqrt[M / 2], \[Gamma]0, Sqrt[2K + 1] (\[Gamma]0 / (K + 1))],
 		diversityType == "MRC",
-			Undefined,
+			g[(\[Lambda] - M) / Sqrt[2 M], - Sqrt[M / 2], n \[Gamma]0, Sqrt[n (2K + 1)] (\[Gamma]0 / (K + 1))],
 		diversityType == "EGC",
 			Undefined,
 		diversityType == "SC",
@@ -601,7 +623,7 @@ AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?Numeric
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			Undefined,
+			g[(\[Lambda] - M n) / Sqrt[2 M n], - Sqrt[M / (2 n)], n \[Gamma]0, Sqrt[n (2K + 1)] (\[Gamma]0 / (K + 1))],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
