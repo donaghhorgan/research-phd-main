@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*30/11/2012*)
-(*1.1*)
+(*03/12/2012*)
+(*1.2*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.2: Moved timing functions to RiceProbabilityOfDetection and added RiceLimit function for public access to truncation points. More minor bug fixes.*)
 (*Version 1.1: Major clean up of code, added approximations and numerical methods for no diversity Rice channels.*)
 (*Version 1.02: Moved database logging functions to the Network package.*)
 (*Version 1.01: Added sample complexity function.*)
@@ -70,6 +71,9 @@ RicePDF;
 
 
 RiceProbabilityOfDetection;
+
+
+RiceLimit;
 
 
 (* ::Subsubsection::Closed:: *)
@@ -225,81 +229,37 @@ RicePDF[\[Gamma]_,K_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Metho
 
 Options[RiceProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 RiceProbabilityOfDetection::usage="RiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] calculates the probability of detection for a single energy detector operating on a Rice fading channel.
-RiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n] calculates the probability of detection for energy detection with diversity reception in a Rice fading channel.\n\n"<>MethodHelp[RiceProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[RiceProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"SmallK\"", "\"Asymptotic\"", "\"NGaussian\""},{"\"Annamalai\"", "\"Herath\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[RiceProbabilityOfDetection]<>"\n\n"<>TimingHelp[RiceProbabilityOfDetection];
+RiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n] calculates the probability of detection for energy detection with diversity reception in a Rice fading channel.\n\n"<>MethodHelp[RiceProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[RiceProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"SmallK\"", "\"Asymptotic\"", "\"Numerical\""},{"\"Annamalai\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[RiceProbabilityOfDetection]<>"\n\n"<>TimingHelp[RiceProbabilityOfDetection];
 RiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,K_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	RiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, RelevantOptions[RiceProbabilityOfDetection]]
 ]
-RiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,K_,n_,OptionsPattern[]]:=Module[{RelevantOptions, method = OptionValue[Method], algorithm = OptionValue[Algorithm]},
+RiceProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,K_,n_,OptionsPattern[]]:=Module[{RelevantOptions, method = OptionValue[Method], algorithm = OptionValue[Algorithm], limit, f, totaltime = 0, iterations = 0, time, result},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 
-	Which[
+	limit = RiceLimit[M, \[Gamma], \[Lambda], K, n, Algorithm->algorithm, RelevantOptions[RiceLimit]];
+
+	f := Which[
 		method == "Exact",
 			Which[
 				algorithm == "Annamalai",
-					AnnamalaiRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[AnnamalaiRiceProbabilityOfDetection]],
-				algorithm == "Herath",
-					HerathRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[HerathRiceProbabilityOfDetection]],
+					AnnamalaiRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, Limit->limit, RelevantOptions[AnnamalaiRiceProbabilityOfDetection]],
 				algorithm == "Numerical",
-					NumericalRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[NumericalRiceProbabilityOfDetection]],
+					NumericalRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, RelevantOptions[NumericalRiceProbabilityOfDetection]],
 				True,
 					Undefined
 			],
 		method == "Approximate",
 			Which[
-				!ListQ[algorithm] && algorithm == "SmallK",
-					SmallKRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[SmallKRiceProbabilityOfDetection]],
-				!ListQ[algorithm] && algorithm == "Asymptotic",
-					AsymptoticRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[AsymptoticRiceProbabilityOfDetection]],
-				!ListQ[algorithm] && algorithm == "NGaussian",
-					NGaussianRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[NGaussianRiceProbabilityOfDetection]],
+				algorithm == "SmallK",
+					SmallKRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, Limit->limit, RelevantOptions[SmallKRiceProbabilityOfDetection]],
+				algorithm == "Asymptotic",
+					AsymptoticRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, RelevantOptions[AsymptoticRiceProbabilityOfDetection]],
+				algorithm == "Numerical",
+					NGaussianRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n, RelevantOptions[NGaussianRiceProbabilityOfDetection]],
 				True,
 					Undefined
 			],
-		True,
-			Undefined
-	]
-]
-
-
-(* ::Subsubsection::Closed:: *)
-(*Annamalai's method*)
-
-
-Options[AnnamalaiRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType],Timed->OptionValue[RiceProbabilityOfDetection,Timed],MaxTime->OptionValue[RiceProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[RiceProbabilityOfDetection,MaxIterations]};
-AnnamalaiRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[AnnamalaiRiceProbabilityOfDetection, "Annamalai"];
-AnnamalaiRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AnnamalaiRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	AnnamalaiRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[AnnamalaiRiceProbabilityOfDetection]]
-]
-AnnamalaiRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
-	(* Handle both lists and scalar values for diversityType *)
-	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
-	
-	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
-	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
-
-	(* Check for invalid combinations of inputs *)
-	If[diversityType == "None" && n > 1, Return[Undefined]];
-	If[\[Gamma]0 == Undefined, Return[Undefined]];
-
-	lim = AnnamalaiRiceLimit[M,\[Gamma],\[Lambda],K,n,DiversityType->diversityType];
-
-	f := Which[
-		diversityType == "None",
-			1 - (2 (1 + K) / (2 + 2K + M \[Gamma]0)) Exp[-K M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 - GammaRegularized[M/2, \[Lambda] / 2]) - Total[Table[k! (2 (1 + K) / (2 + 2K + M \[Gamma]0)) (((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k) Exp[-K M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 / k! + Total[Table[((2 K (1 + K) / (2 + 2K + M \[Gamma]0))^i) / (i! i! (k - i)!),{i , 1, k}]]) (1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k, 1, lim}]],
-		diversityType == "MRC",
-			1 - ((1 - GammaRegularized[M / 2, \[Lambda] / 2]) (2 (1 + K) / (2 + 2K + M \[Gamma]0))^n Exp[-K M n \[Gamma]0 / (2 + 2K + M \[Gamma]0)]) - Total[Table[(1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]) (n + k - 1)! ((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k (2 (1 + K) / (2 + 2K + M \[Gamma]0))^n Exp[-K M n \[Gamma]0 / (2 + 2K + M \[Gamma]0)] Total[Table[(1 / (i! (n + i - 1)! (k - i)!)) (2K n (K + 1) / (2 + 2K + M \[Gamma]))^i,{i, 0, k}]], {k, 1, lim}]],
-		diversityType == "EGC",
-			Undefined,
-		diversityType == "SC",
-			Undefined,
-		diversityType == "SEC",
-			Undefined,
-		diversityType == "SLC",
-			1 - ((2 (1 + K) / (2 + 2K + M \[Gamma]0))^n) Exp[-K n M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 - GammaRegularized[M n/2, \[Lambda] / 2]) - Total[Table[(n + k - 1)! ((2 (1 + K) / (2 + 2K + M \[Gamma]0))^n) (((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k) Exp[-K n M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 / ((n - 1)! k!) + Total[Table[((2 K n (1 + K) / (2 + 2K + M \[Gamma]0))^i) / (i! (n + i - 1)! (k - i)!),{i , 1, k}]]) (1 - GammaRegularized[M n / 2 + k, \[Lambda] / 2]),{k, 1, lim}]],
-		diversityType == "SLS",
-			Undefined,
 		True,
 			Undefined
 	];
@@ -318,10 +278,85 @@ AnnamalaiRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_
 ]
 
 
-Options[AnnamalaiRiceLimit]={DiversityType->OptionValue[AnnamalaiRiceProbabilityOfDetection,DiversityType], Tolerance->10^-6};
+Options[RiceLimit] = {Algorithm->"Annamalai", DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType], Tolerance->10^-6};
+RiceLimit::usage = "RiceLimit[M, \[Gamma], \[Lambda], K] calculates the truncation point for use in the specified algorithm for a single energy detector operating on a Rice channel.
+RiceLimit[M, \[Gamma], \[Lambda], K, n] calculates the truncation point for use in the specified algorithm for energy detection with diversity reception in a Rice channel.";
+RiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{n = 1}, RiceLimit[M, \[Gamma], \[Lambda], K, n, DiversityType->"None", Algorithm->OptionValue[Algorithm], Tolerance->OptionValue[Tolerance]]]
+RiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, \[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], algorithm = OptionValue[Algorithm]},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceLimit][[All,1]]],Options[target][[All,1]]];
+
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	Which[
+		algorithm == "Annamalai",
+			AnnamalaiRiceLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[AnnamalaiRiceLimit]],
+		algorithm == "SmallK",
+			SmallKRiceLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[SmallKRiceLimit]],
+		True,
+			Undefined
+	]
+]
+
+
+(* ::Subsubsection::Closed:: *)
+(*Annamalai's method*)
+
+
+Options[AnnamalaiRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType], Limit->Undefined, LimitFunction->AnnalmalaiRiceLimit};
+AnnamalaiRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[AnnamalaiRiceProbabilityOfDetection, "Annamalai"];
+AnnamalaiRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AnnamalaiRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	AnnamalaiRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[AnnamalaiRiceProbabilityOfDetection]]
+]
+AnnamalaiRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], f, \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	If[limit==Undefined, limit = f[M, \[Gamma], \[Lambda], K, n, DiversityType->diversityType]/.f->OptionValue[LimitFunction]];
+
+	Which[
+		diversityType == "None",
+			1 - (2 (1 + K) / (2 + 2K + M \[Gamma]0)) Exp[-K M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 - GammaRegularized[M/2, \[Lambda] / 2]) - Total[Table[(k!) (2 (1 + K) / (2 + 2K + M \[Gamma]0)) (((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k) Exp[-K M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 / k! + Total[Table[((2 K (1 + K) / (2 + 2K + M \[Gamma]0))^i) / (i! i! (k - i)!),{i , 1, k}]]) (1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]),{k, 1, limit}]],
+		diversityType == "MRC",
+			1 - ((1 - GammaRegularized[M / 2, \[Lambda] / 2]) (2 (1 + K) / (2 + 2K + M \[Gamma]0))^n Exp[-K M n \[Gamma]0 / (2 + 2K + M \[Gamma]0)]) - Total[Table[(1 - GammaRegularized[M / 2 + k, \[Lambda] / 2]) ((n + k - 1)!) (((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k) ((2 (1 + K) / (2 + 2K + M \[Gamma]0))^n) Exp[-K M n \[Gamma]0 / (2 + 2K + M \[Gamma]0)] Total[Table[(1 / (i! (n + i - 1)! (k - i)!)) (2K n (K + 1) / (2 + 2K + M \[Gamma]))^i,{i, 0, k}]], {k, 1, limit}]],
+		diversityType == "EGC",
+			Undefined,
+		diversityType == "SC",
+			Undefined,
+		diversityType == "SEC",
+			Undefined,
+		diversityType == "SLC",
+			1 - ((2 (1 + K) / (2 + 2K + M \[Gamma]0))^n) Exp[-K n M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 - GammaRegularized[M n/2, \[Lambda] / 2]) - Total[Table[((n + k - 1)!) ((2 (1 + K) / (2 + 2K + M \[Gamma]0))^n) (((M \[Gamma]0) / (2 + 2K + M \[Gamma]0))^k) Exp[-K n M \[Gamma]0 / (2 + 2K + M \[Gamma]0)] (1 / ((n - 1)! k!) + Total[Table[((2 K n (1 + K) / (2 + 2K + M \[Gamma]0))^i) / (i! (n + i - 1)! (k - i)!),{i , 1, k}]]) (1 - GammaRegularized[M n / 2 + k, \[Lambda] / 2]),{k, 1, limit}]],
+		diversityType == "SLS",
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - AnnamalaiRiceProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], K, DiversityType->"None"], {i, n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - AnnamalaiRiceProbabilityOfDetection[M, \[Gamma]0, \[Lambda], K, DiversityType->"None"])^n,
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	]
+]
+
+
+Options[AnnamalaiRiceLimit] = {DiversityType->OptionValue[RiceLimit,DiversityType], Tolerance->OptionValue[RiceLimit,Tolerance]};
 AnnamalaiRiceLimit::usage = GenerateTruncationHelp[AnnamalaiRiceLimit, "Annamalai"];
 AnnamalaiRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiRiceLimit[M,\[Gamma],\[Lambda],K,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
-AnnamalaiRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
+AnnamalaiRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 
@@ -355,71 +390,16 @@ AnnamalaiRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,Opti
 
 
 (* ::Subsubsection::Closed:: *)
-(*Herath' s method*)
-
-
-Options[HerathLimit]={Tolerance->10^-6};
-HerathLimit::usage="HerathLimit[M, \[Gamma], \[Lambda], K] calculates the truncation point for use in Herath's algorithm using the default tolerance for a single energy detector.
-HerathLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in Herath's algorithm using the default tolerance for a cooperative network.
-
-The calculation tolerance may be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[HerathLimit]//N//InputForm]<>".";
-HerathLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},HerathLimit[M,\[Gamma],\[Lambda],m,n,Tolerance->OptionValue[Tolerance]]]
-HerathLimit[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{x0,x1,f,fx0,tol=OptionValue[Tolerance]},
-	Block[{$MaxExtraPrecision=\[Infinity]},
-		f[j_?NumericQ]:=N[(m / ((M / 2) \[Gamma] + m))^(n m) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma] / (2 ((M / 2) \[Gamma] + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]),20];
-		(* Use Newton's method to find root *)
-		Ceiling[j/.FindRoot[f[j]==tol,{j,Ceiling[M n/2]}]]
-	]
-]
-
-
-Options[HerathRiceProbabilityOfDetection]={Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
-HerathRiceProbabilityOfDetection::usage="HerathRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the exact probability of detection for a single energy detector operating in a Rice-K fading channel using Herath's algorithm.
-HerathRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the exact probability of detection for a cooperative network operating in a Rice-K fading channel using Herath's algorithm.
-
-Function timing may be specified using the following options:
-
-Timed\[Rule]"<>ToString[Timed/.Options[ProbabilityOfDetection]]<>"
-MaxIterations\[Rule]"<>ToString[MaxIterations/.Options[ProbabilityOfDetection]]<>"
-MaxTime\[Rule]"<>ToString[MaxTime/.Options[ProbabilityOfDetection]]<>"
-
-where the above settings are the defaults, if not specified. If Timed\[Rule]True, then a {Pd, time} list of values will be returned.";
-HerathRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[HerathRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
-	HerathRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[HerathRiceProbabilityOfDetection]]
-]
-HerathRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, totaltime = 0, iterations = 0, time, result},
-	lim = HerathLimit[M,\[Gamma],\[Lambda],m,n];
-	f:=Block[{$MaxExtraPrecision=\[Infinity]},
-		N[
-			Exp[-\[Lambda] / 2](((1 + m)Exp[-m \[Gamma] / (\[Gamma] + m + 1)])/(\[Gamma] + 1 + m))^n Total[Table[(m (\[Gamma] / (\[Gamma] + m + 1)) (1 - (\[Gamma] / (\[Gamma] + m + 1))))^(k-1)/(k - 1)! (1/(u - n - 1) (D[Exp[\[Lambda] z / 2]/((1 - z)(z - (\[Gamma] / (\[Gamma] + m + 1)))^(n + k - 1)),{z, u - L - 1}]/.z->0)+1/(n + k - 2)! (D[Exp[\[Lambda] z / 2]/(z^(u-n) (1 - z)),{z, n + k - 2}]/.z->(\[Gamma] / (\[Gamma] + m + 1)))),{k,1,lim}]]
-		20]
-	];
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
-	]
-];
-
-
-(* ::Subsubsection::Closed:: *)
 (*Numerical method*)
 
 
-Options[NumericalRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType],Timed->OptionValue[RiceProbabilityOfDetection,Timed],MaxTime->OptionValue[RiceProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[RiceProbabilityOfDetection,MaxIterations]};
+Options[NumericalRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType]};
 NumericalRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[NumericalRiceProbabilityOfDetection, "Numerical"];
 NumericalRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NumericalRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NumericalRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[NumericalRiceProbabilityOfDetection]]
 ]
-NumericalRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
+NumericalRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType], \[ScriptCapitalD], x},
 	\[ScriptCapitalD] = NumericalRiceDistribution[M, \[Gamma], K, n, diversityType];
 
 	(* Handle both lists and scalar values for diversityType *)
@@ -432,34 +412,22 @@ NumericalRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	f := Which[
+	Which[
 		diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC" || diversityType == "SLC",
 			1 - CDF[\[ScriptCapitalD], \[Lambda]],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
-					1 - Product[1 - NumericalRiceProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],K,DiversityType->"None"],{i,n}],
+					1 - Product[1 - NumericalRiceProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], K, DiversityType->"None"], {i, n}],
 				!ListQ[\[Gamma]0],
-					1 - (1 - NumericalRiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda],K,DiversityType->"None"])^n,
+					1 - (1 - NumericalRiceProbabilityOfDetection[M, \[Gamma]0, \[Lambda], K, DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
-];
+]
 
 
 NumericalRiceDistribution[M_?NumericQ, \[Gamma]_, K_?NumericQ, n_?IntegerQ, diversityType0_] := NumericalRiceDistribution[M, \[Gamma], K, n, diversityType0] = Module[{\[Gamma]t, \[Gamma]0, g, numberOfPoints = 100000, x, diversityType, y, \[ScriptCapitalD]},
@@ -503,16 +471,13 @@ NumericalRiceDistribution[M_?NumericQ, \[Gamma]_, K_?NumericQ, n_?IntegerQ, dive
 (*Small-K method*)
 
 
-Options[SmallKRiceProbabilityOfDetection]={DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType],Timed->OptionValue[RiceProbabilityOfDetection,Timed],MaxTime->OptionValue[RiceProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[RiceProbabilityOfDetection,MaxIterations], Tolerance->10^-6};
+Options[SmallKRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType], Limit->Undefined, LimitFunction->SmallKRiceLimit};
 SmallKRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[SmallKRiceProbabilityOfDetection, "SmallK"];
 SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SmallKRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	SmallKRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[SmallKRiceProbabilityOfDetection]]
 ]
-SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, \[Nu], \[Gamma]0, \[Gamma]t, f, J, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType], x = Round[m n], tol = OptionValue[Tolerance]},
-	(* This method can only be used when K * n is an integer *)
-	If[Abs[K n - x] > tol, Return[Undefined]];
-	
+SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{limit = OptionValue[Limit], \[Nu], \[Gamma]0, \[Gamma]t, f, J, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -523,14 +488,14 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?Nu
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	lim = SmallKRiceLimit[M, \[Lambda], K, n, DiversityType->diversityType];
+	If[limit==Undefined, limit = f[M, \[Gamma], \[Lambda], K, n, DiversityType->diversityType]/.f->OptionValue[LimitFunction]];
 
 	J[k_, a_, b_, c_] := (Exp[-a^2] / 2) ((I c / (2 b))^k / k!) FaddeevaDerivative[k, -I (a + (c / (2b)))] // Re;
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			With[{a = (\[Lambda] - M) / (2 Sqrt[M]), b = - Sqrt[M] / 2, c = (K + 1) / \[Gamma]0},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K] (J[0, a, b, c] + Total[Table[K^k / k! Total[Table[J[p, a, b, c], {p, 0, k}]], {k, 1, lim}]])
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, DiversityType->diversityType] + Exp[-K] (J[0, a, b, c] + Total[Table[K^k / k! Total[Table[J[p, a, b, c], {p, 0, k}]], {k, 1, limit}]])
 			],
 		diversityType == "MRC",
 			Undefined,
@@ -543,27 +508,30 @@ SmallKRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?Nu
 		diversityType == "SLC",
 			Undefined,
 		diversityType == "SLS",
-			Undefined,
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - SmallKRiceProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], K, DiversityType->"None"], {i, n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - SmallKRiceProbabilityOfDetection[M, \[Gamma]0, \[Lambda], K, DiversityType->"None"])^n,
+				True,
+					Undefined
+			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
 
-Options[SmallKRiceLimit] = {DiversityType->OptionValue[SmallKRiceProbabilityOfDetection,DiversityType], Tolerance->OptionValue[SmallKRiceProbabilityOfDetection,Tolerance]};
-SmallKRiceLimit[M_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
+Options[SmallKRiceLimit] = {DiversityType->OptionValue[RiceLimit,DiversityType], Tolerance->OptionValue[RiceLimit,Tolerance]};
+SmallKRiceLimit::usage = GenerateTruncationHelp[SmallKRiceLimit, "SmallK"];
+SmallKRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{n = 1},SmallKRiceLimit[M,\[Gamma],\[Lambda],K,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
+SmallKRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
 	Which[
 		diversityType == "None",
 			j0 = 1;
@@ -590,13 +558,13 @@ SmallKRiceLimit[M_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]
 (*Asymptotic method*)
 
 
-Options[AsymptoticRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType],Timed->OptionValue[RiceProbabilityOfDetection,Timed],MaxTime->OptionValue[RiceProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[RiceProbabilityOfDetection,MaxIterations]};
+Options[AsymptoticRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType]};
 AsymptoticRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[AsymptoticRiceProbabilityOfDetection, "Asymptotic"];
 AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AsymptoticRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	AsymptoticRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[AsymptoticRiceProbabilityOfDetection]]
 ]
-AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, totaltime = 0, iterations = 0, time, result, diversityType = OptionValue[DiversityType]},
+AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?NumericQ,OptionsPattern[]]:=Module[{lim, f, g, \[Gamma]0, \[Gamma]t, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -609,7 +577,7 @@ AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K
 
 	g[a_, b_, \[Mu]_, \[Sigma]_] := Q[(a + b \[Mu]) / Sqrt[b^2 \[Sigma]^2 + 1]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			g[(\[Lambda] - M) / Sqrt[2 M], - Sqrt[M / 2], \[Gamma]0, Sqrt[2K + 1] (\[Gamma]0 / (K + 1))],
 		diversityType == "MRC",
@@ -623,21 +591,16 @@ AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K
 		diversityType == "SLC",
 			Undefined,
 		diversityType == "SLS",
-			Undefined,
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - AsymptoticRiceProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], K, DiversityType->"None"], {i, n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - AsymptoticRiceProbabilityOfDetection[M, \[Gamma]0, \[Lambda], K, DiversityType->"None"])^n,
+				True,
+					Undefined
+			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f//N
 	]
 ]
 
@@ -646,13 +609,13 @@ AsymptoticRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K
 (*Numerical Gaussian method*)
 
 
-Options[NGaussianRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType],Timed->OptionValue[RiceProbabilityOfDetection,Timed],MaxTime->OptionValue[RiceProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[RiceProbabilityOfDetection,MaxIterations],LowSNR->OptionValue[RiceProbabilityOfDetection,LowSNR]};
+Options[NGaussianRiceProbabilityOfDetection] = {DiversityType->OptionValue[RiceProbabilityOfDetection,DiversityType], LowSNR->OptionValue[RiceProbabilityOfDetection,LowSNR]};
 NGaussianRiceProbabilityOfDetection::usage = GenerateAlgorithmHelp[NGaussianRiceProbabilityOfDetection, "NGaussian"];
 NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NGaussianRiceProbabilityOfDetection[M,\[Gamma],\[Lambda],K,n,RelevantOptions[NGaussianRiceProbabilityOfDetection]]
 ]
-NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, \[Gamma]t, \[Gamma]0, f, totaltime = 0, iterations = 0, time, result, RelevantOptions, diversityType = OptionValue[DiversityType]},
+NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{lim, \[Gamma]t, \[Gamma]0, f, RelevantOptions, diversityType = OptionValue[DiversityType]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -665,7 +628,7 @@ NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_
 
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianRiceProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 
-	f := Which[
+	Which[
 		diversityType == "None",
 			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]RicePDF[\[Gamma]0,K,x,DiversityType->diversityType],{x,0,\[Infinity]}],
 		diversityType == "MRC",
@@ -689,18 +652,6 @@ NGaussianRiceProbabilityOfDetection[M_?NumericQ,\[Gamma]_?NumericQ,\[Lambda]_,K_
 			],
 		True,
 			Undefined
-	];
-
-	If[OptionValue[Timed],
-		(* Evaluate result until MaxTime seconds of CPU time have been used or MaxIterations have been performed, whichever comes first *)
-		While[totaltime < OptionValue[MaxTime] && iterations < OptionValue[MaxIterations],
-			ClearSystemCache[];
-			{time, result} = TimeConstrained[Timing[f],OptionValue[MaxTime],{OptionValue[MaxTime],Null}];
-			totaltime += time;
-			iterations++;
-		];
-		{result,totaltime/iterations},
-		f
 	]
 ]
 
