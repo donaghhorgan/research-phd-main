@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*30/11/2012*)
-(*1.02*)
+(*03/12/2012*)
+(*1.03*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.03: Fixed a bug in ProcessSNR.*)
 (*Version 1.02: Moved FaddeevaDerivative function from the Nakagami package.*)
 (*Version 1.01: Added SEC support, and removed SSC support.*)
 (*Version 1.0: First working version.*)
@@ -69,14 +70,10 @@ FaddeevaDerivative;
 Begin["`Private`"];
 
 
-ProcessSNR::usage="ProcessSNR[\[Gamma], diversityType] converts lists of SNR values to averages or maxima, depending on the specified diversity type.";
+ProcessSNR::usage="ProcessSNR[\[Gamma], diversityType] processes lists of SNR values for the specified diversity type.";
 ProcessSNR[\[Gamma]_,diversityType_:"SLC"]:=Which[
-	diversityType == "None",
+	diversityType == "None" || diversityType == "MRC" || diversityType == "EGC" || diversityType == "SEC" || diversityType == "SLC" || diversityType == "SC",
 		If[ListQ[\[Gamma]], Undefined, \[Gamma]],
-	diversityType == "MRC" || diversityType == "EGC" || diversityType == "SEC" || diversityType == "SLC",
-		Mean[Flatten[{\[Gamma]}]],
-	diversityType == "SC",
-		Max[Flatten[{\[Gamma]}]],
 	diversityType == "SLS",
 		\[Gamma],
 	True,
@@ -91,7 +88,7 @@ ProcessDiversityType[diversityType_]:=If[ListQ[diversityType], {diversityType[[1
 FaddeevaDerivative::usage="Computes the \!\(\*SuperscriptBox[\(k\), \(th\)]\) derivative of the Faddeeva function w(z).";
 FaddeevaDerivative[0, z_] := Exp[-z^2] Erfc[-I z];
 FaddeevaDerivative[1, z_] := -2 z FaddeevaDerivative[0, z] + (2 I)/Sqrt[\[Pi]];
-FaddeevaDerivative[k_?IntegerQ, z_] := FaddeevaDerivative[k, z] = -2 z FaddeevaDerivative[k - 1, z] - 2 (k - 1) FaddeevaDerivative[k - 2, z];
+FaddeevaDerivative[k_?IntegerQ, z_] := FaddeevaDerivative[k, z] = -2 z FaddeevaDerivative[k - 1, z] - 2 (k - 1) FaddeevaDerivative[k - 2, z] // Simplify;
 
 
 End[];
