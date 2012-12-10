@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*30/11/2012*)
-(*1.57*)
+(*10/12/2012*)
+(*1.59*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.59: Fixed minor bugs in limit functions.*)
 (*Version 1.58: Moved timing functions to the main function, and minor bug fixes.*)
 (*Version 1.57: Moved FaddeevaDerivative function to the Extras package.*)
 (*Version 1.56: Added approximaton error for Nakagami's PDF for EGC diversity.*)
@@ -76,10 +77,6 @@
 BeginPackage["Nakagami`"]; 
 
 
-(* Need this for the exact numerical method - maybe move to Network package later? *)
-Protect[Resolution];
-
-
 (* ::Subsection::Closed:: *)
 (*PDF of the signal to noise ratio*)
 
@@ -96,6 +93,9 @@ NakagamiPDF;
 
 
 NakagamiProbabilityOfDetection;
+
+
+NakagamiLimit;
 
 
 (* ::Subsubsection::Closed:: *)
@@ -407,10 +407,10 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 
 
 Options[NakagamiLimit] = {Algorithm->"Annamalai", DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
-NakagamiLimit::usage = "NakagamiLimit[M, \[Gamma], \[Lambda], K] calculates the truncation point for use in the specified algorithm for a single energy detector operating on a Rice channel.
-NakagamiLimit[M, \[Gamma], \[Lambda], K, n] calculates the truncation point for use in the specified algorithm for energy detection with diversity reception in a Rice channel.";
-NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,OptionsPattern[]]:=Module[{n = 1}, NakagamiLimit[M, \[Gamma], \[Lambda], K, n, DiversityType->"None", Algorithm->OptionValue[Algorithm], Tolerance->OptionValue[Tolerance]]]
-NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, \[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], algorithm = OptionValue[Algorithm]},
+NakagamiLimit::usage = "NakagamiLimit[M, \[Gamma], \[Lambda], m] calculates the truncation point for use in the specified algorithm for a single energy detector operating on a Nakagami-m channel.
+NakagamiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the specified algorithm for energy detection with diversity reception in a Nakagami-m channel.";
+NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1}, NakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->"None", Algorithm->OptionValue[Algorithm], Tolerance->OptionValue[Tolerance]]]
+NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, \[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], algorithm = OptionValue[Algorithm]},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiLimit][[All,1]]],Options[target][[All,1]]];
 
 	(* Handle both lists and scalar values for diversityType *)
@@ -421,13 +421,13 @@ NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,OptionsPa
 
 	Which[
 		algorithm == "Annamalai",
-			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[AnnamalaiNakagamiLimit]],
+			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, RelevantOptions[AnnamalaiNakagamiLimit]],
 		algorithm == "Herath",
-			HerathNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[HerathNakagamiLimit]],
+			HerathNakagamiLimit[M, \[Gamma], \[Lambda], m, n, RelevantOptions[HerathNakagamiLimit]],
 		algorithm == "Sun",
-			SunNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[SunNakagamiLimit]],
+			SunNakagamiLimit[M, \[Gamma], \[Lambda], m, n, RelevantOptions[SunNakagamiLimit]],
 		algorithm == "IntegerMN",
-			IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], K, n, RelevantOptions[IntegerMNNakagamiLimit]],
+			IntegerMNNakagamiLimit[M, \[Gamma], \[Lambda], m, n, RelevantOptions[IntegerMNNakagamiLimit]],
 		True,
 			Undefined
 	]
@@ -513,7 +513,7 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol];
 				j/.FindRoot[1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
 			diversityType == "SLS",
-				Table[AnnamalaiNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
+				Table[AnnamalaiNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None",Tolerance->tol], {i, Length[\[Gamma]]}],
 			True,
 				Undefined
 		]//N//Ceiling
@@ -688,7 +688,7 @@ HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Opt
 			j0 = (\[Lambda] / 2) - 1 - InverseQ[1 - tol];
 			j/.FindRoot[(m / ((M / 2) \[Gamma]0 + m))^(m n) Hypergeometric1F1[m n, j + 1, \[Lambda] (M / 2) \[Gamma]0 / (2 ((M / 2) \[Gamma]0 + m))] (1 - GammaRegularized[j + 1, \[Lambda] / 2]) == tol,{j, j0, 1, \[Infinity]}],
 		diversityType == "SLS",
-			Table[HerathNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
+			Table[HerathNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None", Tolerance->tol], {i, Length[\[Gamma]]}],
 		True,
 			Undefined
 	]//Ceiling
@@ -759,7 +759,7 @@ SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Option
 				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
 				j/.FindRoot[(1 - GammaRegularized[M / 2 + j - 1, \[Lambda] / 2]) (1 - CDF[NegativeBinomialDistribution[m, (m / (m + (M / 2) \[Gamma]))^(m)], j + 1]) == tol,{j, j0, 1, \[Infinity]}],
 			diversityType == "MRC",
-				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
+				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType, Tolerance->tol],
 			diversityType == "EGC",
 				Undefined,
 			diversityType == "SC",
@@ -768,9 +768,9 @@ SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,Option
 			diversityType == "SEC",
 				Undefined,
 			diversityType == "SLC",
-				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType],
+				AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->diversityType, Tolerance->tol],
 			diversityType == "SLS",
-				Table[SunNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None"], {i, Length[\[Gamma]]}],
+				Table[SunNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None",Tolerance->tol], {i, Length[\[Gamma]]}],
 			True,
 				Undefined
 		]//Ceiling
