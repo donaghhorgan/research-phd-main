@@ -1192,8 +1192,8 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 (*Low SNR assumption error*)
 
 
-Options[LowSNRAssumptionErrorNakagami] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
-LowSNRAssumptionErrorNakagami::usage="LowSNRAssumptionErrorNakagami[M, \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorNakagami];
+Options[LowSNRAssumptionErrorNakagami] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType]};
+LowSNRAssumptionErrorNakagami::usage="LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m, n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorNakagami];
 LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_] := LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m] = Module[{n = 1},
 	LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m, n, DiversityType->"None"]
 ]
