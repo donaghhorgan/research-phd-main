@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*07/12/2012*)
-(*1.24*)
+(*10/12/2012*)
+(*1.25*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.25: Minor bug fixes for limit functions.*)
 (*Version 1.24: Added error bound functions and renamed SmallK method to IntegerKN.*)
 (*Version 1.23: Added SEC and limited SC (numerical methods only) support.*)
 (*Version 1.22: Finished MRC and SLC implementations.*)
@@ -416,9 +417,9 @@ AnnamalaiRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?IntegerQ,Opti
 			diversityType == "SLS",
 				Which[
 					ListQ[\[Gamma]],
-						Table[AnnamalaiRiceLimit[M,\[Gamma][[i]],\[Lambda],K,DiversityType->"None"], {i, Length[\[Gamma]]}],
+						Table[AnnamalaiRiceLimit[M,\[Gamma][[i]],\[Lambda],K,DiversityType->"None",Tolerance->tol], {i, Length[\[Gamma]]}],
 					!ListQ[\[Gamma]],
-						AnnamalaiRiceLimit[M,\[Gamma],\[Lambda],K,DiversityType->"None"],
+						AnnamalaiRiceLimit[M,\[Gamma],\[Lambda],K,DiversityType->"None",Tolerance->tol],
 					True,
 						Undefined
 				],
@@ -608,9 +609,9 @@ IntegerKNRiceLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,K_?NumericQ,n_?NumericQ,Opti
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]],
-					Table[IntegerKNRiceLimit[M,\[Gamma][[i]],\[Lambda],K,DiversityType->"None"], {i, Length[\[Gamma]]}],
+					Table[IntegerKNRiceLimit[M,\[Gamma][[i]],\[Lambda],K,DiversityType->"None",Tolerance->tol], {i, Length[\[Gamma]]}],
 				!ListQ[\[Gamma]],
-					IntegerKNRiceLimit[M,\[Gamma],\[Lambda],K,DiversityType->"None"],
+					IntegerKNRiceLimit[M,\[Gamma],\[Lambda],K,DiversityType->"None",Tolerance->tol],
 				True,
 					Undefined
 			],
