@@ -238,7 +238,7 @@ GenerateTruncationHelp[fName_,algorithmName_] := ToString[fName] <> "[M, \[Gamma
 
 
 Options[NakagamiPDF] = {Method->"Exact", DiversityType->OptionValue[ProbabilityOfDetection,Algorithm]};
-NakagamiPDF::usage="NakagamiPDF[\[Gamma], m, x] evaluates the probability density function of the instantaneous signal to noise ratio at a single energy detector operating on a Nakagami-m fading channel at x.
+NakagamiPDF::usage = "NakagamiPDF[\[Gamma], m, x] evaluates the probability density function of the instantaneous signal to noise ratio at a single energy detector operating on a Nakagami-m fading channel at x.
 NakagamiPDF[\[Gamma], m, x, n] evaluates the probability density function of the average instantaneous signal to noise ratio for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiPDF]<>"\n\n"<>DiversityTypeHelp[NakagamiPDF];
 NakagamiPDF[\[Gamma]_,m_,x_,OptionsPattern[]]:=Module[{n = 1},NakagamiPDF[\[Gamma],m,x,n,Method->OptionValue[Method],DiversityType->OptionValue[DiversityType]]]
 NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Method], diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, g},
@@ -337,8 +337,8 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 (*Main function*)
 
 
-Options[NakagamiProbabilityOfDetection]={Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
-NakagamiProbabilityOfDetection::usage="NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the probability of detection for a single energy detector operating on a Nakagami-m fading channel.
+Options[NakagamiProbabilityOfDetection] = {Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
+NakagamiProbabilityOfDetection::usage = "NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the probability of detection for a single energy detector operating on a Nakagami-m fading channel.
 NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[NakagamiProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"IntegerMN\"", "\"Asymptotic\"", {"\"SwitchedMN\"", "SwitchingPoint"}, "\"LargeSNR\"", "\"Numerical\""},{"\"Annamalai\"", "\"Digham\"", "\"Herath\"", "\"Sun\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
 NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
@@ -1263,7 +1263,7 @@ AsymptoticErrorNakagami[Pf_,mn_]:=Module[{f, z},
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Sample complexity*)
 
 
