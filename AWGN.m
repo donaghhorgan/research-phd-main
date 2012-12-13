@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*15/11/2012*)
-(*1.24*)
+(*12/12/2012*)
+(*1.30*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.30: Added diversity reception support to the sample complexity function*)
 (*Version 1.24: Added SEC support, and removed SSC support.*)
 (*Version 1.23: Moved LowSNRErrorBound to the Nakagami package.*)
 (*Version 1.22: Moved help functions to Network package.*)
@@ -238,7 +239,7 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[
 (*Threshold*)
 
 
-Options[\[Lambda]]={Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], DiversityType->OptionValue[AWGNProbabilityOfFalseAlarm,DiversityType]};
+Options[\[Lambda]] = {Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], DiversityType->OptionValue[AWGNProbabilityOfFalseAlarm,DiversityType]};
 \[Lambda]::usage="\[Lambda][M, Pf] calculates a threshold suitable for use in the calculation of the decision probabilities for a single energy detector.
 \[Lambda][M, Pf, n] calculates a threshold suitable for use in the calculation of the decision probabilities for energy detection with diversity reception.\n\n"<>MethodHelp[\[Lambda]]<>"\n\n"<>DiversityTypeHelp[\[Lambda]];
 \[Lambda][M_,Pf_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
@@ -275,9 +276,48 @@ Options[\[Lambda]]={Method->OptionValue[AWGNProbabilityOfFalseAlarm,Method], Div
 (*Sample complexity*)
 
 
-AWGNSampleComplexity::usage="AWGNSampleComplexity[\[Gamma], Pf, Pd] calculates the approximate number of samples required for a single energy detector to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.
-AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the approximate number of samples required for a cooperative network to operate with the specified decision probabilities at a given signal to noise ratio in an AWGN channel.";
-AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1]:= (2 / n) * ((InverseQ[Pf] - InverseQ[Pd]) / \[Gamma])^2
+Options[AWGNSampleComplexity] = {Method->OptionValue[SampleComplexity,Method], Algorithm->OptionValue[SampleComplexity,Algorithm], DiversityType->OptionValue[SampleComplexity,DiversityType], LowSNR->OptionValue[SampleComplexity,LowSNR]}
+AWGNSampleComplexity::usage="AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in an AWGN channel.\n\n"<>MethodHelp[AWGNSampleComplexity]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[AWGNSampleComplexity];
+AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method = OptionValue[Method], algorithm = OptionValue[Algorithm], diversityType = OptionValue[DiversityType], \[Gamma]t, g, M},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	g[a_,b_] := Which[
+		method == "Exact",
+			Which[
+				algorithm == "Numerical",
+					M/.FindRoot[AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda][M, Pf, n, Method->"Exact", DiversityType->diversityType], n, DiversityType->diversityType, Method->"Exact"] == Pd, {M, AWGNSampleComplexity[\[Gamma], Pf, Pd, n, DiversityType->diversityType, Method->"Approximate"], 1, \[Infinity]}],
+				True,
+					Undefined
+			],
+		method == "Approximate",
+			Which[
+				algorithm == "Numerical",
+					If[OptionValue[LowSNR],
+						2a ((InverseQ[Pf] - InverseQ[Pd]) / (b \[Gamma]))^2,
+						2 ((Sqrt[a]InverseQ[Pf] - Sqrt[a + 2 b \[Gamma]] InverseQ[Pd]) / (b \[Gamma]))^2
+					],
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	];
+
+	Which[
+		diversityType == "None",
+			g[1, 1],
+		diversityType == "MRC" || diversityType == "EGC",
+			g[1, n],
+		diversityType == "SLC",
+			g[n, n],
+		True,
+			Undefined
+	]
+]
 
 
 End[]
