@@ -307,7 +307,7 @@ AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method 
 			Undefined
 	];
 
-	Which[
+	Quiet[Which[
 		diversityType == "None",
 			g[1, 1],
 		diversityType == "MRC" || diversityType == "EGC",
@@ -316,7 +316,7 @@ AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method 
 			g[n, n],
 		True,
 			Undefined
-	]
+	]]
 ]
 
 
