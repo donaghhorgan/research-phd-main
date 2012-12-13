@@ -253,12 +253,12 @@ CorrelationHelp[fName_] := "Additionally, the average correlation between nodes 
 
 
 Options[ProbabilityOfDetection] = {ChannelType->"AWGN", DiversityType->"SLC", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"Approximate", Algorithm->"Numerical", LowSNR->False, Timed->False, MaxTime->600, MaxIterations->1000, DatabaseLookup->False, DatabaseCaching->False};
-ProbabilityOfDetection::usage="ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for the given number of samples, M, signal to noise ratio per sample, \[Gamma], threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfDetection] <> "\n\n" <> ChannelTypeHelp[ProbabilityOfDetection] <> "\n\n" <> MethodHelp[ProbabilityOfDetection] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfDetection] <> "\n\n" <> CorrelationHelp[ProbabilityOfDetection] <> "\n\n" <> TimingHelp[ProbabilityOfDetection] <> "\n\n" <> DatabaseHelp[ProbabilityOfDetection];
-ProbabilityOfDetection::opt="`1` and `2` options are mutually exclusive. Aborting...";
-ProbabilityOfDetection::k=ProbabilityOfFalseAlarm::k;
-ProbabilityOfDetection::Nb=ProbabilityOfFalseAlarm::Nb;
-ProbabilityOfDetection::\[Lambda]=ProbabilityOfFalseAlarm::\[Lambda];
-ProbabilityOfDetection::\[Gamma]=ProbabilityOfFalseAlarm::\[Lambda];
+ProbabilityOfDetection::usage = "ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for the given number of samples, M, signal to noise ratio per sample, \[Gamma], threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfDetection] <> "\n\n" <> ChannelTypeHelp[ProbabilityOfDetection] <> "\n\n" <> MethodHelp[ProbabilityOfDetection] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfDetection] <> "\n\n" <> CorrelationHelp[ProbabilityOfDetection] <> "\n\n" <> TimingHelp[ProbabilityOfDetection] <> "\n\n" <> DatabaseHelp[ProbabilityOfDetection];
+ProbabilityOfDetection::opt = "`1` and `2` options are mutually exclusive. Aborting...";
+ProbabilityOfDetection::k = "Error: Must specify a voting rule when DecisionBits\[Rule]`1`";
+ProbabilityOfDetection::Nb = "Error: The list `1` must be of length `2` when DecisionBits->`3`.";
+ProbabilityOfDetection::\[Lambda] = "Error: The list `1` must be of length `2` when n = `2`.";
+ProbabilityOfDetection::\[Gamma] = ProbabilityOfDetection::\[Lambda];
 ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfDetection]]]
@@ -445,10 +445,10 @@ ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Mo
 
 
 Options[ProbabilityOfFalseAlarm] = {DiversityType->OptionValue[ProbabilityOfDetection, DiversityType], DecisionBits->OptionValue[ProbabilityOfDetection, DecisionBits], CorrelationCoefficient->OptionValue[ProbabilityOfDetection, CorrelationCoefficient], Method->OptionValue[ProbabilityOfDetection, Method]};
-ProbabilityOfFalseAlarm::usage="ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for the given number of samples, M, threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> MethodHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> CorrelationHelp[ProbabilityOfFalseAlarm];
-ProbabilityOfFalseAlarm::k="Error: Must specify a voting rule when DecisionBits\[Rule]`1`";
-ProbabilityOfFalseAlarm::Nb="Error: The list `1` must be of length `2` when DecisionBits->`3`.";
-ProbabilityOfFalseAlarm::\[Lambda]="Error: The list `1` must be of length `2` when n = `2`.";
+ProbabilityOfFalseAlarm::usage = "ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for the given number of samples, M, threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> MethodHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> CorrelationHelp[ProbabilityOfFalseAlarm];
+ProbabilityOfFalseAlarm::k = ProbabilityOfDetection::k;
+ProbabilityOfFalseAlarm::Nb = ProbabilityOfDetection::Nb;
+ProbabilityOfFalseAlarm::\[Lambda] = ProbabilityOfDetection::\[Lambda];
 ProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfFalseAlarm[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfFalseAlarm]]]
