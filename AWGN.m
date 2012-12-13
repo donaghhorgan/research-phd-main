@@ -41,7 +41,7 @@
 
 
 (* ::Text:: *)
-(*Version 1.30: Added diversity reception support to the sample complexity function*)
+(*Version 1.30: Added diversity reception support to the sample complexity function.*)
 (*Version 1.24: Added SEC support, and removed SSC support.*)
 (*Version 1.23: Moved LowSNRErrorBound to the Nakagami package.*)
 (*Version 1.22: Moved help functions to Network package.*)
