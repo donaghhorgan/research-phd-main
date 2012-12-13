@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*10/12/2012*)
-(*1.25*)
+(*13/12/2012*)
+(*1.30*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.30: Major updates to RiceSampleComplexity, added diversity support, exact and approximate methods.*)
 (*Version 1.25: Minor bug fixes for limit functions.*)
 (*Version 1.24: Added error bound functions and renamed SmallK method to IntegerKN.*)
 (*Version 1.23: Added SEC and limited SC (numerical methods only) support.*)
@@ -131,7 +132,7 @@ AsymptoticErrorRice;
 (*Sample complexity*)
 
 
-NRiceSampleComplexity
+RiceSampleComplexity;
 
 
 (* ::Section:: *)
@@ -778,51 +779,54 @@ AsymptoticErrorRice[Pf_,K_,n_] := AsymptoticErrorRice[Pf, K, n] = Module[{f, z},
 (*Sample complexity*)
 
 
-Options[NRiceSampleComplexity]={Method->OptionValue[SampleComplexity,Method],LowSNR->OptionValue[SampleComplexity,LowSNR],Tolerance->OptionValue[SampleComplexity,Tolerance]};
-NRiceSampleComplexity::usage="NRiceSampleComplexity[\[Gamma], Pf, Pd, m] calculates the sample complexity for a single energy detector operating on a Rice-m fading channel.
-NRiceSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the sample complexity for a cooperative network operating on a Rice-m fading channel.
-
-The following methods can be given:
-
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
-
-By default, Method\[Rule]\""<>ToString[Method/.Options[NRiceSampleComplexity]]<>"\".
-
-If Method\[Rule]\"Approximate\", the LowSNR option may be specified. By default, LowSNR\[Rule]"<>ToString[LowSNR/.Options[NRiceSampleComplexity]]<>".
-
-Numerical tolerance can be specified using the Tolerance option. By default, Tolerance\[Rule]"<>ToString[Tolerance/.Options[NRiceSampleComplexity]//N//InputForm]<>".";
-NRiceSampleComplexity::tol="The difference between the result `1` and the constraint `2` was greater than the specified tolerance `3`.";
-NRiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
-	NRiceSampleComplexity[\[Gamma],Pf,Pd,m,n,RelevantOptions[NRiceSampleComplexity]]
+Options[RiceSampleComplexity] = {DiversityType->OptionValue[SampleComplexity,DiversityType], Method->OptionValue[SampleComplexity,Method], Algorithm->OptionValue[SampleComplexity,Algorithm], LowSNR->OptionValue[SampleComplexity,LowSNR]};
+RiceSampleComplexity::usage="RiceSampleComplexity[\[Gamma], Pf, Pd, K, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Rice channel.\n\n"<>MethodHelp[RiceSampleComplexity]<>"\n\n"<>AlgorithmHelp[RiceSampleComplexity, {"Approximate", "Exact"}, {{"\"Numerical\"", "\"Asymptotic\""},{"\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[RiceSampleComplexity];
+RiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
+	RiceSampleComplexity[\[Gamma], Pf, Pd, K, n, RelevantOptions[RiceSampleComplexity]]
 ]
-NRiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, tol = OptionValue[Tolerance], intialGuess = Max[(20 / (n m^2)), 1] * SampleComplexity[\[Gamma],Pf,Pd,n], courseGuess, fineGuess, result},
-	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NRiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
-	(* Temporarily disable error checking - we'll do our own *)
-	Off[FindRoot::reged,FindRoot::lstol];
-	Switch[OptionValue[Method],
-		"Approximate",
-		(* Only use Gaussian method if it is valid *)
-		If[intialGuess <= 250,
-			result = NRiceSampleComplexity[\[Gamma],Pf,Pd,m,n,tol,Method->"Exact",Tolerance->OptionValue[Tolerance]];,
-			fineGuess = M/.FindRoot[RiceProbabilityOfDetection[M,\[Gamma],\[Lambda][M,Pf,n],m,n,RelevantOptions[RiceProbabilityOfDetection]] == Pd, {M, intialGuess, 1, \[Infinity]}];
-			result = RiceProbabilityOfDetection[fineGuess,\[Gamma],\[Lambda][fineGuess,Pf,n],m,n,RelevantOptions[RiceProbabilityOfDetection]];
-		];,
-		"Exact",
-		(* If Gaussian approximation is valid, then use it to speed up the calculation *)
-		If[intialGuess <= 250,
-			courseGuess = intialGuess;,
-			courseGuess = M/.FindRoot[RiceProbabilityOfDetection[M,\[Gamma],\[Lambda][M,Pf,n],m,n,RelevantOptions[RiceProbabilityOfDetection]] == Pd, {M, intialGuess, 1, \[Infinity]}];
-		];
-		fineGuess = M/.FindRoot[RiceProbabilityOfDetection[courseGuess,\[Gamma],\[Lambda][courseGuess,Pf,n,RelevantOptions[\[Lambda]]],m,n] == Pd, {M, courseGuess, 1, \[Infinity]}];
-		result = RiceProbabilityOfDetection[fineGuess,\[Gamma],\[Lambda][fineGuess,Pf,n,RelevantOptions[\[Lambda]]],m,n];
-	];
-	On[FindRoot::reged,FindRoot::lstol];
-	If[Abs[result - Pd] <= tol//TrueQ,
-		fineGuess,
-		Message[NRiceSampleComplexity::tol, result//N, Pd//N, tol//N]
-	]
+RiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,K_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, RelevantOptions, diversityType = OptionValue[DiversityType], method = OptionValue[Method], algorithm = OptionValue[Algorithm], g, M},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
+
+	Quiet[Which[
+		method == "Exact",
+			Which[
+				algorithm == "Numerical",
+					f[x_?NumericQ] := RiceProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], K, n, RelevantOptions[RiceProbabilityOfDetection]/."Numerical"->"Annamalai"];
+					M/.FindRoot[f[M] == Pd, {M, RiceSampleComplexity[\[Gamma]0, Pf, Pd, K, n, Method->"Approximate", Algorithm->"Numerical", DiversityType->diversityType, LowSNR->OptionValue[LowSNR]], 1, \[Infinity]}],
+				True,
+					Undefined
+			],
+		method == "Approximate",
+			Which[
+				algorithm == "Numerical",
+					f[x_?NumericQ] := RiceProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], K, n, RelevantOptions[RiceProbabilityOfDetection]];
+					M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, Method->"Approximate"], 1, \[Infinity]}],
+				algorithm == "Asymptotic",
+					Which[
+						diversityType == "None",
+							(2 (1+K)^2 (-(1+2 K) InverseQ[Pd]^4+InverseQ[Pd]^2 ((1+K)^2+(1+2 K) InverseQ[Pf]^2)+(1+K) ((1+K) InverseQ[Pf]^2+2 \[Sqrt](InverseQ[Pd]^2 InverseQ[Pf]^2 ((1+K)^2-(1+2 K) InverseQ[Pd]^2+(1+2 K) InverseQ[Pf]^2)))))/(\[Gamma]0^2 ((1+K)^2-(1+2 K) InverseQ[Pd]^2)^2),
+						diversityType == "MRC",
+							(2 (1+K)^2 (-(1+2 K) InverseQ[Pd]^4+InverseQ[Pd]^2 ((1+K)^2 n+(1+2 K) InverseQ[Pf]^2)+(1+K) ((1+K) n InverseQ[Pf]^2+2 \[Sqrt](n InverseQ[Pd]^2 InverseQ[Pf]^2 ((1+K)^2 n-(1+2 K) InverseQ[Pd]^2+(1+2 K) InverseQ[Pf]^2)))))/(n ((1+K)^2 n \[Gamma]0-(\[Gamma]0+2 K \[Gamma]0) InverseQ[Pd]^2)^2),
+						diversityType == "SLC",
+							(2 (1+K)^2 (-(1+2 K) InverseQ[Pd]^4+InverseQ[Pd]^2 ((1+K)^2 n+(1+2 K) InverseQ[Pf]^2)+(1+K) ((1+K) n InverseQ[Pf]^2+2 \[Sqrt](n InverseQ[Pd]^2 InverseQ[Pf]^2 ((1+K)^2 n-(1+2 K) InverseQ[Pd]^2+(1+2 K) InverseQ[Pf]^2)))))/((1+K)^2 n \[Gamma]0-(\[Gamma]0+2 K \[Gamma]0) InverseQ[Pd]^2)^2,
+						True,
+							Undefined
+					],
+				True,
+					Undefined
+			]
+	]]
 ]
 
 
