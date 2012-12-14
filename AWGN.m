@@ -310,7 +310,7 @@ AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method,
 			M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma], Pf, Pd, n, DiversityType->diversityType, Method->"ApproximateNumerical"], 1, \[Infinity]}],
 		method == "ApproximateNumerical",
 			2 ((Sqrt[a] InverseQ[Pf] - Sqrt[a + 2 b \[Gamma]] InverseQ[Pd]) / (b \[Gamma]))^2,
-		method == "ApproximateNumericalLowSNR",
+		method == "ApproximateNumericalLowSNR" || method == "ApproximateAsymptotic",
 			2a ((InverseQ[Pf] - InverseQ[Pd]) / (b \[Gamma]))^2,
 		True,
 			Undefined
