@@ -152,9 +152,11 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,OptionsPattern[]]:=Module[{n = 1, Rele
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfFalseAlarm][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfFalseAlarm]]]
 ]
-AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, method = OptionValue[Method], g},
+AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, method, mn, g},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	{method, mn} = ProcessMethod[OptionValue[Method]];
 
 	(* Check for invalid combinations of inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
@@ -192,12 +194,14 @@ AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{n 
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[AWGNProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	AWGNProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[AWGNProbabilityOfDetection]]]
 ]
-AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, method = OptionValue[Method], g},
+AWGNProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, method, mn, g},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
 	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
 	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	{method, mn} = ProcessMethod[OptionValue[Method]];
 
 	(* Check for invalid combinations of inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
@@ -253,9 +257,11 @@ Options[\[Lambda]] = {Method->"Exact", DiversityType->OptionValue[AWGNProbabilit
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[\[Lambda]][[All,1]]],Options[target][[All,1]]];
 	\[Lambda][M,Pf,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[\[Lambda]]]]
 ]
-\[Lambda][M_,Pf_,n_,OptionsPattern[]]:=Module[{method = OptionValue[Method], diversityType = OptionValue[DiversityType], \[Gamma]t, g},
+\[Lambda][M_,Pf_,n_,OptionsPattern[]]:=Module[{method, mn, diversityType = OptionValue[DiversityType], \[Gamma]t, g},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	{method, mn} = ProcessMethod[OptionValue[Method]];
 
 	g[a_,b_] := Which[
 		(* Check to see if method is "Exact" or starts with "Exact" *)
@@ -287,9 +293,11 @@ Options[\[Lambda]] = {Method->"Exact", DiversityType->OptionValue[AWGNProbabilit
 
 Options[AWGNSampleComplexity] = {Method->OptionValue[SampleComplexity,Method], DiversityType->OptionValue[SampleComplexity,DiversityType]}
 AWGNSampleComplexity::usage="AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in an AWGN channel.\n\n"<>MethodHelp[AWGNSampleComplexity, {"\"ExactNumerical\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\""}]<>"\n\n"<>DiversityTypeHelp[AWGNSampleComplexity];
-AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method = OptionValue[Method], diversityType = OptionValue[DiversityType], \[Gamma]t, f, g, M, RelevantOptions},
+AWGNSampleComplexity[\[Gamma]_,Pf_,Pd_,n_:1,OptionsPattern[]] := Module[{method, mn, diversityType = OptionValue[DiversityType], \[Gamma]t, f, g, M, RelevantOptions},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	{method, mn} = ProcessMethod[OptionValue[Method]];
 
 	(* Check for invalid inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
