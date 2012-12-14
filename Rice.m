@@ -814,7 +814,7 @@ AsymptoticErrorRice[Pf_,K_,n_] := AsymptoticErrorRice[Pf, K, n] = Module[{f, z},
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Sample complexity*)
 
 
@@ -842,7 +842,7 @@ RiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,K_?NumericQ,n_
 	Quiet[Which[
 		method == "ExactNumerical",
 			f[x_?NumericQ] := RiceProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], K, n, RelevantOptions[RiceProbabilityOfDetection]/."ExactNumerical"->"ExactAnnamalai"];
-			M/.FindRoot[f[M] == Pd, {M, RiceSampleComplexity[\[Gamma]0, Pf, Pd, K, n, RelevantOptions[RiceSampleComplexity]], 1, \[Infinity]}],
+			M/.FindRoot[f[M] == Pd, {M, RiceSampleComplexity[\[Gamma]0, Pf, Pd, K, n, Method->"ApproximateNumerical", DiversityType->diversityType], 1, \[Infinity]}],
 		method == "ApproximateNumerical",
 			f[x_?NumericQ] := RiceProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], K, n, RelevantOptions[RiceProbabilityOfDetection]];
 			M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, RelevantOptions[RiceSampleComplexity]], 1, \[Infinity]}],
