@@ -841,7 +841,7 @@ AsymptoticErrorRice[Pf_,K_,n_] := AsymptoticErrorRice[Pf, K, n] = Module[{f, z},
 
 
 Options[RiceSampleComplexity] = {DiversityType->OptionValue[SampleComplexity,DiversityType], Method->OptionValue[SampleComplexity,Method], Algorithm->OptionValue[SampleComplexity,Algorithm]};
-RiceSampleComplexity::usage="RiceSampleComplexity[\[Gamma], Pf, Pd, K, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Rice channel.\n\n"<>MethodHelp[RiceSampleComplexity]<>"\n\n"<>AlgorithmHelp[RiceSampleComplexity, {"Approximate", "Exact"}, {{"\"Numerical\"", "\"Asymptotic\""},{"\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[RiceSampleComplexity];
+RiceSampleComplexity::usage="RiceSampleComplexity[\[Gamma], Pf, Pd, K, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Rice channel.\n\n"<>MethodHelp[RiceSampleComplexity]<>"\n\n"<>AlgorithmHelp[RiceSampleComplexity, {"Approximate", "Exact"}, {{"\"Numerical\"", "\"NumericalLowSNR\"", "\"Asymptotic\""},{"\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[RiceSampleComplexity];
 RiceSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,K_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[RiceSampleComplexity][[All,1]]],Options[target][[All,1]]];
 	RiceSampleComplexity[\[Gamma], Pf, Pd, K, n, RelevantOptions[RiceSampleComplexity]]
