@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.42: Removed obsolete MNSwitchingPoint symbol, amalgamated methods and algorithms, changed MethodHelp function.*)
 (*Version 1.41: Updated help for some functions.*)
 (*Version 1.40: Changed LowSNR to False by default.*)
 (*Version 1.34: Changed "NRice" to "Rice", changed SSC to SEC.*)
@@ -61,7 +62,7 @@
 BeginPackage["Network`"];
 
 
-Protect[ChannelType, DiversityType, DecisionBits, CorrelationCoefficient, Algorithm, LowSNR, Timed, MaxTime, DatabaseLookup, DatabaseCaching, MNSwitchingPoint];
+Protect[ChannelType, DiversityType, DecisionBits, CorrelationCoefficient, Timed, MaxTime, DatabaseLookup, DatabaseCaching];
 
 
 (* ::Subsection:: *)
@@ -141,9 +142,6 @@ DefaultHelp;
 MethodHelp;
 
 
-LowSNRHelp;
-
-
 DiversityTypeHelp;
 
 
@@ -195,15 +193,18 @@ DefaultHelp[fName_,optionSpec_] := Module[{help, n, options, defaultOption},
 ]
 
 
-MethodHelp[fName_] := "The following methods may be specified:
+MethodHelp[fName_, methods_] := Module[{help, n, m},
+	help = "The following methods may be specified:\n\n";
 
-Method\[Rule]\"Approximate\"
-Method\[Rule]\"Exact\"
+	For[n = 1, n <= Length[methods], n++,
+		help = help <> "Method\[Rule]" <> ToString[methods[[n]]] <> "\n"
+	];
 
-" <> Evaluate[DefaultHelp[fName, Method]];
+	help = help <> "\n" <> Evaluate[DefaultHelp[fName, Method]]
+];
 
 
-LowSNRHelp := "If Method\[Rule]\"Approximate\", then the LowSNR option can be used to specify whether to use a low signal to noise ratio approximation. "<>DefaultHelp[AWGNProbabilityOfDetection,LowSNR];
+GeneralMethodHelp[fName_] := "A computational method may be specified using the Method option. " <> DefaultHelp[fName, Method] <> " For more information, see individual packages.";
 
 
 DiversityTypeHelp[fName_] := "The following diversity reception schemes may be specified:
@@ -252,8 +253,8 @@ CorrelationHelp[fName_] := "Additionally, the average correlation between nodes 
 (*Probability of detection (general)*)
 
 
-Options[ProbabilityOfDetection] = {ChannelType->"AWGN", DiversityType->"SLC", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"Approximate", Algorithm->"Numerical", LowSNR->False, Timed->False, MaxTime->600, MaxIterations->1000, DatabaseLookup->False, DatabaseCaching->False};
-ProbabilityOfDetection::usage = "ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for the given number of samples, M, signal to noise ratio per sample, \[Gamma], threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfDetection] <> "\n\n" <> ChannelTypeHelp[ProbabilityOfDetection] <> "\n\n" <> MethodHelp[ProbabilityOfDetection] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfDetection] <> "\n\n" <> CorrelationHelp[ProbabilityOfDetection] <> "\n\n" <> TimingHelp[ProbabilityOfDetection] <> "\n\n" <> DatabaseHelp[ProbabilityOfDetection];
+Options[ProbabilityOfDetection] = {ChannelType->"AWGN", DiversityType->"SLC", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"ApproximateNumerical", Timed->False, MaxTime->600, MaxIterations->1000, DatabaseLookup->False, DatabaseCaching->False};
+ProbabilityOfDetection::usage = "ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates the probability of detection for the given number of samples, M, signal to noise ratio per sample, \[Gamma], threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfDetection] <> "\n\n" <> ChannelTypeHelp[ProbabilityOfDetection] <> "\n\n" <> GeneralMethodHelp[ProbabilityOfDetection] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfDetection] <> "\n\n" <> CorrelationHelp[ProbabilityOfDetection] <> "\n\n" <> TimingHelp[ProbabilityOfDetection] <> "\n\n" <> DatabaseHelp[ProbabilityOfDetection];
 ProbabilityOfDetection::opt = "`1` and `2` options are mutually exclusive. Aborting...";
 ProbabilityOfDetection::k = "Error: Must specify a voting rule when DecisionBits\[Rule]`1`";
 ProbabilityOfDetection::Nb = "Error: The list `1` must be of length `2` when DecisionBits->`3`.";
@@ -263,15 +264,19 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,OptionsPattern[]]:=Module[{Releva
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,#/.(DiversityType/.#)->"None"&[RelevantOptions[ProbabilityOfDetection]]]
 ]
-ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{k=Null},
+ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOptions, k = Null},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]]
 ]
 ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType, m, \[Rho] = OptionValue[CorrelationCoefficient], Nb = OptionValue[DecisionBits], RelevantOptions, f, g, time, result, rationalPf},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+
 	If[OptionValue[DatabaseLookup] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseLookup","Timed"]; Abort[]];
+
 	If[OptionValue[DatabaseCaching] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseCaching","Timed"]; Abort[]];
+
 	If[ListQ[\[Gamma]] && (Length[\[Gamma]] != n), Message[ProbabilityOfDetection::\[Gamma], \[Gamma], n]; Abort[]];
+
 	If[ListQ[OptionValue[ChannelType]],
 		If[Length[OptionValue[ChannelType]]==2,
 			{channelType,m} = OptionValue[ChannelType],
@@ -279,11 +284,12 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		],
 		channelType = OptionValue[ChannelType];
 	];
+
 	g[\[Gamma]0_,\[Lambda]0_,n0_]:=Switch[channelType,
 		"AWGN",
 		AWGNProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[AWGNProbabilityOfDetection]],
 		"Rayleigh",
-		NRayleighProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[NRayleighProbabilityOfDetection]],
+		RayleighProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[RayleighProbabilityOfDetection]],
 		"Nakagami",
 		NakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NakagamiProbabilityOfDetection]],
 		"Rice",
@@ -291,6 +297,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		_,
 		Undefined
 	];
+
 	f := Which[
 		Nb == \[Infinity],
 			Which[
@@ -390,14 +397,15 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		True,
 			Undefined
 	];
+
 	If[OptionValue[DatabaseLookup],
-		result = GetProbabilityOfDetection[OptionValue[Algorithm],channelType,M,\[Gamma],ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]//N,n,m,RelevantOptions[GetProbabilityOfDetection]];
+		result = GetProbabilityOfDetection[OptionValue[Method],channelType,M,\[Gamma],ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]//N,n,m,RelevantOptions[GetProbabilityOfDetection]];
 		If[TrueQ[result==Null],
 			result = f;
 			If[OptionValue[DatabaseCaching],
 				(* For correct retrieval of results later, attempt to convert Pf to rational form *)
 				rationalPf = Round[ProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[ProbabilityOfFalseAlarm]]*10^6//N]/10^6;
-				CacheProbabilityOfDetection[OptionValue[Algorithm],channelType,M,\[Gamma],rationalPf,n,m,result//N,RelevantOptions[CacheProbabilityOfDetection]];
+				CacheProbabilityOfDetection[OptionValue[Method],channelType,M,\[Gamma],rationalPf,n,m,result//N,RelevantOptions[CacheProbabilityOfDetection]];
 			];
 		];
 		result,
@@ -445,7 +453,7 @@ ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Mo
 
 
 Options[ProbabilityOfFalseAlarm] = {DiversityType->OptionValue[ProbabilityOfDetection, DiversityType], DecisionBits->OptionValue[ProbabilityOfDetection, DecisionBits], CorrelationCoefficient->OptionValue[ProbabilityOfDetection, CorrelationCoefficient], Method->OptionValue[ProbabilityOfDetection, Method]};
-ProbabilityOfFalseAlarm::usage = "ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for the given number of samples, M, threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> MethodHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> CorrelationHelp[ProbabilityOfFalseAlarm];
+ProbabilityOfFalseAlarm::usage = "ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the probability of false alarm for the given number of samples, M, threshold, \[Lambda], and number of diversity branches, n.\n\n" <> DiversityTypeHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> GeneralMethodHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> DecisionBitsHelp[ProbabilityOfFalseAlarm] <> "\n\n" <> CorrelationHelp[ProbabilityOfFalseAlarm];
 ProbabilityOfFalseAlarm::k = ProbabilityOfDetection::k;
 ProbabilityOfFalseAlarm::Nb = ProbabilityOfDetection::Nb;
 ProbabilityOfFalseAlarm::\[Lambda] = ProbabilityOfDetection::\[Lambda];
@@ -691,8 +699,8 @@ k[P0_?ListQ,P1_?ListQ,votes_?ListQ,\[Rho]_:0]:=Module[{v,n,Pa,\[CapitalDelta]0,P
 (*Sample complexity*)
 
 
-Options[SampleComplexity] = {DiversityType->"SLC", ChannelType->"AWGN", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"Approximate", Algorithm->"Numerical", LowSNR->True, Tolerance->10^-6, DatabaseLookup->False, DatabaseCaching->False};
-SampleComplexity::usage="SampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for a cooperative network of energy detectors to operate with the specified decision probabilities at the given signal to noise ratio.\n\n" <> DiversityTypeHelp[SampleComplexity] <> "\n\n" <> ChannelTypeHelp[SampleComplexity] <> "\n\n" <> MethodHelp[SampleComplexity] <> "\n\n" <> DecisionBitsHelp[SampleComplexity] <> "\n\n" <> CorrelationHelp[SampleComplexity] <> "\n\n" <> DatabaseHelp[SampleComplexity];
+Options[SampleComplexity] = {DiversityType->"SLC", ChannelType->"AWGN", DecisionBits->\[Infinity], CorrelationCoefficient->0, Method->"ApproximateNumerical", Tolerance->10^-6, DatabaseLookup->False, DatabaseCaching->False};
+SampleComplexity::usage="SampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of samples required for a cooperative network of energy detectors to operate with the specified decision probabilities at the given signal to noise ratio.\n\n" <> DiversityTypeHelp[SampleComplexity] <> "\n\n" <> ChannelTypeHelp[SampleComplexity] <> "\n\n" <> GeneralMethodHelp[SampleComplexity] <> "\n\n" <> DecisionBitsHelp[SampleComplexity] <> "\n\n" <> CorrelationHelp[SampleComplexity] <> "\n\n" <> DatabaseHelp[SampleComplexity];
 SampleComplexity::tol="The difference between the result `1` and the constraint `2` was greater than the specified tolerance `3`.";
 SampleComplexity::opt="`1` and `2` options are mutually exclusive. Aborting...";
 SampleComplexity[\[Gamma]_,Pf_,Pd_,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
