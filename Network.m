@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*13/12/2012*)
-(*1.41*)
+(*14/12/2012*)
+(*1.42*)
 
 
 (* ::Subsection:: *)
@@ -163,6 +163,7 @@ Needs["Rayleigh`"];
 Needs["Nakagami`"];
 Needs["Rice`"];
 Needs["DBLogging`"];
+<<Extras`
 
 
 (* ::Subsection::Closed:: *)
@@ -271,68 +272,49 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{Rel
 ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType, m, \[Rho] = OptionValue[CorrelationCoefficient], Nb = OptionValue[DecisionBits], RelevantOptions, f, g, time, result, rationalPf},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 
+	(* Check for invalid combinations of inputs *)
 	If[OptionValue[DatabaseLookup] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseLookup","Timed"]; Abort[]];
-
 	If[OptionValue[DatabaseCaching] && OptionValue[Timed], Message[ProbabilityOfDetection::opt,"DatabaseCaching","Timed"]; Abort[]];
-
 	If[ListQ[\[Gamma]] && (Length[\[Gamma]] != n), Message[ProbabilityOfDetection::\[Gamma], \[Gamma], n]; Abort[]];
+	If[Nb == \[Infinity] && \[Rho] != 0, Return[Undefined]];
+	If[TrueQ[k == Null] && Nb != \[Infinity], Message[ProbabilityOfDetection::k, Nb]; Abort[]];
+	If[Nb != \[Infinity] && Length[Flatten[{\[Lambda]}, 1]] > 2^Nb - 1, Message[ProbabilityOfDetection::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
 
-	If[ListQ[OptionValue[ChannelType]],
-		If[Length[OptionValue[ChannelType]]==2,
-			{channelType,m} = OptionValue[ChannelType],
-			channelType = OptionValue[ChannelType][[1]]
-		],
-		channelType = OptionValue[ChannelType];
+	{channelType, m} = ProcessChannelType[OptionValue[ChannelType]];
+
+	g[\[Gamma]0_,\[Lambda]0_,n0_] := Which[
+		channelType == "AWGN",
+			AWGNProbabilityOfDetection[M, \[Gamma]0, \[Lambda]0, n0, RelevantOptions[AWGNProbabilityOfDetection]],
+		channelType == "Rayleigh",
+			RayleighProbabilityOfDetection[M, \[Gamma]0, \[Lambda]0, n0, RelevantOptions[RayleighProbabilityOfDetection]],
+		channelType == "Nakagami",
+			NakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda]0, m, n0, RelevantOptions[NakagamiProbabilityOfDetection]],
+		channelType == "Rice",
+			RiceProbabilityOfDetection[M, \[Gamma]0, \[Lambda]0, m, n0, RelevantOptions[RiceProbabilityOfDetection]],
+		True,
+			Undefined
 	];
 
-	g[\[Gamma]0_,\[Lambda]0_,n0_]:=Switch[channelType,
-		"AWGN",
-		AWGNProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[AWGNProbabilityOfDetection]],
-		"Rayleigh",
-		RayleighProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,n0,RelevantOptions[RayleighProbabilityOfDetection]],
-		"Nakagami",
-		NakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[NakagamiProbabilityOfDetection]],
-		"Rice",
-		RiceProbabilityOfDetection[M,\[Gamma]0,\[Lambda]0,m,n0,RelevantOptions[RiceProbabilityOfDetection]],
-		_,
-		Undefined
-	];
-
+	(* This is messy, but it works *)
 	f := Which[
 		Nb == \[Infinity],
 			Which[
-				\[Rho] == 0,
-					Which[
-						!ListQ[\[Lambda]],
-							g[\[Gamma],\[Lambda],n],
-						ListQ[\[Lambda]],
-							Which[
-								Length[\[Lambda]] == 1,
-									g[\[Gamma],Last[\[Lambda]],n],
-								Length[\[Lambda]] == 2,
-									g[\[Gamma],Last[\[Lambda]],n],
-								True,
-									Undefined
-							],
-						True,
-							Undefined
-					],
+				Length[Flatten[{\[Lambda]}]] <= 2,
+					g[\[Gamma], Last[\[Lambda]], n],
 				True,
 					Undefined
 			],
 		Nb >= 1,
-			If[TrueQ[k==Null],Message[ProbabilityOfDetection::k,Nb];Abort[]];
-			Module[{probabilities,temp},
+			Module[{probabilities, temp},
 				Which[
 					!ListQ[\[Lambda]],
-						If[Nb != 1, Message[ProbabilityOfDetection::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
 						Which[
 							!ListQ[\[Gamma]],
 								probabilities = g[\[Gamma],\[Lambda],1],
 							ListQ[\[Gamma]],
 								If[OptionValue[Timed],
-									{temp, time} = Table[g[\[Gamma][[n0]],\[Lambda],1],{n0,n}]//Transpose,
-									temp = Table[g[\[Gamma][[n0]],\[Lambda],1],{n0,n}]
+									{temp, time} = Table[g[\[Gamma][[n0]], \[Lambda], 1], {n0, n}] // Transpose,
+									temp = Table[g[\[Gamma][[n0]], \[Lambda], 1], {n0, n}]
 								];
 								probabilities = Table[{1 - temp[[i]], temp[[i]]},{i,n}],
 							True,
@@ -430,15 +412,16 @@ ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]]:=Modul
 ]
 ProbabilityOfMissedDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],RelevantOptions,f},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfMissedDetection][[All,1]]],Options[target][[All,1]]];
+
 	Which[
 		!ListQ[\[Lambda]],
-			1 - ProbabilityOfDetection[M,\[Gamma],\[Lambda],n,k,RelevantOptions[ProbabilityOfDetection]],
+			1 - ProbabilityOfDetection[M, \[Gamma], \[Lambda], n, k, RelevantOptions[ProbabilityOfDetection]],
 		ListQ[\[Lambda]],
 			Which[
 				Length[\[Lambda]] == 1,
-					1 - ProbabilityOfDetection[M,\[Gamma],First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfDetection]],
+					1 - ProbabilityOfDetection[M, \[Gamma], First[\[Lambda]], n, k, RelevantOptions[ProbabilityOfDetection]],
 				Length[\[Lambda]] == 2,
-					1 - ProbabilityOfDetection[M,\[Gamma],First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfDetection]],
+					1 - ProbabilityOfDetection[M, \[Gamma], First[\[Lambda]], n, k, RelevantOptions[ProbabilityOfDetection]],
 				True,
 					Undefined
 			],
@@ -473,13 +456,13 @@ ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantO
 				\[Rho] == 0,
 					Which[
 						!ListQ[\[Lambda]],
-							AWGNProbabilityOfFalseAlarm[M,\[Lambda],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+							AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, RelevantOptions[AWGNProbabilityOfFalseAlarm]],
 						ListQ[\[Lambda]],
 							Which[
 								Length[\[Lambda]] == 1,
-								AWGNProbabilityOfFalseAlarm[M,Last[\[Lambda]],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+								AWGNProbabilityOfFalseAlarm[M, Last[\[Lambda]], n, RelevantOptions[AWGNProbabilityOfFalseAlarm]],
 								Length[\[Lambda]] == 2,
-									AWGNProbabilityOfFalseAlarm[M,Last[\[Lambda]],n,RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+									AWGNProbabilityOfFalseAlarm[M, Last[\[Lambda]], n, RelevantOptions[AWGNProbabilityOfFalseAlarm]],
 								True,
 									Undefined
 							],
@@ -495,17 +478,17 @@ ProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantO
 				Which[
 					!ListQ[\[Lambda]],
 						If[Nb != 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
-						probabilities = AWGNProbabilityOfFalseAlarm[M,\[Lambda],RelevantOptions[AWGNProbabilityOfFalseAlarm]],
+						probabilities = AWGNProbabilityOfFalseAlarm[M, \[Lambda], RelevantOptions[AWGNProbabilityOfFalseAlarm]],
 					ListQ[\[Lambda]],
 						Which[
 							!ListQ[First[\[Lambda]]],
 								If[Length[\[Lambda]] != 2^Nb - 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda], 2^Nb - 1, Nb]; Abort[]];
-								temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda]}];
+								temp = Table[AWGNProbabilityOfFalseAlarm[M, x, RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda]}];
 								probabilities = Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],
 							ListQ[First[\[Lambda]]],
 								If[Length[\[Lambda]] != n, Message[ProbabilityOfFalseAlarm::\[Lambda], \[Lambda], n]; Abort[]];
 								Table[If[Length[\[Lambda][[i]]] != 2^Nb - 1, Message[ProbabilityOfFalseAlarm::Nb, \[Lambda][[i]], 2^Nb - 1, Nb]; Abort[]],{i,Length[\[Lambda]]}];
-								probabilities = Table[temp = Table[AWGNProbabilityOfFalseAlarm[M,x,RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda][[n0]]}];Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}],
+								probabilities = Table[temp = Table[AWGNProbabilityOfFalseAlarm[M, x, RelevantOptions[AWGNProbabilityOfFalseAlarm]],{x,\[Lambda][[n0]]}];Flatten[{-Differences[Flatten[{1,temp}]],Last[temp]}],{n0,n}],
 							True,
 								Undefined
 						],
@@ -536,15 +519,16 @@ ProbabilityOfAcquisition[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{RelevantOpt
 ]
 ProbabilityOfAcquisition[M_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[ProbabilityOfAcquisition][[All,1]]],Options[target][[All,1]]];
+
 	Which[
 		!ListQ[\[Lambda]],
-			1 - ProbabilityOfFalseAlarm[M,\[Lambda],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+			1 - ProbabilityOfFalseAlarm[M, \[Lambda], n, k, RelevantOptions[ProbabilityOfFalseAlarm]],
 		ListQ[\[Lambda]],
 			Which[
 				Length[\[Lambda]] == 1,
-					1 - ProbabilityOfFalseAlarm[M,First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+					1 - ProbabilityOfFalseAlarm[M, First[\[Lambda]], n, k, RelevantOptions[ProbabilityOfFalseAlarm]],
 				Length[\[Lambda]] == 2,
-					1 - ProbabilityOfFalseAlarm[M,First[\[Lambda]],n,k,RelevantOptions[ProbabilityOfFalseAlarm]],
+					1 - ProbabilityOfFalseAlarm[M, First[\[Lambda]], n, k, RelevantOptions[ProbabilityOfFalseAlarm]],
 				True,
 					Undefined
 			]
@@ -707,63 +691,51 @@ SampleComplexity[\[Gamma]_,Pf_,Pd_,OptionsPattern[]]:=Module[{RelevantOptions, n
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
 	SampleComplexity[\[Gamma],Pf,Pd,n,RelevantOptions[SampleComplexity]]
 ]
-SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{result,channelType,m,\[Rho]=OptionValue[CorrelationCoefficient],x,y,tol=OptionValue[Tolerance],RelevantOptions,f},
+SampleComplexity[\[Gamma]_,Pf_,Pd_,n_,OptionsPattern[]]:=Module[{result, channelType, m, \[Rho] = OptionValue[CorrelationCoefficient], x, y, tol = OptionValue[Tolerance], RelevantOptions, f, Nb = OptionValue[DecisionBits]},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[SampleComplexity][[All,1]]],Options[target][[All,1]]];
 
-	If[ListQ[OptionValue[ChannelType]],
-		If[Length[OptionValue[ChannelType]]==2,
-			{channelType,m} = OptionValue[ChannelType],
-			channelType = OptionValue[ChannelType][[1]]
-		],
-		channelType = OptionValue[ChannelType];
-	];
+	(* Check for invalid inputs *)
+	If[0 < \[Rho] <= 1 && n == 2, Return[Undefined]];
 
-	Switch[channelType,
-		"AWGN",
-		m = Null,
-		"Rayleigh",
-		m = 1;
-	];
+	{channelType, m} = ProcessChannelType[OptionValue[ChannelType]];
 
-	f := If[OptionValue[DecisionBits]==\[Infinity],
-		If[\[Rho]==0,
-			Switch[channelType,
-				"AWGN",
-					AWGNSampleComplexity[\[Gamma], Pf, Pd, n, RelevantOptions[AWGNSampleComplexity]],
-				"Rayleigh",
-					RayleighSampleComplexity[\[Gamma], Pf, Pd, n, RelevantOptions[RayleighSampleComplexity]],
-				"Nakagami",
-					NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[NakagamiSampleComplexity]],
-				"Rice",
-					RiceSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[RiceSampleComplexity]],
-				_,
-					SampleComplexity[\[Gamma], Pf, Pd, n, RelevantOptions[SampleComplexity]]
+	f := Which[
+		Nb == \[Infinity],
+			Which[
+				\[Rho] == 0,
+					Which[
+						channelType == "AWGN",
+							AWGNSampleComplexity[\[Gamma], Pf, Pd, n, RelevantOptions[AWGNSampleComplexity]],
+						channelType == "Rayleigh",
+							RayleighSampleComplexity[\[Gamma], Pf, Pd, n, RelevantOptions[RayleighSampleComplexity]],
+						channelType == "Nakagami",
+							NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[NakagamiSampleComplexity]],
+						channelType == "Rice",
+							RiceSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[RiceSampleComplexity]],
+						True,
+							Undefined
+					],
+				True,
+					Undefined
 			],
-			(* No solution for correlated infinite precision fusion *)
+		1 <= Nb < \[Infinity],
+			{x, y} = Quiet[{x, y}/.(NMinimize[{Abs[FusionCenterProbabilityOfDetection[x, n, k[y, x, n, \[Rho]], \[Rho]] - Pd] + Abs[FusionCenterProbabilityOfFalseAlarm[y, n, k[y, x, n, \[Rho]], \[Rho]] - Pf], 0 < x < 1 && 0 < y < 1}, {x, y}][[2]])];
+			If[!(Abs[FusionCenterProbabilityOfDetection[x, n, k[y, x, n, \[Rho]], \[Rho]] - Pd] <= tol), Message[SampleComplexity::tol, FusionCenterProbabilityOfDetection[x, n, k[y, x, n, \[Rho]], \[Rho]]//N, Pd//N, tol//N]];
+			If[!(Abs[FusionCenterProbabilityOfFalseAlarm[y, n, k[y, x, n, \[Rho]], \[Rho]] - Pf] <= tol), Message[SampleComplexity::tol, FusionCenterProbabilityOfFalseAlarm[y, n, k[y, x, n, \[Rho]], \[Rho]]//N, Pf//N, tol//N]];
+			Which[
+				channelType == "AWGN",
+					AWGNSampleComplexity[\[Gamma], y, x],
+				channelType == "Rayleigh",
+					RayleighSampleComplexity[\[Gamma], y, x, RelevantOptions[RayleighSampleComplexity]],
+				channelType == "Nakagami",
+					NakagamiSampleComplexity[\[Gamma], y, x, m, RelevantOptions[NakagamiSampleComplexity]],
+				channelType == "Rice",
+					RiceSampleComplexity[\[Gamma], Pf, Pd, m, RelevantOptions[RiceSampleComplexity]],
+				True,
+					Undefined
+			],
+		True,
 			Undefined
-		],
-		If[\[Rho]!=0&&n==2,
-			(* No solution for correlated fusion when n = 2 *)
-			Undefined,
-			(* Temporarily disable checks - we'll do our own after *)
-			Off[FindRoot::lstol,NMinimize::cvmit];
-			{x,y} = {x,y}/.(NMinimize[{Abs[FusionCenterProbabilityOfDetection[x,n,k[y,x,n,\[Rho]],\[Rho]]-Pd]+Abs[FusionCenterProbabilityOfFalseAlarm[y,n,k[y,x,n,\[Rho]],\[Rho]]-Pf],0<x<1&&0<y<1},{x,y}][[2]]);
-			On[FindRoot::lstol,NMinimize::cvmit];
-			If[!(Abs[FusionCenterProbabilityOfDetection[x,n,k[y,x,n,\[Rho]],\[Rho]] - Pd] <= tol),Message[SampleComplexity::tol, FusionCenterProbabilityOfDetection[x,n,k[y,x,n,\[Rho]],\[Rho]]//N, Pd//N, tol//N]];
-			If[!(Abs[FusionCenterProbabilityOfFalseAlarm[y,n,k[y,x,n,\[Rho]],\[Rho]] - Pf] <= tol),Message[SampleComplexity::tol, FusionCenterProbabilityOfFalseAlarm[y,n,k[y,x,n,\[Rho]],\[Rho]]//N, Pf//N, tol//N]];
-			Switch[channelType,
-				"AWGN",
-				AWGNSampleComplexity[\[Gamma],y,x],
-				"Rayleigh",
-				RayleighSampleComplexity[\[Gamma],y,x,RelevantOptions[RayleighSampleComplexity]],
-				"Nakagami",
-				NakagamiSampleComplexity[\[Gamma],y,x,m,RelevantOptions[NakagamiSampleComplexity]],
-				"Rice",
-				RiceSampleComplexity[\[Gamma],Pf,Pd,m,RelevantOptions[RiceSampleComplexity]],
-				_,
-				SampleComplexity[\[Gamma],y,x,n,RelevantOptions[SampleComplexity]]
-			]
-		]
 	];
 
 	If[OptionValue[DatabaseLookup],
