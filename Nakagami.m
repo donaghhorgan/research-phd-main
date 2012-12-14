@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*13/12/2012*)
-(*1.60*)
+(*14/12/2012*)
+(*1.61*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.61: Created NumericalLowSNR method instead of using LowSNR option.*)
 (*Version 1.60: Major updates for NakagamiSampleComplexity: added diversity support, exact and approximate methods.*)
 (*Version 1.59: Fixed minor bugs in limit functions.*)
 (*Version 1.58: Moved timing functions to the main function, and minor bug fixes.*)
@@ -166,10 +167,17 @@ LopezBenitezNakagamiProbabilityOfDetection;
 
 
 (* ::Subsubsection::Closed:: *)
-(*Numerical Gaussian method*)
+(*Numerical method (approximate)*)
 
 
 NGaussianNakagamiProbabilityOfDetection;
+
+
+(* ::Subsubsection::Closed:: *)
+(*Numerical method (approximate, low SNR)*)
+
+
+NGaussianLowSNRNakagamiProbabilityOfDetection;
 
 
 (* ::Subsection::Closed:: *)
@@ -337,7 +345,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method = OptionValue[M
 (*Main function*)
 
 
-Options[NakagamiProbabilityOfDetection] = {Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],LowSNR->OptionValue[ProbabilityOfDetection,LowSNR],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
+Options[NakagamiProbabilityOfDetection] = {Method->OptionValue[ProbabilityOfDetection,Method],Algorithm->OptionValue[ProbabilityOfDetection,Algorithm],DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 NakagamiProbabilityOfDetection::usage = "NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the probability of detection for a single energy detector operating on a Nakagami-m fading channel.
 NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>AlgorithmHelp[NakagamiProbabilityOfDetection, {"Approximate", "Exact"}, {{"\"IntegerMN\"", "\"Asymptotic\"", {"\"SwitchedMN\"", "SwitchingPoint"}, "\"LargeSNR\"", "\"Numerical\""},{"\"Annamalai\"", "\"Digham\"", "\"Herath\"", "\"Sun\"", "\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
 NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
@@ -386,6 +394,8 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 				(* This method has two names for legacy reasons *)
 				!ListQ[algorithm] && (algorithm == "Numerical" || algorithm == "NGaussian"),
 					NGaussianNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NGaussianNakagamiProbabilityOfDetection]],
+				!ListQ[algorithm] && (algorithm == "NumericalLowSNR" || algorithm == "NGaussian"),
+					NGaussianLowSNRNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NGaussianLowSNRNakagamiProbabilityOfDetection]],
 				True,
 					Undefined
 			],
@@ -1135,10 +1145,10 @@ LopezBenitezNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?N
 
 
 (* ::Subsubsection::Closed:: *)
-(*Numerical Gaussian method*)
+(*Numerical method (approximate)*)
 
 
-Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], LowSNR->OptionValue[NakagamiProbabilityOfDetection,LowSNR]};
+Options[NGaussianNakagamiProbabilityOfDetection] = {DiversityType -> OptionValue[NakagamiProbabilityOfDetection, DiversityType], LowSNR -> False};
 NGaussianNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NGaussianNakagamiProbabilityOfDetection, "Numerical"];
 NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
@@ -1185,6 +1195,57 @@ NGaussianNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ]
 
 
+(* ::Subsubsection::Closed:: *)
+(*Numerical method (approximate, low SNR)*)
+
+
+Options[NGaussianLowSNRNakagamiProbabilityOfDetection] = {DiversityType -> OptionValue[NakagamiProbabilityOfDetection,DiversityType], LowSNR -> True};
+NGaussianLowSNRNakagamiProbabilityOfDetection::usage = GenerateAlgorithmHelp[NGaussianLowSNRNakagamiProbabilityOfDetection, "Numerical"];
+NGaussianLowSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianLowSNRNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+	NGaussianLowSNRNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[NGaussianLowSNRNakagamiProbabilityOfDetection]]]
+]
+NGaussianLowSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, RelevantOptions, diversityType = OptionValue[DiversityType]},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+	
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NGaussianLowSNRNakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
+
+	Which[
+		diversityType == "None",
+			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,DiversityType->diversityType],{x,0,\[Infinity]}],
+		diversityType == "MRC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x/n,\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
+		diversityType == "EGC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x/n,\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
+		diversityType == "SC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
+		diversityType == "SEC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x,\[Lambda],RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->{diversityType, \[Gamma]t}],{x,0,\[Infinity]}],
+		diversityType == "SLC",
+			NIntegrate[AWGNProbabilityOfDetection[M,x/n,\[Lambda],n,RelevantOptions[AWGNProbabilityOfDetection]]NakagamiPDF[\[Gamma]0,m,x,n,DiversityType->diversityType],{x,0,\[Infinity]}],
+		diversityType == "SLS",
+			Which[
+				ListQ[\[Gamma]0],
+					1 - Product[1 - NGaussianLowSNRNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None",LowSNR->OptionValue[LowSNR]],{i,n}],
+				!ListQ[\[Gamma]0],
+					1 - (1 - NGaussianLowSNRNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None",LowSNR->OptionValue[LowSNR]])^n,
+				True,
+					Undefined
+			],
+		True,
+			Undefined
+	]
+]
+
+
 (* ::Subsection:: *)
 (*Detection probability error bounds*)
 
@@ -1216,7 +1277,7 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 
 	If[diversityType == "SLS",
 		(* This bound is VERY loose *)
-		With[{Pm = (1 - ProbabilityOfDetection[M, \[Gamma], \[Lambda], ChannelType -> {"Nakagami", m}, Method -> "Approximate", Algorithm -> "Numerical", DiversityType -> "None", LowSNR -> False])},
+		With[{Pm = (1 - ProbabilityOfDetection[M, \[Gamma], \[Lambda], ChannelType -> {"Nakagami", m}, Method -> "Approximate", Algorithm -> "Numerical", DiversityType -> "None"])},
 			Min[Abs[{Pm^n - (Pm - LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n, Pm^n - (Pm + LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n}]]
 		],
 		NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
@@ -1267,8 +1328,8 @@ AsymptoticErrorNakagami[Pf_,mn_]:=Module[{f, z},
 (*Sample complexity*)
 
 
-Options[NakagamiSampleComplexity] = {DiversityType->OptionValue[SampleComplexity,DiversityType], Method->OptionValue[SampleComplexity,Method], Algorithm->OptionValue[SampleComplexity,Algorithm], LowSNR->OptionValue[SampleComplexity,LowSNR]};
-NakagamiSampleComplexity::usage="NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Nakagami-m channel.\n\n"<>MethodHelp[NakagamiSampleComplexity]<>"\n\n"<>AlgorithmHelp[NakagamiSampleComplexity, {"Approximate", "Exact"}, {{"\"Numerical\"", "\"Asymptotic\""},{"\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiSampleComplexity];
+Options[NakagamiSampleComplexity] = {DiversityType->OptionValue[SampleComplexity,DiversityType], Method->OptionValue[SampleComplexity,Method], Algorithm->OptionValue[SampleComplexity,Algorithm]};
+NakagamiSampleComplexity::usage="NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Nakagami-m channel.\n\n"<>MethodHelp[NakagamiSampleComplexity]<>"\n\n"<>AlgorithmHelp[NakagamiSampleComplexity, {"Approximate", "Exact"}, {{"\"Numerical\"", "\"NumericalLowSNR\"", "\"Asymptotic\""},{"\"Numerical\""}}]<>"\n\n"<>LowSNRHelp<>"\n\n"<>DiversityTypeHelp[NakagamiSampleComplexity];
 NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiSampleComplexity][[All,1]]],Options[target][[All,1]]];
 	NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[NakagamiSampleComplexity]]
@@ -1291,13 +1352,16 @@ NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeric
 			Which[
 				algorithm == "Numerical",
 					f[x_?NumericQ] := NakagamiProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], m, n, RelevantOptions[NakagamiProbabilityOfDetection]/."Numerical"->"Annamalai"];
-					M/.FindRoot[f[M] == Pd, {M, NakagamiSampleComplexity[\[Gamma]0, Pf, Pd, m, n, Method->"Approximate", Algorithm->"Numerical", DiversityType->diversityType, LowSNR->OptionValue[LowSNR]], 1, \[Infinity]}],
+					M/.FindRoot[f[M] == Pd, {M, NakagamiSampleComplexity[\[Gamma]0, Pf, Pd, m, n, Method->"Approximate", Algorithm->"Numerical", DiversityType->diversityType], 1, \[Infinity]}],
 				True,
 					Undefined
 			],
 		method == "Approximate",
 			Which[
 				algorithm == "Numerical",
+					f[x_?NumericQ] := NakagamiProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], m, n, RelevantOptions[NakagamiProbabilityOfDetection]];
+					M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, Method->"Approximate"], 1, \[Infinity]}],
+				algorithm == "NumericalLowSNR",
 					f[x_?NumericQ] := NakagamiProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], m, n, RelevantOptions[NakagamiProbabilityOfDetection]];
 					M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, Method->"Approximate"], 1, \[Infinity]}],
 				algorithm == "Asymptotic",
