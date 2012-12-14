@@ -62,6 +62,9 @@ ProcessSNR;
 ProcessMethod;
 
 
+ProcessChannelType;
+
+
 ProcessDiversityType;
 
 
