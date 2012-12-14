@@ -399,7 +399,7 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 
 Options[NakagamiLimit] = {Method->"ExactAnnamalai", DiversityType->OptionValue[NakagamiProbabilityOfDetection,DiversityType], Tolerance->10^-6};
 NakagamiLimit::usage = "NakagamiLimit[M, \[Gamma], \[Lambda], m] calculates the truncation point for use in the specified method for a single energy detector operating on a Nakagami-m channel.
-NakagamiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the specified method for energy detection with diversity reception in a Nakagami-m channel.";
+NakagamiLimit[M, \[Gamma], \[Lambda], m, n] calculates the truncation point for use in the specified method for energy detection with diversity reception in a Nakagami-m channel.\n\n" <> MethodHelp[NakagamiLimit, {"\"ExactNumerical\"", "\"ExactAnnamalai\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\"", "\"ApproximateIntegerKN\"", "\"ApproximateAsymptotic\""}] <> "\n\n" <> DiversityTypeHelp[NakagamiLimit];
 NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1}, NakagamiLimit[M, \[Gamma], \[Lambda], m, n, DiversityType->"None", Tolerance->OptionValue[Tolerance]]]
 NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{RelevantOptions, \[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], method, mn},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiLimit][[All,1]]],Options[target][[All,1]]];
