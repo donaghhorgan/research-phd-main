@@ -33,7 +33,7 @@
 
 (* ::Text:: *)
 (*14/12/2012*)
-(*1.04*)
+(*1.05*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.05: Added ProcessChannelType function.*)
 (*Version 1.04: Added ProcessMethod function.*)
 (*Version 1.03: Fixed a bug in ProcessSNR.*)
 (*Version 1.02: Moved FaddeevaDerivative function from the Nakagami package.*)
@@ -89,7 +90,11 @@ ProcessMethod::usage="ProcessMethod[method] processes the specified method and r
 ProcessMethod[method_]:=If[ListQ[method], {method[[1]], method[[2]]}, {method, Null}, Undefined]
 
 
-ProcessDiversityType::usage="ProcessDiversityType[x] either returns the list {\"SEC\", \[Gamma]t} or {diversityType, Null}.";
+ProcessChannelType::usage="ProcessChannelType[channelType] processes the specified channel type and returns a list."
+ProcessChannelType[channelType_]:=If[ListQ[channelType], {channelType[[1]], channelType[[2]]}, {channelType, Null}, Undefined]
+
+
+ProcessDiversityType::usage="ProcessDiversityType[diversityType] processes the specified diversity type and returns a list.";
 ProcessDiversityType[diversityType_]:=If[ListQ[diversityType], {diversityType[[1]], diversityType[[2]]}, {diversityType, Null}, Undefined]
 
 
