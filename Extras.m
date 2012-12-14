@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*03/12/2012*)
-(*1.03*)
+(*14/12/2012*)
+(*1.04*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.04: Added ProcessMethod function.*)
 (*Version 1.03: Fixed a bug in ProcessSNR.*)
 (*Version 1.02: Moved FaddeevaDerivative function from the Nakagami package.*)
 (*Version 1.01: Added SEC support, and removed SSC support.*)
@@ -55,6 +56,9 @@ BeginPackage["Extras`"];
 
 
 ProcessSNR;
+
+
+ProcessMethod;
 
 
 ProcessDiversityType;
@@ -79,6 +83,10 @@ ProcessSNR[\[Gamma]_,diversityType_:"SLC"]:=Which[
 	True,
 		Undefined
 ]
+
+
+ProcessMethod::usage="ProcessMethod[method] processes the specified method and returns a list.";
+ProcessMethod[method_]:=If[ListQ[method], {method[[1]], method[[2]]}, {method, Null}, Undefined]
 
 
 ProcessDiversityType::usage="ProcessDiversityType[x] either returns the list {\"SEC\", \[Gamma]t} or {diversityType, Null}.";
