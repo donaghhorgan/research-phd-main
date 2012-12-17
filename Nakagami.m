@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*14/12/2012*)
-(*1.62*)
+(*17/12/2012*)
+(*1.63*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.63: Added asymptotic error bounds to the NakagamiSampleComplexity function.*)
 (*Version 1.62: Amalgamated algorithms and methods.*)
 (*Version 1.61: Created NumericalLowSNR method instead of using LowSNR option.*)
 (*Version 1.60: Major updates for NakagamiSampleComplexity: added diversity support, exact and approximate methods.*)
@@ -1292,7 +1293,7 @@ NakagamiEGCSumDistribution[\[Gamma]_,m_,n_] := NakagamiEGCSumDistribution[\[Gamm
 
 
 AsymptoticErrorNakagami::usage="AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the error of the asymptotic method for the specified parameters.";
-AsymptoticErrorNakagami[Pf_,mn_]:=Module[{f, z},
+AsymptoticErrorNakagami[Pf_,mn_] := AsymptoticErrorNakagami[Pf, mn] = Module[{f, z},
 	f[z_] := (Pf / 2) Erfc[Sqrt[mn / 2]] + (1 - Pf) (GammaRegularized[mn, z] - (1 / 2) Erfc[(z - mn)/Sqrt[2 mn]]);
 
 	NMaximize[{Abs[f[z]], z >= 0}, {z, 0, mn}][[1]]
@@ -1304,12 +1305,12 @@ AsymptoticErrorNakagami[Pf_,mn_]:=Module[{f, z},
 
 
 Options[NakagamiSampleComplexity] = {DiversityType->OptionValue[SampleComplexity,DiversityType], Method->OptionValue[SampleComplexity,Method]};
-NakagamiSampleComplexity::usage="NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Nakagami-m channel.\n\n"<>MethodHelp[NakagamiSampleComplexity, {"\"ExactNumerical\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\"", "\"ApproximateAsymptotic\""}]<>"\n\n"<>DiversityTypeHelp[NakagamiSampleComplexity];
+NakagamiSampleComplexity::usage="NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates the number of samples required for the specified decision probabilities and signal to noise ratio in a Nakagami-m channel.\n\n"<>MethodHelp[NakagamiSampleComplexity, {"\"ExactNumerical\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\"", "\"ApproximateAsymptotic\"", "\"ApproximateAsymptoticUpperBound\"", "\"ApproximateAsymptoticLowerBound\""}]<>"\n\n"<>DiversityTypeHelp[NakagamiSampleComplexity];
 NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,OptionsPattern[]]:=Module[{RelevantOptions, n = 1},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiSampleComplexity][[All,1]]],Options[target][[All,1]]];
 	NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n, RelevantOptions[NakagamiSampleComplexity]]
 ]
-NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, RelevantOptions, diversityType = OptionValue[DiversityType], method, mn, g, M},
+NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, RelevantOptions, diversityType = OptionValue[DiversityType], method, mn, g, M, \[Epsilon]},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 	
@@ -1349,6 +1350,12 @@ NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeric
 				True,
 					Undefined
 			],
+		method == "ApproximateAsymptoticUpperBound",
+			\[Epsilon] = AsymptoticErrorNakagami[Pf, m n];
+			If[Pd + \[Epsilon] >= 1, \[Infinity], NakagamiSampleComplexity[\[Gamma], Pf, Pd + \[Epsilon], m, n, Method->"ApproximateAsymptotic", DiversityType->diversityType]],
+		method == "ApproximateAsymptoticLowerBound",
+			\[Epsilon] = AsymptoticErrorNakagami[Pf, m n];
+			If[Pd - \[Epsilon] <= 0, 0, NakagamiSampleComplexity[\[Gamma], Pf, Pd - \[Epsilon], m, n, Method->"ApproximateAsymptotic", DiversityType->diversityType]],
 		True,
 			Undefined
 	]]
