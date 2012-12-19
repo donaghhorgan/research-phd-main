@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*17/12/2012*)
-(*1.63*)
+(*19/12/2012*)
+(*1.70*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.70: Added no diversity, MRC and EGC methods to the LargeSNRNakagamiProbabilityOfDetection function. Added LargeSNR sample complexity algorithms for no diversity, MRC, EGC and SLC.*)
 (*Version 1.63: Added asymptotic error bounds to the NakagamiSampleComplexity function.*)
 (*Version 1.62: Amalgamated algorithms and methods.*)
 (*Version 1.61: Created NumericalLowSNR method instead of using LowSNR option.*)
@@ -351,6 +352,9 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 	limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Method->method, RelevantOptions[NakagamiLimit]];
 
 	f := Which[
+		(* Catch extreme values - they can cause errors *)
+		\[Lambda] == -\[Infinity] || M == \[Infinity] || \[Gamma] == \[Infinity] || n == \[Infinity],
+			1,
 		method == "ExactAnnamalai",
 			AnnamalaiNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,Limit->limit,RelevantOptions[AnnamalaiNakagamiProbabilityOfDetection]],
 		method == "ExactDigham",
@@ -870,17 +874,13 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[A_, B_, k_] := (1 / 2) Exp[-A^2] Total[Table[((I/(2 B))^l / l!) FaddeevaDerivative[l, -I (A + (1 / (2 B)))], {l, 0, k - 1}]] // Re;
+	g[k_, a_, b_, c_] := (1 / 2) Exp[-a^2] Total[Table[((I c / (2 b))^l / l!) FaddeevaDerivative[l, -I (a + (c / (2 b)))], {l, 0, k - 1}]] // Re;
 	
 	Which[
 		diversityType == "None",
-			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
-			],
+			AWGNProbabilityOfFalseAlarm[M, \[Lambda], Method->"Approximate", DiversityType->diversityType] + g[m, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / \[Gamma]0],
 		diversityType == "MRC",
-			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
-			],
+			AWGNProbabilityOfFalseAlarm[M, \[Lambda], Method->"Approximate", DiversityType->diversityType] + g[m n, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / \[Gamma]0],
 		diversityType == "EGC",
 			(* Dharmawansa's exact method *)
 			(*If[limit==Null, limit = NakagamiLimit[M, \[Gamma], \[Lambda], m, n, Method->"ApproximateIntegerMN", DiversityType->diversityType]];
@@ -896,23 +896,19 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 					Undefined
 			],*)
 			(* Nakagami's approximate method *)
-			With[{c = Gamma[m + 1]^2 / (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2)},
-				With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 c m n)},
-					AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + g[A, B, x]
-				]
+			With[{\[Beta] = (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2) / (n Gamma[m + 1]^2)},
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], Method->"Approximate", DiversityType->diversityType] + g[m n, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / (\[Beta] \[Gamma]0)]
 			],
 		diversityType == "SC",
 			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m)},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda]] + (n / Gamma[m]) Total[Table[(-1)^l Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (1 / (l + 1)^(m + k)) g[A, B / (l + 1), m + k], {k, 0, l (m - 1)}]], {l, 0, n - 1}]]
+				AWGNProbabilityOfFalseAlarm[M, \[Lambda], Method->"Approximate", DiversityType->diversityType] + (n / Gamma[m]) Total[Table[(-1)^l Binomial[n - 1, l] Total[Table[MultinomialCoefficient[l, k, m] (1 / (l + 1)^(m + k)) g[A, B / (l + 1), m + k], {k, 0, l (m - 1)}]], {l, 0, n - 1}]]
 			],
 		diversityType == "SEC",
 			With[{A = (\[Lambda] - M) / (2 Sqrt[M]), B = - Sqrt[M] \[Gamma]0 / (2 m), C = (\[Lambda] - M (1 + \[Gamma]t)) / (2 Sqrt[M])},
 				(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^(n - 1) IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"] + Sum[(1 - GammaRegularized[m, m \[Gamma]t / \[Gamma]0])^j, {j, 0, n - 2}] (GammaRegularized[m, m \[Gamma]t / \[Gamma]0] ((1 / 2) (1 - Erf[C])) + ((1 / 2) Exp[-C^2] Total[Table[((I/(2 B))^l / l!) GammaRegularized[m - l, m \[Gamma]t / \[Gamma]0] FaddeevaDerivative[l, N[-I (C + (1 / (2 B))),30]], {l, 0, m - 1}]] // Re))
 			],
 		diversityType == "SLC",
-			With[{A = (\[Lambda] - M n) / (2 Sqrt[M n]), B = - Sqrt[M] \[Gamma]0 / (2 m Sqrt[n])},
-				AWGNProbabilityOfFalseAlarm[M, \[Lambda], n] + g[A, B, x]
-			],
+			AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, Method->"Approximate", DiversityType->diversityType] + g[m n, (\[Lambda] - M n) / (2 Sqrt[M n]), - Sqrt[M] / (2 Sqrt[n]), m / \[Gamma]0],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
@@ -983,27 +979,29 @@ LargeSNRNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numer
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[n0_] := AWGNProbabilityOfFalseAlarm[M,\[Lambda],n] + (1 - AWGNProbabilityOfFalseAlarm[M,\[Lambda],n]) ( Gamma[m n,(m (-M n+\[Lambda]))/(M \[Gamma]0)]/Gamma[m n]);
+	g[k_, a_, b_, c_] := AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, Method->"Approximate", DiversityType->diversityType] + (1 - AWGNProbabilityOfFalseAlarm[M, \[Lambda], n, Method->"Approximate", DiversityType->diversityType]) GammaRegularized[k, - a c / b];
 
 	Which[
 		diversityType == "None",
-			g[1],
+			g[m, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / \[Gamma]0],
 		diversityType == "MRC",
-			Undefined,
+			g[m n, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / \[Gamma]0],
 		diversityType == "EGC",
-			Undefined,
+			With[{\[Beta] = (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2) / (n Gamma[m + 1]^2)},
+				g[m n, (\[Lambda] - M) / (2 Sqrt[M]), - Sqrt[M] / 2, m / (\[Beta] \[Gamma]0)]
+			],
 		diversityType == "SC",
 			Undefined,
 		diversityType == "SEC",
 			Undefined,
 		diversityType == "SLC",
-			g[n],
+			g[m n, (\[Lambda] - M n) / (2 Sqrt[M n]), - Sqrt[M] / (2 Sqrt[n]), m / \[Gamma]0],
 		diversityType == "SLS",
 			Which[
 				ListQ[\[Gamma]0],
-					1 - Product[1 - LargeSNRNakagamiProbabilityOfDetection[M,\[Gamma]0[[i]],\[Lambda],m,DiversityType->"None"],{i,n}],
+					1 - Product[1 - LargeSNRNakagamiProbabilityOfDetection[M, \[Gamma]0[[i]], \[Lambda], m, DiversityType->"None"],{i,n}],
 				!ListQ[\[Gamma]0],
-					1 - (1 - LargeSNRNakagamiProbabilityOfDetection[M,\[Gamma]0,\[Lambda],m,DiversityType->"None"])^n,
+					1 - (1 - LargeSNRNakagamiProbabilityOfDetection[M, \[Gamma]0, \[Lambda], m, DiversityType->"None"])^n,
 				True,
 					Undefined
 			],
@@ -1335,6 +1333,21 @@ NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeric
 		method == "ApproximateNumericalLowSNR",
 			f[x_?NumericQ] := NakagamiProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], m, n, RelevantOptions[NakagamiProbabilityOfDetection]];
 			M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, RelevantOptions[AWGNSampleComplexity]], 1, \[Infinity]}],
+		method == "ApproximateLargeSNR",
+			Which[
+				diversityType == "None",
+					2 (m InverseQ[Pf] / (\[Gamma]0 InverseGammaRegularized[m, (Pd - Pf) / (1 - Pf)]))^2,
+				diversityType == "MRC",
+					2 (m InverseQ[Pf] / (\[Gamma]0 InverseGammaRegularized[m n, (Pd - Pf) / (1 - Pf)]))^2,
+				diversityType == "EGC",
+					With[{\[Beta] = (Gamma[m + 1]^2 + m (n - 1) Gamma[m + 1 / 2]^2) / (n Gamma[m + 1]^2)},
+						2 (m InverseQ[Pf] / (\[Beta] \[Gamma]0 InverseGammaRegularized[m n, (Pd - Pf) / (1 - Pf)]))^2
+					],
+				diversityType == "SLC",
+					2 n (m InverseQ[Pf] / (\[Gamma]0 InverseGammaRegularized[m n, (Pd - Pf) / (1 - Pf)]))^2,
+				True,
+					Undefined
+			],
 		method == "ApproximateAsymptotic",
 			Which[
 				diversityType == "None",
