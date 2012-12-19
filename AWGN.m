@@ -162,10 +162,10 @@ AWGNProbabilityOfFalseAlarm[M_,\[Lambda]_,n_,OptionsPattern[]]:=Module[{diversit
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 
 	g[a_] := Which[
-		method == "ApproximateNumerical" || method == "ApproximateNumericalLowSNR",
-			Q[(\[Lambda] - M a) / Sqrt[2M a]],
-		method == "ExactNumerical",
+		method == "Exact" || StringTake[method, 5] == "Exact",
 			GammaRegularized[M a / 2, \[Lambda] / 2],
+		method == "Approximate" || StringTake[method, 11] == "Approximate" || method == "NGaussian",
+			Q[(\[Lambda] - M a) / Sqrt[2M a]],
 		True,
 			Undefined
 	];
