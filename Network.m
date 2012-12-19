@@ -250,7 +250,7 @@ CorrelationHelp[fName_] := "Additionally, the average correlation between nodes 
 (*Decision probabilities*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Probability of detection (general)*)
 
 
@@ -300,7 +300,7 @@ ProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,n_,k_,OptionsPattern[]]:=Module[{
 		Nb == \[Infinity],
 			Which[
 				Length[Flatten[{\[Lambda]}]] <= 2,
-					g[\[Gamma], Last[\[Lambda]], n],
+					g[\[Gamma], Last[Flatten[{\[Lambda]}]], n],
 				True,
 					Undefined
 			],
