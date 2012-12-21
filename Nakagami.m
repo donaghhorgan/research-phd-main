@@ -333,7 +333,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method, mn, diversityT
 (*Detection probability*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Main function*)
 
 
@@ -415,6 +415,9 @@ NakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPa
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 
 	Which[
+		(* Catch extreme values - they can cause errors *)
+		\[Lambda] == -\[Infinity] || M == \[Infinity] || \[Gamma] == \[Infinity] || n == \[Infinity],
+			Undefined,
 		method == "ExactAnnamalai",
 			AnnamalaiNakagamiLimit[M, \[Gamma], \[Lambda], m, n, RelevantOptions[AnnamalaiNakagamiLimit]],
 		method == "ExactHerath",
