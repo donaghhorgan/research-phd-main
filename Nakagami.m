@@ -333,13 +333,13 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method, mn, diversityT
 (*Detection probability*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Main function*)
 
 
 Options[NakagamiProbabilityOfDetection] = {Method->OptionValue[ProbabilityOfDetection,Method], DiversityType->OptionValue[ProbabilityOfDetection,DiversityType],Timed->OptionValue[ProbabilityOfDetection,Timed],MaxTime->OptionValue[ProbabilityOfDetection,MaxTime],MaxIterations->OptionValue[ProbabilityOfDetection,MaxIterations]};
 NakagamiProbabilityOfDetection::usage = "NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] calculates the probability of detection for a single energy detector operating on a Nakagami-m fading channel.
-NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection, {"\"ExactNumerical\"", "\"ExactAnnamalai\"", "\"ExactDigham\"", "\"ExactHerath\"", "\"ExactSun\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\"", "\"ApproximateIntegerMN\"", "\"ApproximateAsymptotic\"", "{\"ApproximateSwitchedMN\", mn} (where mn is the switching point)", "\"ApproximateLargeSNR\""}]<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
+NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m, n] calculates the probability of detection for energy detection with diversity reception in a Nakagami-m fading channel.\n\n"<>MethodHelp[NakagamiProbabilityOfDetection, {"\"ExactNumerical\"", "\"ExactAnnamalai\"", "\"ExactDigham\"", "\"ExactHerath\"", "\"ExactSun\"", "\"ApproximateNumerical\"", "\"ApproximateNumericalLowSNR\"", "\"ApproximateIntegerMN\"", "\"ApproximateAsymptotic\"", "{\"ApproximateSwitchedMN\", mn} (where mn is the switching point)", "\"ApproximateSmallPf\"", "\"ApproximateLargeSNR\""}]<>"\n\n"<>DiversityTypeHelp[NakagamiProbabilityOfDetection]<>"\n\n"<>TimingHelp[NakagamiProbabilityOfDetection];
 NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,OptionsPattern[]]:=Module[{n = 1, RelevantOptions},
 	RelevantOptions[target_]:=FilterRules[Table[#[[i]]->OptionValue[#[[i]]],{i,Length[#]}]&[Options[NakagamiProbabilityOfDetection][[All,1]]],Options[target][[All,1]]];
 	NakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,#/.(DiversityType/.#)->"None"&[RelevantOptions[NakagamiProbabilityOfDetection]]]
@@ -367,7 +367,8 @@ NakagamiProbabilityOfDetection[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]]:=
 			NumericalNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[NumericalNakagamiProbabilityOfDetection]],
 		method == "ApproximateIntegerMN",
 			IntegerMNNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[IntegerMNNakagamiProbabilityOfDetection]],
-		method == "ApproximateLargeSNR",
+		(* Keep two names for legacy reasons *)
+		method == "ApproximateLargeSNR" || method == "ApproximateSmallPf",
 			LargeSNRNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[LargeSNRNakagamiProbabilityOfDetection]],
 		method == "ApproximateAsymptotic",
 			AsymptoticNakagamiProbabilityOfDetection[M,\[Gamma],\[Lambda],m,n,RelevantOptions[AsymptoticNakagamiProbabilityOfDetection]],
