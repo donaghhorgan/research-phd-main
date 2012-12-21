@@ -1337,7 +1337,8 @@ NakagamiSampleComplexity[\[Gamma]_?NumericQ,Pf_?NumericQ,Pd_?NumericQ,m_?Numeric
 		method == "ApproximateNumericalLowSNR",
 			f[x_?NumericQ] := NakagamiProbabilityOfDetection[x, \[Gamma]0, \[Lambda][x, Pf, n, RelevantOptions[\[Lambda]]], m, n, RelevantOptions[NakagamiProbabilityOfDetection]];
 			M/.FindRoot[f[M] == Pd, {M, AWGNSampleComplexity[\[Gamma]0, Pf, Pd, n, RelevantOptions[AWGNSampleComplexity]], 1, \[Infinity]}],
-		method == "ApproximateLargeSNR",
+		(* Keep two names for legacy reasons *)
+		method == "ApproximateLargeSNR" || method == "ApproximateSmallPf",
 			Which[
 				diversityType == "None",
 					2 (m InverseQ[Pf] / (\[Gamma]0 InverseGammaRegularized[m, (Pd - Pf) / (1 - Pf)]))^2,
