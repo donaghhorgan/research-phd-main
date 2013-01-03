@@ -299,9 +299,9 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method, mn, diversityT
 		method == "Approximate" || StringTake[method, 11] == "Approximate",
 			Which[
 				diversityType == "None",
-					g[1],
+					g[1, \[Gamma]0],
 				diversityType == "MRC",
-					g[n],
+					g[n, \[Gamma]0],
 				diversityType == "EGC",
 					(* Nakagami's approximate PDF *)
 					PDF[NormalDistribution[(\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2) / Gamma[1 + m]^2), (\[Gamma]0 + (m (-1 + n) \[Gamma]0 Gamma[1 / 2 + m]^2)/Gamma[1 + m]^2) Sqrt[m n]], x],
@@ -310,7 +310,7 @@ NakagamiPDF[\[Gamma]_,m_,x_,n_,OptionsPattern[]]:=Module[{method, mn, diversityT
 				diversityType == "SEC",
 					Undefined,
 				diversityType == "SLC",
-					g[n],
+					g[n, \[Gamma]0],
 				diversityType == "SLS",
 					Which[
 						ListQ[\[Gamma]0],
