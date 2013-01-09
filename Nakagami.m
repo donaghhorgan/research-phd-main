@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*19/12/2012*)
-(*1.70*)
+(*09/01/2012*)
+(*1.71*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.71: Improved the computation time of the AnnamalaiNakagamiLimit function.*)
 (*Version 1.70: Added no diversity, MRC and EGC methods to the LargeSNRNakagamiProbabilityOfDetection function. Added LargeSNR sample complexity algorithms for no diversity, MRC, EGC and SLC.*)
 (*Version 1.63: Added asymptotic error bounds to the NakagamiSampleComplexity function.*)
 (*Version 1.62: Amalgamated algorithms and methods.*)
@@ -487,7 +488,7 @@ AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 Options[AnnamalaiNakagamiLimit] = {DiversityType->OptionValue[AnnamalaiNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
 AnnamalaiNakagamiLimit::usage = GenerateTruncationHelp[AnnamalaiNakagamiLimit, "Annamalai"];
 AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
-AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
+AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], f},
 	(* Handle both lists and scalar values for diversityType *)
 	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
 
@@ -497,11 +498,35 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 	Quiet[
 		Which[
 			diversityType == "None",
-				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
-				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol] // Round;
+				f[j_] := 1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2];
+				Which[
+					f[j0] > tol,
+						While[f[j0] > tol, j0++];
+						j0,
+					f[j0] < tol,
+						While[f[j0] < tol, j0--];
+						j0,
+					f[j0] == tol,
+						j0,
+					True,
+						Undefined
+				],
 			diversityType == "MRC",
-				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol];
-				j/.FindRoot[1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M / 2) - Sqrt[M / 2] InverseQ[1 - tol] // Round;
+				f[j_] := 1 - GammaRegularized[(M / 2) + j + 1, \[Lambda] / 2];
+				Which[
+					f[j0] > tol,
+						While[f[j0] > tol, j0++];
+						j0,
+					f[j0] < tol,
+						While[f[j0] < tol, j0--];
+						j0,
+					f[j0] == tol,
+						j0,
+					True,
+						Undefined
+				],
 			diversityType == "EGC",
 				Undefined,
 			diversityType == "SC",
@@ -509,13 +534,25 @@ AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,
 			diversityType == "SEC",
 				Undefined,
 			diversityType == "SLC",
-				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol];
-				j/.FindRoot[1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2] == tol,{j, j0, 1, \[Infinity]}],
+				j0 = (\[Lambda] / 2) - (M n / 2) - Sqrt[M n / 2] InverseQ[1 - tol] // Round;
+				f[j_] := 1 - GammaRegularized[(M / 2) n + j + 1, \[Lambda] / 2];
+				Which[
+					f[j0] > tol,
+						While[f[j0] > tol, j0++];
+						j0,
+					f[j0] < tol,
+						While[f[j0] < tol, j0--];
+						j0,
+					f[j0] == tol,
+						j0,
+					True,
+						Undefined
+				],
 			diversityType == "SLS",
 				Table[AnnamalaiNakagamiLimit[M,\[Gamma][[i]],\[Lambda],m,DiversityType->"None",Tolerance->tol], {i, Length[\[Gamma]]}],
 			True,
 				Undefined
-		]//N//Ceiling
+		]
 	]
 ]
 
@@ -878,7 +915,8 @@ IntegerMNNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 	If[\[Gamma]0 == Undefined, Return[Undefined]];
 
-	g[k_, a_, b_, c_] := (1 / 2) Exp[-a^2] Total[Table[((I c / (2 b))^l / l!) FaddeevaDerivative[l, -I (a + (c / (2 b)))], {l, 0, k - 1}]] // Re;
+	(* Precision is set to 100 here - required for FaddeevaDerivative to be stable for large orders *)
+	g[k_, a_, b_, c_] := (1 / 2) Exp[-a^2] Total[Table[((I c / (2 b))^l / l!) FaddeevaDerivative[l, N[-I (a + (c / (2 b))), 100]], {l, 0, k - 1}]] // Re;
 	
 	Which[
 		diversityType == "None",
@@ -1244,7 +1282,7 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 	(* Check for invalid combinations of inputs *)
 	If[diversityType == "None" && n > 1, Return[Undefined]];
 
-	g[\[Epsilon]_?NumericQ] := Which[
+	(*g[\[Epsilon]_?NumericQ] := Which[
 		diversityType == "None" || diversityType == "SLC",
 			Abs[AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, Method->"ApproximateNumerical"] - AWGNProbabilityOfDetection[M, \[Epsilon], \[Lambda], n, DiversityType->diversityType, Method->"ApproximateNumericalLowSNR"]],
 		diversityType == "MRC" || diversityType == "EGC" || diversityType == "SC" || diversityType == "SEC",
@@ -1259,7 +1297,12 @@ LowSNRAssumptionErrorNakagami[M_,\[Gamma]_,\[Lambda]_,m_,n_,OptionsPattern[]] :=
 			Min[Abs[{Pm^n - (Pm - LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n, Pm^n - (Pm + LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m])^n}]]
 		],
 		NMaximize[{g[\[Epsilon]], 0 <= \[Epsilon] <= \[Epsilon]max}, {\[Epsilon], 0, \[Epsilon]max}][[1]]
-	]
+	]*)
+
+	(*Abs[Q[(\[Lambda] - M (1 + n \[Gamma]))/Sqrt[2 M (1 + 2 n \[Gamma])]] - Q[(\[Lambda] - M (1 +n \[Gamma]))/Sqrt[2 M]]]*)
+	(*Abs[-(E^((-((\[Lambda]-M(1+n \[Gamma]))/Sqrt[2M(1+2 n \[Gamma])])^2/2))/Sqrt[2\[Pi]])((\[Lambda]-M(1+n \[Gamma]))/Sqrt[2M(1+2n \[Gamma])])(1-Sqrt[1+2n \[Gamma]])]//N*)
+	(*Abs[E^(-((\[Lambda]-M(1+n \[Gamma]))/Sqrt[2M])^2/2)/Sqrt[2\[Pi]] \[Gamma]]//N*)
+	(2^(-(1/2)+m n) E^(-((M-\[Lambda])^2/(4 M))) (2+2 Sqrt[2] Sqrt[M]+M)^(-((m n)/2)) (m/\[Gamma])^(m n) (-(((2 m Sqrt[M]+(Sqrt[2]+Sqrt[M]) \[Gamma] (M-\[Lambda])) Gamma[1+(m n)/2] Hypergeometric1F1[1+(m n)/2,3/2,(2 m Sqrt[M]+(Sqrt[2]+Sqrt[M]) \[Gamma] (M-\[Lambda]))^2/(4 M (2+2 Sqrt[2] Sqrt[M]+M) \[Gamma]^2)])/(Sqrt[M] (2+2 Sqrt[2] Sqrt[M]+M) \[Gamma]))+(Gamma[1/2 (1+m n)] Hypergeometric1F1[1/2 (1+m n),1/2,(2 m Sqrt[M]+(Sqrt[2]+Sqrt[M]) \[Gamma] (M-\[Lambda]))^2/(4 M (2+2 Sqrt[2] Sqrt[M]+M) \[Gamma]^2)])/Sqrt[2+2 Sqrt[2] Sqrt[M]+M]))/(Sqrt[\[Pi]] Gamma[m n])//N
 ]
 
 
