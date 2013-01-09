@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       157,          7]
-NotebookDataLength[     95634,       2071]
-NotebookOptionsPosition[     78924,       1599]
-NotebookOutlinePosition[     85434,       1769]
-CellTagsIndexPosition[     84970,       1755]
+NotebookDataLength[    103128,       2258]
+NotebookOptionsPosition[     85499,       1760]
+NotebookOutlinePosition[     92269,       1936]
+CellTagsIndexPosition[     91847,       1923]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -165,7 +165,7 @@ Cell[CellGroupData[{
 
 Cell[BoxData["\<\"FusionCenterProbabilityOfDetection\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.564482236327017*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729871774188*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"FusionCenterProbabilityOfDetection[Pd, n, k] calculates the \
@@ -174,12 +174,12 @@ decision fusion.\\nFusionCenterProbabilityOfDetection[Pd, n, k, \[Rho]] \
 calculates the overall probability of detection for a cooperative network \
 with 1 bit decision fusion and correlated decisions.\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482236403883*^9},
- CellTags->"Info3564482236-3035831"],
+ CellChangeTimes->{3.566729872127795*^9},
+ CellTags->"Info3566729871-1208992"],
 
 Cell[BoxData["\<\"FusionCenterProbabilityOfFalseAlarm\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.564482236486265*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729872145393*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"FusionCenterProbabilityOfFalseAlarm[Pf, n, k] calculates the \
@@ -188,12 +188,12 @@ decision fusion.\\nFusionCenterProbabilityOfFalseAlarm[Pf, n, k, \[Rho]] \
 calculates the overall probability of false alarm for a cooperative network \
 with 1 bit decision fusion and correlated decisions.\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482236590075*^9},
- CellTags->"Info3564482236-3035831"],
+ CellChangeTimes->{3.566729872168901*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"k\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.564482236643331*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729872183235*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"\\\"k[Pf, Pd, n] calculates the optimum fusion rule for a \
@@ -211,12 +211,12 @@ quantisation.\\\\nk[{\\!\\(\\*SubscriptBox[\\(P\\), \\(00\\)]\\), \
 \\(11\\)]\\), ...}, n, \[Rho]] calculates the optimum fusion rule for a \
 cooperative network with arbitrary decision quantisation and correlated \
 decisions.\\\"\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482236733345*^9},
- CellTags->"Info3564482236-3035831"],
+ CellChangeTimes->{3.566729872389749*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"ProbabilityOfAcquisition\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.564482236799245*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.5667298724107113`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProbabilityOfAcquisition[M, \[Lambda], n] calculates the \
@@ -236,12 +236,12 @@ DecisionBits\[Rule]Infinity.\\n\\nAdditionally, the average correlation \
 between nodes may be specified with the CorrelationCoefficient option. By \
 default, CorrelationCoefficient\[Rule]0.\"\>", "MSG"]], "Print", "PrintUsage",
  
- CellChangeTimes->{3.56448223687306*^9},
- CellTags->"Info3564482236-3035831"],
+ CellChangeTimes->{3.566729872506899*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"ProbabilityOfDetection\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.564482236891518*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729872526328*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProbabilityOfDetection[M, \[Gamma], \[Lambda], n] calculates \
@@ -272,12 +272,12 @@ with the DatabaseLookup and DatabaseCaching options. For database caching, \
 both the DatabaseLookup and DatabaseCaching options must be set to True. By \
 default, DatabaseLookup\[Rule]False and DatabaseCaching\[Rule]False.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.56448223700532*^9},
- CellTags->"Info3564482236-3035831"],
+ CellChangeTimes->{3.5667298726208572`*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"ProbabilityOfFalseAlarm\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.5644822370682783`*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729872638349*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProbabilityOfFalseAlarm[M, \[Lambda], n] calculates the \
@@ -297,12 +297,12 @@ DecisionBits\[Rule]Infinity.\\n\\nAdditionally, the average correlation \
 between nodes may be specified with the CorrelationCoefficient option. By \
 default, CorrelationCoefficient\[Rule]0.\"\>", "MSG"]], "Print", "PrintUsage",
  
- CellChangeTimes->{3.564482237193891*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.5667298727352953`*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"ProbabilityOfMissedDetection\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.5644822372570133`*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.5667298727552223`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProbabilityOfMissedDetection[M, \[Gamma], \[Lambda], n] \
@@ -334,12 +334,12 @@ with the DatabaseLookup and DatabaseCaching options. For database caching, \
 both the DatabaseLookup and DatabaseCaching options must be set to True. By \
 default, DatabaseLookup\[Rule]False and DatabaseCaching\[Rule]False.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482237330304*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.566729872850525*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"SampleComplexity\"\>"], "Print",
  CellChangeTimes->{{3.564482001552766*^9, 3.564482021746084*^9}, 
-   3.5644821918483133`*^9, 3.56448223734822*^9}],
+   3.5644821918483133`*^9, 3.564482236327017*^9, 3.566729872866376*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SampleComplexity[\[Gamma], Pf, Pd, n] calculates the number of \
@@ -366,8 +366,8 @@ enabled with the DatabaseLookup and DatabaseCaching options. For database \
 caching, both the DatabaseLookup and DatabaseCaching options must be set to \
 True. By default, DatabaseLookup\[Rule]False and DatabaseCaching\[Rule]False.\
 \"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482237423944*^9},
- CellTags->"Info3564482237-3035831"]
+ CellChangeTimes->{3.5667298728917093`*^9},
+ CellTags->"Info3566729872-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -389,7 +389,8 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"AWGNPDF\"\>"], "Print",
- CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9}],
+ CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9, 
+  3.566729872939427*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AWGNPDF[M, \[Gamma], x] evaluates the probability density \
@@ -401,11 +402,12 @@ may be specified:\\n\\nMethod\[Rule]\\\"ExactNumerical\\\"\\nMethod\[Rule]\\\"\
 ApproximateNumerical\\\"\\nMethod\[Rule]\\\"ApproximateNumericalLowSNR\\\"\\n\
 \\nBy default, Method\[Rule]\\\"ApproximateNumerical\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482237653242*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.566729873000599*^9},
+ CellTags->"Info3566729872-1208992"],
 
 Cell[BoxData["\<\"AWGNProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482193118094*^9, 3.5644822377122*^9}],
+ CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9, 
+  3.5667298730148697`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AWGNProbabilityOfDetection[M, \[Gamma], \[Lambda]] calculates \
@@ -424,11 +426,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482237786066*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.566729873033112*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"AWGNProbabilityOfFalseAlarm\"\>"], "Print",
- CellChangeTimes->{3.564482193118094*^9, 3.564482237805925*^9}],
+ CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9, 
+  3.5667298730463257`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AWGNProbabilityOfFalseAlarm[M, \[Lambda]] calculates the \
@@ -446,11 +449,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822379116096`*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.5667298731336517`*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"AWGNSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482193118094*^9, 3.5644822379607477`*^9}],
+ CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9, 
+  3.566729873149637*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AWGNSampleComplexity[\[Gamma], Pf, Pd, n] calculates the \
@@ -466,11 +470,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482238052865*^9},
- CellTags->"Info3564482237-3035831"],
+ CellChangeTimes->{3.5667298732261066`*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"\[Lambda]\"\>"], "Print",
- CellChangeTimes->{3.564482193118094*^9, 3.564482238102124*^9}],
+ CellChangeTimes->{3.564482193118094*^9, 3.564482237561705*^9, 
+  3.5667298732402*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"\[Lambda][M, Pf] calculates a threshold suitable for use in \
@@ -486,8 +491,8 @@ may be specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822381916733`*^9},
- CellTags->"Info3564482238-3035831"]
+ CellChangeTimes->{3.566729873322192*^9},
+ CellTags->"Info3566729873-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -509,7 +514,8 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"RayleighPDF\"\>"], "Print",
- CellChangeTimes->{3.564482194060416*^9, 3.564482238287404*^9}],
+ CellChangeTimes->{3.564482194060416*^9, 3.564482238287404*^9, 
+  3.5667298733537073`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RayleighPDF[\[Gamma], x] evaluates the probability density \
@@ -527,11 +533,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482238477489*^9},
- CellTags->"Info3564482238-3035831"],
+ CellChangeTimes->{3.566729873497703*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"RayleighProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194060416*^9, 3.564482238525494*^9}],
+ CellChangeTimes->{3.564482194060416*^9, 3.564482238287404*^9, 
+  3.56672987351448*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RayleighProbabilityOfDetection[M, \[Gamma], \[Lambda]] \
@@ -547,9 +554,10 @@ ApproximateNumerical\\\"\\nMethod\[Rule]\\\"ApproximateNumericalLowSNR\\\"\\\
 nMethod\[Rule]\\\"ApproximateIntegerMN\\\"\\nMethod\[Rule]\\\"\
 ApproximateAsymptotic\\\"\\nMethod\[Rule]{\\\"ApproximateSwitchedMN\\\"n} \
 (where mn is the switching \
-point)\\nMethod\[Rule]\\\"ApproximateLargeSNR\\\"\\n\\nBy default, Method\
-\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity reception \
-schemes may be \
+point)\\nMethod\[Rule]\\\"ApproximateSmallPf\\\"\\nMethod\[Rule]\\\"\
+ApproximateLargeSNR\\\"\\n\\nBy default, \
+Method\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity \
+reception schemes may be \
 specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"\
 MRC\\\"\\nDiversityType\[Rule]\\\"EGC\\\"\\nDiversityType\[Rule]\\\"SC\\\"\\\
 nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
@@ -560,11 +568,12 @@ specified using the Timed option. By default, Timed\[Rule]False, \
 MaxIterations\[Rule]1000 and MaxTime\[Rule]600. If Timed\[Rule]True, then a \
 {Pd, time} list of values will be returned. The Timed option is incompatible \
 with database lookup/caching.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482238585877*^9},
- CellTags->"Info3564482238-3035831"],
+ CellChangeTimes->{3.566729873596224*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"RayleighSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482194060416*^9, 3.5644822386037683`*^9}],
+ CellChangeTimes->{3.564482194060416*^9, 3.564482238287404*^9, 
+  3.566729873616611*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RayleighSampleComplexity[\[Gamma], Pf, Pd, n] calculates the \
@@ -572,7 +581,9 @@ number of samples required for the specified decision probabilities and \
 signal to noise ratio in a Rayleigh channel.\\n\\nThe following methods may \
 be specified:\\n\\nMethod\[Rule]\\\"ExactNumerical\\\"\\nMethod\[Rule]\\\"\
 ApproximateNumerical\\\"\\nMethod\[Rule]\\\"ApproximateNumericalLowSNR\\\"\\\
-nMethod\[Rule]\\\"ApproximateAsymptotic\\\"\\n\\nBy default, \
+nMethod\[Rule]\\\"ApproximateAsymptotic\\\"\\nMethod\[Rule]\\\"\
+ApproximateAsymptoticUpperBound\\\"\\nMethod\[Rule]\\\"\
+ApproximateAsymptoticLowerBound\\\"\\n\\nBy default, \
 Method\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity \
 reception schemes may be \
 specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"\
@@ -581,8 +592,8 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482238664633*^9},
- CellTags->"Info3564482238-3035831"]
+ CellChangeTimes->{3.566729873731864*^9},
+ CellTags->"Info3566729873-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -605,7 +616,8 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"AnnamalaiNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729873762969*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AnnamalaiNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -625,21 +637,23 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822388950853`*^9},
- CellTags->"Info3564482238-3035831"],
+ CellChangeTimes->{3.566729873826908*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"AsymptoticErrorNakagami\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482238947404*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729873844739*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AsymptoticErrorNakagami[Pf, m n] gives the upper bound for the \
 error of the asymptotic method for the specified parameters.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822390420933`*^9},
- CellTags->"Info3564482238-3035831"],
+ CellChangeTimes->{3.566729873920858*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"AsymptoticNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822390909863`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729873937312*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AsymptoticNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -660,11 +674,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822391835012`*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874015193*^9},
+ CellTags->"Info3566729873-1208992"],
 
 Cell[BoxData["\<\"DighamNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482239245047*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.56672987403016*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"DighamNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], \
@@ -684,11 +699,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482239271872*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874056452*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"HerathNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822393266573`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.5667298740707493`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"HerathNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], \
@@ -708,11 +724,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822393808193`*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874151689*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"IntegerMNNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822393996277`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874165992*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"IntegerMNNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -732,11 +749,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.56448223948678*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.56672987423917*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"LargeSNRNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482239539886*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874257717*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LargeSNRNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], \
@@ -757,11 +775,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482239632618*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874281385*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"LopezBenitezNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482239705941*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874295298*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LopezBenitezNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -782,11 +801,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482239801162*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874374226*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"LowSNRAssumptionErrorNakagami\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822398237867`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.5667298743908443`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LowSNRAssumptionErrorNakagami[M, \[Gamma], \[Lambda], m, n] \
@@ -798,11 +818,12 @@ following diversity reception schemes may be specified:\\n\\nDiversityType\
 value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\[Rule]\\\"SLS\\\"\\n\
 \\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482239880828*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874464252*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NakagamiEGCPDFApproximationError\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822398981657`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.5667298744776278`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LowSNRAssumptionErrorNakagami[M, \[Lambda], n] calculates the \
@@ -814,11 +835,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482239997346*^9},
- CellTags->"Info3564482239-3035831"],
+ CellChangeTimes->{3.566729874503981*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NakagamiLimit\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240021385*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.5667298745181828`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NakagamiLimit[M, \[Gamma], \[Lambda], m] calculates the \
@@ -839,11 +861,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240103969*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.566729874540895*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NakagamiPDF\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240126903*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874557411*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NakagamiPDF[\[Gamma], m, x] evaluates the probability density \
@@ -861,11 +884,12 @@ may be specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240214334*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.5667298745757103`*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822402664022`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.5667298745897837`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] \
@@ -881,9 +905,10 @@ ApproximateNumerical\\\"\\nMethod\[Rule]\\\"ApproximateNumericalLowSNR\\\"\\\
 nMethod\[Rule]\\\"ApproximateIntegerMN\\\"\\nMethod\[Rule]\\\"\
 ApproximateAsymptotic\\\"\\nMethod\[Rule]{\\\"ApproximateSwitchedMN\\\", mn} \
 (where mn is the switching \
-point)\\nMethod\[Rule]\\\"ApproximateLargeSNR\\\"\\n\\nBy default, Method\
-\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity reception \
-schemes may be \
+point)\\nMethod\[Rule]\\\"ApproximateSmallPf\\\"\\nMethod\[Rule]\\\"\
+ApproximateLargeSNR\\\"\\n\\nBy default, \
+Method\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity \
+reception schemes may be \
 specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"\
 MRC\\\"\\nDiversityType\[Rule]\\\"EGC\\\"\\nDiversityType\[Rule]\\\"SC\\\"\\\
 nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
@@ -894,11 +919,12 @@ specified using the Timed option. By default, Timed\[Rule]False, \
 MaxIterations\[Rule]1000 and MaxTime\[Rule]600. If Timed\[Rule]True, then a \
 {Pd, time} list of values will be returned. The Timed option is incompatible \
 with database lookup/caching.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240366859*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.566729874611815*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NakagamiSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240386909*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.56672987462689*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NakagamiSampleComplexity[\[Gamma], Pf, Pd, m, n] calculates \
@@ -906,7 +932,9 @@ the number of samples required for the specified decision probabilities and \
 signal to noise ratio in a Nakagami-m channel.\\n\\nThe following methods may \
 be specified:\\n\\nMethod\[Rule]\\\"ExactNumerical\\\"\\nMethod\[Rule]\\\"\
 ApproximateNumerical\\\"\\nMethod\[Rule]\\\"ApproximateNumericalLowSNR\\\"\\\
-nMethod\[Rule]\\\"ApproximateAsymptotic\\\"\\n\\nBy default, \
+nMethod\[Rule]\\\"ApproximateAsymptotic\\\"\\nMethod\[Rule]\\\"\
+ApproximateAsymptoticUpperBound\\\"\\nMethod\[Rule]\\\"\
+ApproximateAsymptoticLowerBound\\\"\\n\\nBy default, \
 Method\[Rule]\\\"ApproximateNumerical\\\".\\n\\nThe following diversity \
 reception schemes may be \
 specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"\
@@ -915,11 +943,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240484117*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.5667298746522093`*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NGaussianLowSNRNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240531542*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874668236*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NGaussianLowSNRNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -940,11 +969,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240610239*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.566729874748411*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NGaussianNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240669183*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874763688*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NGaussianNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -964,11 +994,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482240786291*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.566729874839143*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"NumericalNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.5644822408742533`*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874854207*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NumericalNakagamiProbabilityOfDetection[M, \[Gamma], \
@@ -988,11 +1019,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822409249487`*^9},
- CellTags->"Info3564482240-3035831"],
+ CellChangeTimes->{3.566729874929021*^9},
+ CellTags->"Info3566729874-1208992"],
 
 Cell[BoxData["\<\"SunNakagamiProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482194539772*^9, 3.564482240945874*^9}],
+ CellChangeTimes->{3.564482194539772*^9, 3.564482238753443*^9, 
+  3.566729874952238*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SunNakagamiProbabilityOfDetection[M, \[Gamma], \[Lambda], m] \
@@ -1012,8 +1044,8 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241007621*^9},
- CellTags->"Info3564482240-3035831"]
+ CellChangeTimes->{3.566729874970964*^9},
+ CellTags->"Info3566729874-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1036,7 +1068,8 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"AnnamalaiRiceProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875158003*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AnnamalaiRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] \
@@ -1056,21 +1089,23 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241200478*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.566729875247529*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"AsymptoticErrorRice\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.564482241274354*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875262712*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AsymptoticErrorRice[Pf, K, n] gives the upper bound for the \
 error of the asymptotic method for the specified parameters.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241343109*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.566729875343747*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"AsymptoticRiceProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.5644822414714746`*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.5667298753621387`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"AsymptoticRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], \
@@ -1090,11 +1125,37 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241574876*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.56672987539433*^9},
+ CellTags->"Info3566729875-1208992"],
+
+Cell[BoxData["\<\"IntegerKNRiceProbabilityOfDetection\"\>"], "Print",
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875412238*^9}],
+
+Cell[BoxData[
+ StyleBox["\<\"IntegerKNRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] \
+calculates the probability of detection for a single energy detector \
+operating in a Rice fading channel using the IntegerKN \
+method.\\nIntegerKNRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n] \
+calculates the probability of detection for energy detection with diversity \
+reception in a Rice fading channel using the IntegerKN method.\\n\\nThe \
+following diversity reception schemes may be specified:\\n\\nDiversityType\
+\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"MRC\\\"\\nDiversityType\[Rule]\\\
+\"EGC\\\"\\nDiversityType\[Rule]\\\"SC\\\"\\nDiversityType\[Rule]{\\\"SEC\\\",\
+ \[Gamma]t} (where \[Gamma]t is the threshold switching \
+value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\[Rule]\\\"SLS\\\"\\n\
+\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\\n\\nFunction timing options \
+may be specified using the Timed option. By default, Timed\[Rule]Timed, \
+MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
+Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
+Timed option is incompatible with database lookup/caching.\"\>", 
+  "MSG"]], "Print", "PrintUsage",
+ CellChangeTimes->{3.5667298754396677`*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"LowSNRAssumptionErrorRice\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.56448224162466*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.5667298754576283`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LowSNRAssumptionErrorRice[M, \[Gamma], \[Lambda], K, n] \
@@ -1106,11 +1167,12 @@ following diversity reception schemes may be specified:\\n\\nDiversityType\
 value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\[Rule]\\\"SLS\\\"\\n\
 \\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482241718918*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.56672987547958*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"NGaussianLowSNRRiceProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.5644822417351837`*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875496739*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NGaussianLowSNRRiceProbabilityOfDetection[M, \[Gamma], \
@@ -1131,11 +1193,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241752079*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.566729875579525*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"NGaussianRiceProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.564482241770729*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.5667298755952387`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NGaussianRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] \
@@ -1155,11 +1218,12 @@ MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
 Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
 Timed option is incompatible with database lookup/caching.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822418315163`*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.566729875673553*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"RiceLimit\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.56448224185911*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.5667298756883698`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RiceLimit[M, \[Gamma], \[Lambda], K] calculates the truncation \
@@ -1179,11 +1243,12 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482241955161*^9},
- CellTags->"Info3564482241-3035831"],
+ CellChangeTimes->{3.566729875712533*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"RicePDF\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.564482242051166*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.5667298757267838`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RicePDF[\[Gamma], K, x] evaluates the probability density \
@@ -1200,11 +1265,12 @@ may be specified:\\n\\nDiversityType\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482242157189*^9},
- CellTags->"Info3564482242-3035831"],
+ CellChangeTimes->{3.566729875809474*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"RiceProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.564482242219233*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875824828*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] \
@@ -1228,11 +1294,12 @@ specified using the Timed option. By default, Timed\[Rule]False, \
 MaxIterations\[Rule]1000 and MaxTime\[Rule]600. If Timed\[Rule]True, then a \
 {Pd, time} list of values will be returned. The Timed option is incompatible \
 with database lookup/caching.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482242315147*^9},
- CellTags->"Info3564482242-3035831"],
+ CellChangeTimes->{3.5667298759052763`*^9},
+ CellTags->"Info3566729875-1208992"],
 
 Cell[BoxData["\<\"RiceSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482197336719*^9, 3.5644822423371363`*^9}],
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875921235*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"RiceSampleComplexity[\[Gamma], Pf, Pd, K, n] calculates the \
@@ -1249,8 +1316,33 @@ nDiversityType\[Rule]{\\\"SEC\\\", \[Gamma]t} (where \[Gamma]t is the \
 threshold switching value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\
 \[Rule]\\\"SLS\\\"\\n\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482242434312*^9},
- CellTags->"Info3564482242-3035831"]
+ CellChangeTimes->{3.56672987594403*^9},
+ CellTags->"Info3566729875-1208992"],
+
+Cell[BoxData["\<\"SmallPfRiceProbabilityOfDetection\"\>"], "Print",
+ CellChangeTimes->{3.564482197336719*^9, 3.564482241077231*^9, 
+  3.566729875959161*^9}],
+
+Cell[BoxData[
+ StyleBox["\<\"SmallPfRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K] \
+calculates the probability of detection for a single energy detector \
+operating in a Rice fading channel using the SmallPf \
+method.\\nSmallPfRiceProbabilityOfDetection[M, \[Gamma], \[Lambda], K, n] \
+calculates the probability of detection for energy detection with diversity \
+reception in a Rice fading channel using the SmallPf method.\\n\\nThe \
+following diversity reception schemes may be specified:\\n\\nDiversityType\
+\[Rule]\\\"None\\\"\\nDiversityType\[Rule]\\\"MRC\\\"\\nDiversityType\[Rule]\\\
+\"EGC\\\"\\nDiversityType\[Rule]\\\"SC\\\"\\nDiversityType\[Rule]{\\\"SEC\\\",\
+ \[Gamma]t} (where \[Gamma]t is the threshold switching \
+value)\\nDiversityType\[Rule]\\\"SLC\\\"\\nDiversityType\[Rule]\\\"SLS\\\"\\n\
+\\nBy default, DiversityType\[Rule]\\\"SLC\\\".\\n\\nFunction timing options \
+may be specified using the Timed option. By default, Timed\[Rule]Timed, \
+MaxIterations\[Rule]MaxIterations and MaxTime\[Rule]MaxTime. If \
+Timed\[Rule]True, then a {Pd, time} list of values will be returned. The \
+Timed option is incompatible with database lookup/caching.\"\>", 
+  "MSG"]], "Print", "PrintUsage",
+ CellChangeTimes->{3.5667298760422497`*^9},
+ CellTags->"Info3566729875-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1273,22 +1365,61 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"InverseQ\"\>"], "Print",
- CellChangeTimes->{3.564482198799305*^9, 3.564482242540299*^9}],
+ CellChangeTimes->{3.564482198799305*^9, 3.564482242540299*^9, 
+  3.5667298761337013`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"InverseQ[P] calculates the value of the inverse of the \
 Gaussian Q-function at P.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482242655759*^9},
- CellTags->"Info3564482242-3035831"],
+ CellChangeTimes->{3.56672987621104*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"Q\"\>"], "Print",
- CellChangeTimes->{3.564482198799305*^9, 3.564482242679634*^9}],
+ CellChangeTimes->{3.564482198799305*^9, 3.564482242540299*^9, 
+  3.566729876225707*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"Q[x] calculates the value of Gaussian Q-function at x.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482242769113*^9},
- CellTags->"Info3564482242-3035831"]
+ CellChangeTimes->{3.566729876251398*^9},
+ CellTags->"Info3566729876-1208992"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["InverseMarcumQ", "Section",
+ CellChangeTimes->{{3.5453780335135527`*^9, 3.545378038251978*^9}, {
+  3.564477201559671*^9, 3.56447720735034*^9}, {3.5644820433049393`*^9, 
+  3.564482043688128*^9}, {3.5644820970815372`*^9, 3.564482098439966*^9}, {
+  3.56672985996171*^9, 3.5667298669697123`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GenerateHelp", "[", "\"\<InverseMarcumQ`\>\"", "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.5644819960285187`*^9, 3.564482046493178*^9}, {
+   3.564482101312537*^9, 3.564482103742082*^9}, 3.5667298693004932`*^9}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData["\<\"InverseMarcumQ`InverseMarcumQ\"\>"], "Print",
+ CellChangeTimes->{
+  3.564482198799305*^9, 3.564482242540299*^9, {3.5667298763255577`*^9, 
+   3.5667298983943768`*^9}}],
+
+Cell[BoxData[
+ StyleBox["\<\"\\\"InverseMarcumQ[m, a, z] calculates the value of the \
+inverse of the Marcum Q-function, \\!\\(\\*SubscriptBox[\\(Q\\), \
+\\(m\\)]\\)(a, b). If \\!\\(\\*SubscriptBox[\\(Q\\), \\(m\\)]\\)(a, b) = z, \
+then this function will return b = \
+\\!\\(\\*SuperscriptBox[SubscriptBox[\\(Q\\), \\(m\\)], \\(-1\\)]\\)(a, z).\\\
+\"\"\>", "MSG"]], "Print", "PrintUsage",
+ CellChangeTimes->{3.566729898450713*^9},
+ CellTags->"Info3566729898-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1311,7 +1442,8 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"ErfApprox`ErfApprox\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.566729876496456*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ErfApprox[x] calculates the approximate value of the error \
@@ -1319,11 +1451,12 @@ function at x.\\n\\nThe following methods can be \
 given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\\\"\\nMethod->\
 \\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy default, \
 Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.56448224293694*^9},
- CellTags->"Info3564482242-3035831"],
+ CellChangeTimes->{3.56672987658916*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`ErfcApprox\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.564482242981372*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.5667298766059504`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ErfcApprox[x] calculates the approximate value of the \
@@ -1331,20 +1464,22 @@ complementary error function at x.\\n\\nThe following methods can be \
 given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\\\"\\nMethod->\
 \\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy default, \
 Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482243075536*^9},
- CellTags->"Info3564482242-3035831"],
+ CellChangeTimes->{3.566729876684024*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`LopezBenitezParameters\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.56448224312113*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.56672987670539*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"LopezBenitezParameters[x] returns Lopez-Benitez's min-MARE \
 parameters for x.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822432002563`*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.566729876775655*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`NErfApprox\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.564482243249196*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.566729876789336*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NErfcApprox[x] numerically evaluates the approximate value of \
@@ -1352,11 +1487,12 @@ the error function at x.\\n\\nThe following methods can be \
 given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\\\"\\nMethod->\
 \\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy default, \
 Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482243376813*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.566729876861977*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`NErfApproxError\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.564482243421247*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.566729876877666*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NErfApproxError[x] calculates the error between the error \
@@ -1364,11 +1500,12 @@ function and its approximation.\\n\\nThe following methods can be \
 given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\\\"\\nMethod->\
 \\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy default, \
 Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482243439455*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.566729876903823*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`NErfcApprox\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.5644822434536533`*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.5667298769179993`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NErfcApprox[x] numerically evaluates the approximate value of \
@@ -1376,11 +1513,12 @@ the complementary error function at x.\\n\\nThe following methods can be \
 given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\\\"\\nMethod->\
 \\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy default, \
 Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.56448224347012*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.56672987693602*^9},
+ CellTags->"Info3566729876-1208992"],
 
 Cell[BoxData["\<\"ErfApprox`NErfcApproxError\"\>"], "Print",
- CellChangeTimes->{3.564482199161399*^9, 3.564482243486435*^9}],
+ CellChangeTimes->{3.564482199161399*^9, 3.564482242824889*^9, 
+  3.5667298769543457`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"NErfcApproxError[x] calculates the error between the \
@@ -1388,8 +1526,8 @@ complementary error function and its approximation.\\n\\nThe following \
 methods can be given:\\n\\nMethod->\\\"Chiani\\\"\\nMethod->\\\"Lopez-Benitez\
 \\\"\\nMethod->\\\"Loskot\\\"\\nMethod->\\\"Karagiannidis\\\"\\n\\nBy \
 default, Method->Lopez-Benitez.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482243502742*^9},
- CellTags->"Info3564482243-3035831"]
+ CellChangeTimes->{3.566729876979025*^9},
+ CellTags->"Info3566729876-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1412,42 +1550,56 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"Extras`FaddeevaDerivative\"\>"], "Print",
- CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9}],
+ CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9, 
+  3.566729877056861*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"\\\"Computes the \\!\\(\\*SuperscriptBox[\\(k\\), \\(th\\)]\\) \
 derivative of the Faddeeva function w(z).\\\"\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482243595669*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.566729877138185*^9},
+ CellTags->"Info3566729877-1208992"],
 
-Cell[BoxData["\<\"Extras`ProcessDiversityType\"\>"], "Print",
- CellChangeTimes->{3.564482200173284*^9, 3.5644822436107883`*^9}],
+Cell[BoxData["\<\"Extras`ProcessChannelType\"\>"], "Print",
+ CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9, 
+  3.566729877156554*^9}],
 
 Cell[BoxData[
- StyleBox["\<\"ProcessDiversityType[x] either returns the list {\\\"SEC\\\", \
-\[Gamma]t} or {diversityType, Null}.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822436274137`*^9},
- CellTags->"Info3564482243-3035831"],
+ StyleBox["\<\"ProcessChannelType[channelType] processes the specified \
+channel type and returns a list.\"\>", "MSG"]], "Print", "PrintUsage",
+ CellChangeTimes->{3.566729877222568*^9},
+ CellTags->"Info3566729877-1208992"],
+
+Cell[BoxData["\<\"Extras`ProcessDiversityType\"\>"], "Print",
+ CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9, 
+  3.566729877239769*^9}],
+
+Cell[BoxData[
+ StyleBox["\<\"ProcessDiversityType[diversityType] processes the specified \
+diversity type and returns a list.\"\>", "MSG"]], "Print", "PrintUsage",
+ CellChangeTimes->{3.566729877407968*^9},
+ CellTags->"Info3566729877-1208992"],
 
 Cell[BoxData["\<\"Extras`ProcessMethod\"\>"], "Print",
- CellChangeTimes->{3.564482200173284*^9, 3.564482243640726*^9}],
+ CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9, 
+  3.5667298774229393`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProcessMethod[method] processes the specified method and \
 returns a list.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.56448224369431*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.566729877442066*^9},
+ CellTags->"Info3566729877-1208992"],
 
 Cell[BoxData["\<\"Extras`ProcessSNR\"\>"], "Print",
- CellChangeTimes->{3.564482200173284*^9, 3.564482243713681*^9}],
+ CellChangeTimes->{3.564482200173284*^9, 3.5644822435392942`*^9, 
+  3.566729877455756*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"ProcessSNR[\[Gamma], diversityType] processes lists of SNR \
 values for the specified diversity type.\"\>", "MSG"]], "Print", "PrintUsage",
  
- CellChangeTimes->{3.56448224380223*^9},
- CellTags->"Info3564482243-3035831"]
+ CellChangeTimes->{3.566729877475009*^9},
+ CellTags->"Info3566729877-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1470,44 +1622,48 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"DBLogging`CacheProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482200656953*^9, 3.56448224385732*^9}],
+ CellChangeTimes->{3.564482200656953*^9, 3.56448224385732*^9, 
+  3.566729877590743*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"CacheProbabilityOfDetection[algorithm, channelType, M, \
 \[Gamma], Pf, n, m, result] caches the specified record in the database.\"\>",
    "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482243958009*^9},
- CellTags->"Info3564482243-3035831"],
+ CellChangeTimes->{3.5667298776714067`*^9},
+ CellTags->"Info3566729877-1208992"],
 
 Cell[BoxData["\<\"DBLogging`CacheSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482200656953*^9, 3.564482244045816*^9}],
+ CellChangeTimes->{3.564482200656953*^9, 3.56448224385732*^9, 
+  3.5667298776945753`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"CacheSampleComplexity[channel, precision, n, \[Gamma], Pf, Pm, \
 result] caches the specified record in the database.\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.564482244109221*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.566729877759706*^9},
+ CellTags->"Info3566729877-1208992"],
 
 Cell[BoxData["\<\"DBLogging`GetProbabilityOfDetection\"\>"], "Print",
- CellChangeTimes->{3.564482200656953*^9, 3.56448224415652*^9}],
+ CellChangeTimes->{3.564482200656953*^9, 3.56448224385732*^9, 
+  3.5667298777761517`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"GetProbabilityOfDetection[algorithm, channelType, M, \[Gamma], \
 Pf, n, m] fetches the specified record from the database.\"\>", 
   "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822442700033`*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.5667298779514017`*^9},
+ CellTags->"Info3566729877-1208992"],
 
 Cell[BoxData["\<\"DBLogging`GetSampleComplexity\"\>"], "Print",
- CellChangeTimes->{3.564482200656953*^9, 3.5644822443234673`*^9}],
+ CellChangeTimes->{3.564482200656953*^9, 3.56448224385732*^9, 
+  3.566729877969142*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"GetSampleComplexity[channel, precision, n, \[Gamma], Pf, Pm] \
 fetches the specified record from the database.\"\>", "MSG"]], "Print", \
 "PrintUsage",
- CellChangeTimes->{3.5644822444149446`*^9},
- CellTags->"Info3564482244-3035831"]
+ CellChangeTimes->{3.56672987806391*^9},
+ CellTags->"Info3566729877-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1530,53 +1686,58 @@ Cell[BoxData[
 Cell[CellGroupData[{
 
 Cell[BoxData["\<\"SQLite`SQLiteCloseDatabase\"\>"], "Print",
- CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9}],
+ CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9, 
+  3.566729878237774*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SQLiteCloseDatabase[db] closes the database specified by the \
 file handle db.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482244647695*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.566729878360392*^9},
+ CellTags->"Info3566729878-1208992"],
 
 Cell[BoxData["\<\"SQLite`SQLiteCreateTable\"\>"], "Print",
- CellChangeTimes->{3.5644822013195047`*^9, 3.5644822447446203`*^9}],
+ CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9, 
+  3.56672987837541*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SQLiteCreateTable[db, tableName, columnNames, columnTypes] \
 creates a table named tableName with columns specified by columnNames and \
 columnTypes in the database specified by the handle db.\"\>", "MSG"]], "Print",\
  "PrintUsage",
- CellChangeTimes->{3.564482244854006*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.566729878451665*^9},
+ CellTags->"Info3566729878-1208992"],
 
 Cell[BoxData["\<\"SQLite`SQLiteInsertRecord\"\>"], "Print",
- CellChangeTimes->{3.5644822013195047`*^9, 3.564482244877524*^9}],
+ CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9, 
+  3.5667298784663982`*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SQLiteInsertRecord[db, tableName, columnNames, values] inserts \
 a new record into the specified table.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482244981127*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.5667298784849043`*^9},
+ CellTags->"Info3566729878-1208992"],
 
 Cell[BoxData["\<\"SQLite`SQLiteLookupRecord\"\>"], "Print",
- CellChangeTimes->{3.5644822013195047`*^9, 3.564482244997201*^9}],
+ CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9, 
+  3.566729878499132*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SQLiteLookupRecord[db, tableName, columnNames, values] returns \
 the value of the entries specified by tableName, columnNames and values.\"\>",
    "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.5644822450491953`*^9},
- CellTags->"Info3564482244-3035831"],
+ CellChangeTimes->{3.566729878687929*^9},
+ CellTags->"Info3566729878-1208992"],
 
 Cell[BoxData["\<\"SQLite`SQLiteOpenDatabase\"\>"], "Print",
- CellChangeTimes->{3.5644822013195047`*^9, 3.564482245107058*^9}],
+ CellChangeTimes->{3.5644822013195047`*^9, 3.5644822444794683`*^9, 
+  3.566729878715292*^9}],
 
 Cell[BoxData[
  StyleBox["\<\"SQLiteOpenDatabase[databaseName] opens the database specified \
 by the string databaseName and returns a file handle. If no database exists, \
 then one is created.\"\>", "MSG"]], "Print", "PrintUsage",
- CellChangeTimes->{3.564482245210647*^9},
- CellTags->"Info3564482245-3035831"]
+ CellChangeTimes->{3.566729878739139*^9},
+ CellTags->"Info3566729878-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1608,162 +1769,168 @@ StyleDefinitions->"Default.nb"
 (* Internal cache information *)
 (*CellTagsOutline
 CellTagsIndex->{
- "Info3564482236-3035831"->{
-  Cell[5536, 169, 484, 8, 100, "Print",
-   CellTags->"Info3564482236-3035831"],
-  Cell[6211, 183, 490, 8, 100, "Print",
-   CellTags->"Info3564482236-3035831"],
-  Cell[6858, 197, 1059, 17, 138, "Print",
-   CellTags->"Info3564482236-3035831"],
-  Cell[8097, 220, 1226, 19, 436, "Print",
-   CellTags->"Info3564482236-3035831"],
-  Cell[9501, 245, 2100, 30, 753, "Print",
-   CellTags->"Info3564482236-3035831"]},
- "Info3564482237-3035831"->{
-  Cell[11782, 281, 1226, 19, 436, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[13194, 306, 2116, 31, 772, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[15481, 343, 1794, 26, 679, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[17847, 393, 738, 11, 248, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[18713, 409, 1172, 18, 473, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[20016, 432, 1134, 17, 473, "Print",
-   CellTags->"Info3564482237-3035831"],
-  Cell[21276, 454, 1001, 15, 435, "Print",
-   CellTags->"Info3564482237-3035831"]},
- "Info3564482238-3035831"->{
-  Cell[22390, 474, 1043, 15, 452, "Print",
-   CellTags->"Info3564482238-3035831"],
-  Cell[24017, 513, 1135, 17, 454, "Print",
-   CellTags->"Info3564482238-3035831"],
-  Cell[25286, 535, 1833, 28, 696, "Print",
-   CellTags->"Info3564482238-3035831"],
-  Cell[27249, 568, 1055, 16, 454, "Print",
-   CellTags->"Info3564482238-3035831"],
-  Cell[29012, 609, 1319, 19, 399, "Print",
-   CellTags->"Info3564482238-3035831"],
-  Cell[30458, 633, 276, 5, 62, "Print",
-   CellTags->"Info3564482238-3035831"]},
- "Info3564482239-3035831"->{
-  Cell[30880, 643, 1325, 20, 418, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[32345, 668, 1305, 19, 399, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[33792, 692, 1307, 19, 399, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[35244, 716, 1316, 19, 399, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[36702, 740, 1315, 20, 399, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[38163, 765, 1331, 20, 418, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[39629, 790, 705, 11, 287, "Print",
-   CellTags->"Info3564482239-3035831"],
-  Cell[40472, 806, 693, 11, 287, "Print",
-   CellTags->"Info3564482239-3035831"]},
- "Info3564482240-3035831"->{
-  Cell[41282, 822, 1311, 20, 529, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[42708, 847, 1145, 17, 454, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[43989, 869, 1846, 28, 696, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[45963, 902, 1060, 16, 454, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[47172, 923, 1331, 20, 418, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[48646, 948, 1317, 19, 399, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[50108, 972, 1319, 19, 399, "Print",
-   CellTags->"Info3564482240-3035831"],
-  Cell[51564, 996, 1293, 19, 399, "Print",
-   CellTags->"Info3564482240-3035831"]},
- "Info3564482241-3035831"->{
-  Cell[53554, 1040, 1297, 19, 399, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[54974, 1064, 271, 5, 62, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[55387, 1074, 1301, 19, 399, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[56816, 1098, 701, 11, 287, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[57664, 1114, 1311, 20, 399, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[59114, 1139, 1299, 19, 399, "Print",
-   CellTags->"Info3564482241-3035831"],
-  Cell[60525, 1163, 1289, 19, 529, "Print",
-   CellTags->"Info3564482241-3035831"]},
- "Info3564482242-3035831"->{
-  Cell[61925, 1187, 1123, 16, 454, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[63178, 1208, 1586, 23, 603, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[64890, 1236, 1050, 16, 454, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[66620, 1277, 228, 4, 41, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[66953, 1286, 203, 4, 41, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[67847, 1315, 424, 7, 209, "Print",
-   CellTags->"Info3564482242-3035831"],
-  Cell[68395, 1327, 440, 7, 209, "Print",
-   CellTags->"Info3564482242-3035831"]},
- "Info3564482243-3035831"->{
-  Cell[68970, 1339, 226, 4, 43, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[69320, 1348, 438, 7, 209, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[69887, 1360, 441, 7, 209, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[70455, 1372, 451, 7, 209, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[71036, 1384, 456, 7, 228, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[72183, 1416, 258, 5, 46, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[72574, 1426, 248, 4, 43, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[72946, 1435, 219, 4, 43, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[73286, 1444, 248, 5, 43, "Print",
-   CellTags->"Info3564482243-3035831"],
-  Cell[74242, 1474, 278, 5, 62, "Print",
-   CellTags->"Info3564482243-3035831"]},
- "Info3564482244-3035831"->{
-  Cell[74655, 1484, 265, 5, 62, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[75058, 1494, 273, 5, 62, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[75466, 1504, 260, 5, 43, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[76422, 1534, 224, 4, 43, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[76778, 1543, 340, 6, 62, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[77249, 1554, 249, 4, 43, "Print",
-   CellTags->"Info3564482244-3035831"],
-  Cell[77629, 1563, 288, 5, 62, "Print",
-   CellTags->"Info3564482244-3035831"]},
- "Info3564482245-3035831"->{
-  Cell[78048, 1573, 309, 5, 61, "Print",
-   CellTags->"Info3564482245-3035831"]}
+ "Info3566729871-1208992"->{
+  Cell[5558, 169, 484, 8, 100, "Print",
+   CellTags->"Info3566729871-1208992"]},
+ "Info3566729872-1208992"->{
+  Cell[6255, 183, 490, 8, 100, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[6924, 197, 1059, 17, 138, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[8187, 220, 1227, 19, 436, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[9614, 245, 2103, 30, 753, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[11918, 281, 1228, 19, 436, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[13354, 306, 2116, 31, 772, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[15664, 343, 1796, 26, 679, "Print",
+   CellTags->"Info3566729872-1208992"],
+  Cell[18057, 394, 738, 11, 248, "Print",
+   CellTags->"Info3566729872-1208992"]},
+ "Info3566729873-1208992"->{
+  Cell[18952, 411, 1172, 18, 473, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[20282, 435, 1134, 17, 473, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[21565, 458, 1003, 15, 435, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[22704, 479, 1041, 15, 452, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[24356, 519, 1135, 17, 454, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[25649, 542, 1877, 29, 715, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[27679, 577, 1169, 18, 492, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[29581, 621, 1317, 19, 399, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[31050, 646, 274, 5, 62, "Print",
+   CellTags->"Info3566729873-1208992"],
+  Cell[31493, 657, 1323, 20, 418, "Print",
+   CellTags->"Info3566729873-1208992"]},
+ "Info3566729874-1208992"->{
+  Cell[32980, 683, 1305, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[34452, 708, 1305, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[35925, 733, 1316, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[37408, 758, 1315, 20, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[38894, 784, 1331, 20, 418, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[40385, 810, 705, 11, 287, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[41253, 827, 693, 11, 287, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[42090, 844, 1311, 20, 529, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[43541, 870, 1147, 17, 454, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[44849, 893, 1890, 29, 715, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[46891, 928, 1176, 18, 492, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[48241, 952, 1331, 20, 418, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[49740, 978, 1317, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[51225, 1003, 1317, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"],
+  Cell[52704, 1028, 1293, 19, 399, "Print",
+   CellTags->"Info3566729874-1208992"]},
+ "Info3566729875-1208992"->{
+  Cell[54719, 1073, 1297, 19, 399, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[56164, 1098, 271, 5, 62, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[56602, 1109, 1300, 19, 399, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[58066, 1134, 1299, 19, 399, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[59521, 1159, 700, 11, 287, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[60391, 1176, 1311, 20, 399, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[61868, 1202, 1297, 19, 399, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[63305, 1227, 1289, 19, 529, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[64732, 1252, 1123, 16, 454, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[66010, 1274, 1588, 23, 603, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[67747, 1303, 1049, 16, 454, "Print",
+   CellTags->"Info3566729875-1208992"],
+  Cell[68958, 1325, 1291, 19, 399, "Print",
+   CellTags->"Info3566729875-1208992"]},
+ "Info3566729876-1208992"->{
+  Cell[70956, 1370, 227, 4, 41, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[71313, 1380, 203, 4, 41, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[73545, 1447, 424, 7, 209, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[74120, 1460, 440, 7, 209, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[74720, 1473, 224, 4, 43, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[75093, 1483, 438, 7, 209, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[75685, 1496, 441, 7, 209, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[76278, 1509, 451, 7, 209, "Print",
+   CellTags->"Info3566729876-1208992"],
+  Cell[76886, 1522, 456, 7, 228, "Print",
+   CellTags->"Info3566729876-1208992"]},
+ "Info3566729898-1208992"->{
+  Cell[72362, 1413, 467, 8, 63, "Print",
+   CellTags->"Info3566729898-1208992"]},
+ "Info3566729877-1208992"->{
+  Cell[78058, 1555, 258, 5, 46, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[78472, 1566, 236, 4, 43, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[78866, 1576, 242, 4, 43, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[79261, 1586, 220, 4, 43, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[79629, 1596, 249, 5, 43, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[80611, 1627, 280, 5, 62, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[81052, 1638, 265, 5, 62, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[81482, 1649, 273, 5, 62, "Print",
+   CellTags->"Info3566729877-1208992"],
+  Cell[81912, 1660, 257, 5, 43, "Print",
+   CellTags->"Info3566729877-1208992"]},
+ "Info3566729878-1208992"->{
+  Cell[82890, 1691, 224, 4, 43, "Print",
+   CellTags->"Info3566729878-1208992"],
+  Cell[83270, 1701, 340, 6, 62, "Print",
+   CellTags->"Info3566729878-1208992"],
+  Cell[83770, 1713, 251, 4, 43, "Print",
+   CellTags->"Info3566729878-1208992"],
+  Cell[84179, 1723, 286, 5, 62, "Print",
+   CellTags->"Info3566729878-1208992"],
+  Cell[84623, 1734, 309, 5, 61, "Print",
+   CellTags->"Info3566729878-1208992"]}
  }
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"Info3564482236-3035831", 79245, 1610},
- {"Info3564482237-3035831", 79681, 1621},
- {"Info3564482238-3035831", 80291, 1636},
- {"Info3564482239-3035831", 80816, 1649},
- {"Info3564482240-3035831", 81508, 1666},
- {"Info3564482241-3035831", 82202, 1683},
- {"Info3564482242-3035831", 82816, 1698},
- {"Info3564482243-3035831", 83424, 1713},
- {"Info3564482244-3035831", 84268, 1734},
- {"Info3564482245-3035831", 84865, 1749}
+ {"Info3566729871-1208992", 85820, 1771},
+ {"Info3566729872-1208992", 85930, 1774},
+ {"Info3566729873-1208992", 86617, 1791},
+ {"Info3566729874-1208992", 87474, 1812},
+ {"Info3566729875-1208992", 88749, 1843},
+ {"Info3566729876-1208992", 89783, 1868},
+ {"Info3566729898-1208992", 90548, 1887},
+ {"Info3566729877-1208992", 90659, 1890},
+ {"Info3566729878-1208992", 91418, 1909}
  }
 *)
 (*NotebookFileOutline
@@ -1795,282 +1962,302 @@ Cell[4993, 152, 142, 2, 74, "Section"],
 Cell[CellGroupData[{
 Cell[5160, 158, 164, 3, 30, "Input"],
 Cell[CellGroupData[{
-Cell[5349, 165, 184, 2, 23, "Print"],
-Cell[5536, 169, 484, 8, 100, "Print",
- CellTags->"Info3564482236-3035831"],
-Cell[6023, 179, 185, 2, 23, "Print"],
-Cell[6211, 183, 490, 8, 100, "Print",
- CellTags->"Info3564482236-3035831"],
-Cell[6704, 193, 151, 2, 23, "Print"],
-Cell[6858, 197, 1059, 17, 138, "Print",
- CellTags->"Info3564482236-3035831"],
-Cell[7920, 216, 174, 2, 23, "Print"],
-Cell[8097, 220, 1226, 19, 436, "Print",
- CellTags->"Info3564482236-3035831"],
-Cell[9326, 241, 172, 2, 23, "Print"],
-Cell[9501, 245, 2100, 30, 753, "Print",
- CellTags->"Info3564482236-3035831"],
-Cell[11604, 277, 175, 2, 23, "Print"],
-Cell[11782, 281, 1226, 19, 436, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[13011, 302, 180, 2, 23, "Print"],
-Cell[13194, 306, 2116, 31, 772, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[15313, 339, 165, 2, 23, "Print"],
-Cell[15481, 343, 1794, 26, 679, "Print",
- CellTags->"Info3564482237-3035831"]
+Cell[5349, 165, 206, 2, 23, "Print"],
+Cell[5558, 169, 484, 8, 100, "Print",
+ CellTags->"Info3566729871-1208992"],
+Cell[6045, 179, 207, 2, 23, "Print"],
+Cell[6255, 183, 490, 8, 100, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[6748, 193, 173, 2, 23, "Print"],
+Cell[6924, 197, 1059, 17, 138, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[7986, 216, 198, 2, 23, "Print"],
+Cell[8187, 220, 1227, 19, 436, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[9417, 241, 194, 2, 23, "Print"],
+Cell[9614, 245, 2103, 30, 753, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[11720, 277, 195, 2, 23, "Print"],
+Cell[11918, 281, 1228, 19, 436, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[13149, 302, 202, 2, 23, "Print"],
+Cell[13354, 306, 2116, 31, 772, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[15473, 339, 188, 2, 23, "Print"],
+Cell[15664, 343, 1796, 26, 679, "Print",
+ CellTags->"Info3566729872-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[17336, 376, 190, 3, 74, "Section"],
+Cell[17521, 376, 190, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[17551, 383, 163, 3, 30, "Input"],
+Cell[17736, 383, 163, 3, 30, "Input"],
 Cell[CellGroupData[{
-Cell[17739, 390, 105, 1, 23, "Print"],
-Cell[17847, 393, 738, 11, 248, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[18588, 406, 122, 1, 23, "Print"],
-Cell[18713, 409, 1172, 18, 473, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[19888, 429, 125, 1, 23, "Print"],
-Cell[20016, 432, 1134, 17, 473, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[21153, 451, 120, 1, 23, "Print"],
-Cell[21276, 454, 1001, 15, 435, "Print",
- CellTags->"Info3564482237-3035831"],
-Cell[22280, 471, 107, 1, 23, "Print"],
-Cell[22390, 474, 1043, 15, 452, "Print",
- CellTags->"Info3564482238-3035831"]
+Cell[17924, 390, 130, 2, 23, "Print"],
+Cell[18057, 394, 738, 11, 248, "Print",
+ CellTags->"Info3566729872-1208992"],
+Cell[18798, 407, 151, 2, 23, "Print"],
+Cell[18952, 411, 1172, 18, 473, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[20127, 431, 152, 2, 23, "Print"],
+Cell[20282, 435, 1134, 17, 473, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[21419, 454, 143, 2, 23, "Print"],
+Cell[21565, 458, 1003, 15, 435, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[22571, 475, 130, 2, 23, "Print"],
+Cell[22704, 479, 1041, 15, 452, "Print",
+ CellTags->"Info3566729873-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[23494, 496, 194, 3, 74, "Section"],
+Cell[23806, 501, 194, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[23713, 503, 167, 3, 30, "Input"],
+Cell[24025, 508, 167, 3, 30, "Input"],
 Cell[CellGroupData[{
-Cell[23905, 510, 109, 1, 23, "Print"],
-Cell[24017, 513, 1135, 17, 454, "Print",
- CellTags->"Info3564482238-3035831"],
-Cell[25155, 532, 128, 1, 23, "Print"],
-Cell[25286, 535, 1833, 28, 696, "Print",
- CellTags->"Info3564482238-3035831"],
-Cell[27122, 565, 124, 1, 23, "Print"],
-Cell[27249, 568, 1055, 16, 454, "Print",
- CellTags->"Info3564482238-3035831"]
+Cell[24217, 515, 136, 2, 23, "Print"],
+Cell[24356, 519, 1135, 17, 454, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[25494, 538, 152, 2, 23, "Print"],
+Cell[25649, 542, 1877, 29, 715, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[27529, 573, 147, 2, 23, "Print"],
+Cell[27679, 577, 1169, 18, 492, "Print",
+ CellTags->"Info3566729873-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[28365, 591, 242, 3, 74, "Section"],
+Cell[28909, 602, 242, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[28632, 598, 215, 4, 30, "Input"],
+Cell[29176, 609, 215, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[28872, 606, 137, 1, 23, "Print"],
-Cell[29012, 609, 1319, 19, 399, "Print",
- CellTags->"Info3564482238-3035831"],
-Cell[30334, 630, 121, 1, 23, "Print"],
-Cell[30458, 633, 276, 5, 62, "Print",
- CellTags->"Info3564482238-3035831"],
-Cell[30737, 640, 140, 1, 23, "Print"],
-Cell[30880, 643, 1325, 20, 418, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[32208, 665, 134, 1, 23, "Print"],
-Cell[32345, 668, 1305, 19, 399, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[33653, 689, 136, 1, 23, "Print"],
-Cell[33792, 692, 1307, 19, 399, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[35102, 713, 139, 1, 23, "Print"],
-Cell[35244, 716, 1316, 19, 399, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[36563, 737, 136, 1, 23, "Print"],
-Cell[36702, 740, 1315, 20, 399, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[38020, 762, 140, 1, 23, "Print"],
-Cell[38163, 765, 1331, 20, 418, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[39497, 787, 129, 1, 23, "Print"],
-Cell[39629, 790, 705, 11, 287, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[40337, 803, 132, 1, 23, "Print"],
-Cell[40472, 806, 693, 11, 287, "Print",
- CellTags->"Info3564482239-3035831"],
-Cell[41168, 819, 111, 1, 23, "Print"],
-Cell[41282, 822, 1311, 20, 529, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[42596, 844, 109, 1, 23, "Print"],
-Cell[42708, 847, 1145, 17, 454, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[43856, 866, 130, 1, 23, "Print"],
-Cell[43989, 869, 1846, 28, 696, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[45838, 899, 122, 1, 23, "Print"],
-Cell[45963, 902, 1060, 16, 454, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[47026, 920, 143, 1, 23, "Print"],
-Cell[47172, 923, 1331, 20, 418, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[48506, 945, 137, 1, 23, "Print"],
-Cell[48646, 948, 1317, 19, 399, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[49966, 969, 139, 1, 23, "Print"],
-Cell[50108, 972, 1319, 19, 399, "Print",
- CellTags->"Info3564482240-3035831"],
-Cell[51430, 993, 131, 1, 23, "Print"],
-Cell[51564, 996, 1293, 19, 399, "Print",
- CellTags->"Info3564482240-3035831"]
+Cell[29416, 617, 162, 2, 23, "Print"],
+Cell[29581, 621, 1317, 19, 399, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[30901, 642, 146, 2, 23, "Print"],
+Cell[31050, 646, 274, 5, 62, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[31327, 653, 163, 2, 23, "Print"],
+Cell[31493, 657, 1323, 20, 418, "Print",
+ CellTags->"Info3566729873-1208992"],
+Cell[32819, 679, 158, 2, 23, "Print"],
+Cell[32980, 683, 1305, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[34288, 704, 161, 2, 23, "Print"],
+Cell[34452, 708, 1305, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[35760, 729, 162, 2, 23, "Print"],
+Cell[35925, 733, 1316, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[37244, 754, 161, 2, 23, "Print"],
+Cell[37408, 758, 1315, 20, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[38726, 780, 165, 2, 23, "Print"],
+Cell[38894, 784, 1331, 20, 418, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[40228, 806, 154, 2, 23, "Print"],
+Cell[40385, 810, 705, 11, 287, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[41093, 823, 157, 2, 23, "Print"],
+Cell[41253, 827, 693, 11, 287, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[41949, 840, 138, 2, 23, "Print"],
+Cell[42090, 844, 1311, 20, 529, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[43404, 866, 134, 2, 23, "Print"],
+Cell[43541, 870, 1147, 17, 454, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[44691, 889, 155, 2, 23, "Print"],
+Cell[44849, 893, 1890, 29, 715, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[46742, 924, 146, 2, 23, "Print"],
+Cell[46891, 928, 1176, 18, 492, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[48070, 948, 168, 2, 23, "Print"],
+Cell[48241, 952, 1331, 20, 418, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[49575, 974, 162, 2, 23, "Print"],
+Cell[49740, 978, 1317, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[51060, 999, 162, 2, 23, "Print"],
+Cell[51225, 1003, 1317, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"],
+Cell[52545, 1024, 156, 2, 23, "Print"],
+Cell[52704, 1028, 1293, 19, 399, "Print",
+ CellTags->"Info3566729874-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[52918, 1022, 238, 3, 74, "Section"],
+Cell[54058, 1054, 238, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[53181, 1029, 212, 4, 30, "Input"],
+Cell[54321, 1061, 212, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[53418, 1037, 133, 1, 23, "Print"],
-Cell[53554, 1040, 1297, 19, 399, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[54854, 1061, 117, 1, 23, "Print"],
-Cell[54974, 1064, 271, 5, 62, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[55248, 1071, 136, 1, 23, "Print"],
-Cell[55387, 1074, 1301, 19, 399, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[56691, 1095, 122, 1, 23, "Print"],
-Cell[56816, 1098, 701, 11, 287, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[57520, 1111, 141, 1, 23, "Print"],
-Cell[57664, 1114, 1311, 20, 399, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[58978, 1136, 133, 1, 23, "Print"],
-Cell[59114, 1139, 1299, 19, 399, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[60416, 1160, 106, 1, 23, "Print"],
-Cell[60525, 1163, 1289, 19, 529, "Print",
- CellTags->"Info3564482241-3035831"],
-Cell[61817, 1184, 105, 1, 23, "Print"],
-Cell[61925, 1187, 1123, 16, 454, "Print",
- CellTags->"Info3564482242-3035831"],
-Cell[63051, 1205, 124, 1, 23, "Print"],
-Cell[63178, 1208, 1586, 23, 603, "Print",
- CellTags->"Info3564482242-3035831"],
-Cell[64767, 1233, 120, 1, 23, "Print"],
-Cell[64890, 1236, 1050, 16, 454, "Print",
- CellTags->"Info3564482242-3035831"]
+Cell[54558, 1069, 158, 2, 23, "Print"],
+Cell[54719, 1073, 1297, 19, 399, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[56019, 1094, 142, 2, 23, "Print"],
+Cell[56164, 1098, 271, 5, 62, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[56438, 1105, 161, 2, 23, "Print"],
+Cell[56602, 1109, 1300, 19, 399, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[57905, 1130, 158, 2, 23, "Print"],
+Cell[58066, 1134, 1299, 19, 399, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[59368, 1155, 150, 2, 23, "Print"],
+Cell[59521, 1159, 700, 11, 287, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[60224, 1172, 164, 2, 23, "Print"],
+Cell[60391, 1176, 1311, 20, 399, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[61705, 1198, 160, 2, 23, "Print"],
+Cell[61868, 1202, 1297, 19, 399, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[63168, 1223, 134, 2, 23, "Print"],
+Cell[63305, 1227, 1289, 19, 529, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[64597, 1248, 132, 2, 23, "Print"],
+Cell[64732, 1252, 1123, 16, 454, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[65858, 1270, 149, 2, 23, "Print"],
+Cell[66010, 1274, 1588, 23, 603, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[67601, 1299, 143, 2, 23, "Print"],
+Cell[67747, 1303, 1049, 16, 454, "Print",
+ CellTags->"Info3566729875-1208992"],
+Cell[68799, 1321, 156, 2, 23, "Print"],
+Cell[68958, 1325, 1291, 19, 399, "Print",
+ CellTags->"Info3566729875-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[66001, 1259, 243, 3, 74, "Section"],
+Cell[70310, 1351, 243, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[66269, 1266, 217, 4, 30, "Input"],
+Cell[70578, 1358, 217, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[66511, 1274, 106, 1, 23, "Print"],
-Cell[66620, 1277, 228, 4, 41, "Print",
- CellTags->"Info3564482242-3035831"],
-Cell[66851, 1283, 99, 1, 23, "Print"],
-Cell[66953, 1286, 203, 4, 41, "Print",
- CellTags->"Info3564482242-3035831"]
+Cell[70820, 1366, 133, 2, 23, "Print"],
+Cell[70956, 1370, 227, 4, 41, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[71186, 1376, 124, 2, 23, "Print"],
+Cell[71313, 1380, 203, 4, 41, "Print",
+ CellTags->"Info3566729876-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[67217, 1297, 241, 3, 74, "Section"],
+Cell[71577, 1391, 298, 4, 74, "Section"],
 Cell[CellGroupData[{
-Cell[67483, 1304, 219, 4, 30, "Input"],
+Cell[71900, 1399, 250, 5, 30, "Input"],
 Cell[CellGroupData[{
-Cell[67727, 1312, 117, 1, 23, "Print"],
-Cell[67847, 1315, 424, 7, 209, "Print",
- CellTags->"Info3564482242-3035831"],
-Cell[68274, 1324, 118, 1, 23, "Print"],
-Cell[68395, 1327, 440, 7, 209, "Print",
- CellTags->"Info3564482242-3035831"],
-Cell[68838, 1336, 129, 1, 23, "Print"],
-Cell[68970, 1339, 226, 4, 43, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[69199, 1345, 118, 1, 23, "Print"],
-Cell[69320, 1348, 438, 7, 209, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[69761, 1357, 123, 1, 23, "Print"],
-Cell[69887, 1360, 441, 7, 209, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[70331, 1369, 121, 1, 23, "Print"],
-Cell[70455, 1372, 451, 7, 209, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[70909, 1381, 124, 1, 23, "Print"],
-Cell[71036, 1384, 456, 7, 228, "Print",
- CellTags->"Info3564482243-3035831"]
+Cell[72175, 1408, 184, 3, 23, "Print"],
+Cell[72362, 1413, 467, 8, 63, "Print",
+ CellTags->"Info3566729898-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[71553, 1398, 238, 3, 74, "Section"],
+Cell[72890, 1428, 241, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[71816, 1405, 214, 4, 30, "Input"],
+Cell[73156, 1435, 219, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[72055, 1413, 125, 1, 23, "Print"],
-Cell[72183, 1416, 258, 5, 46, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[72444, 1423, 127, 1, 23, "Print"],
-Cell[72574, 1426, 248, 4, 43, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[72825, 1432, 118, 1, 23, "Print"],
-Cell[72946, 1435, 219, 4, 43, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[73168, 1441, 115, 1, 23, "Print"],
-Cell[73286, 1444, 248, 5, 43, "Print",
- CellTags->"Info3564482243-3035831"]
+Cell[73400, 1443, 142, 2, 23, "Print"],
+Cell[73545, 1447, 424, 7, 209, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[73972, 1456, 145, 2, 23, "Print"],
+Cell[74120, 1460, 440, 7, 209, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[74563, 1469, 154, 2, 23, "Print"],
+Cell[74720, 1473, 224, 4, 43, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[74947, 1479, 143, 2, 23, "Print"],
+Cell[75093, 1483, 438, 7, 209, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[75534, 1492, 148, 2, 23, "Print"],
+Cell[75685, 1496, 441, 7, 209, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[76129, 1505, 146, 2, 23, "Print"],
+Cell[76278, 1509, 451, 7, 209, "Print",
+ CellTags->"Info3566729876-1208992"],
+Cell[76732, 1518, 151, 2, 23, "Print"],
+Cell[76886, 1522, 456, 7, 228, "Print",
+ CellTags->"Info3566729876-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[73595, 1456, 243, 3, 74, "Section"],
+Cell[77403, 1536, 238, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[73863, 1463, 217, 4, 30, "Input"],
+Cell[77666, 1543, 214, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[74105, 1471, 134, 1, 23, "Print"],
-Cell[74242, 1474, 278, 5, 62, "Print",
- CellTags->"Info3564482243-3035831"],
-Cell[74523, 1481, 129, 1, 23, "Print"],
-Cell[74655, 1484, 265, 5, 62, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[74923, 1491, 132, 1, 23, "Print"],
-Cell[75058, 1494, 273, 5, 62, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[75334, 1501, 129, 1, 23, "Print"],
-Cell[75466, 1504, 260, 5, 43, "Print",
- CellTags->"Info3564482244-3035831"]
+Cell[77905, 1551, 150, 2, 23, "Print"],
+Cell[78058, 1555, 258, 5, 46, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[78319, 1562, 150, 2, 23, "Print"],
+Cell[78472, 1566, 236, 4, 43, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[78711, 1572, 152, 2, 23, "Print"],
+Cell[78866, 1576, 242, 4, 43, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[79111, 1582, 147, 2, 23, "Print"],
+Cell[79261, 1586, 220, 4, 43, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[79484, 1592, 142, 2, 23, "Print"],
+Cell[79629, 1596, 249, 5, 43, "Print",
+ CellTags->"Info3566729877-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[75787, 1516, 240, 3, 74, "Section"],
+Cell[79939, 1608, 243, 3, 74, "Section"],
 Cell[CellGroupData[{
-Cell[76052, 1523, 214, 4, 30, "Input"],
+Cell[80207, 1615, 217, 4, 30, "Input"],
 Cell[CellGroupData[{
-Cell[76291, 1531, 128, 1, 23, "Print"],
-Cell[76422, 1534, 224, 4, 43, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[76649, 1540, 126, 1, 23, "Print"],
-Cell[76778, 1543, 340, 6, 62, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[77121, 1551, 125, 1, 23, "Print"],
-Cell[77249, 1554, 249, 4, 43, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[77501, 1560, 125, 1, 23, "Print"],
-Cell[77629, 1563, 288, 5, 62, "Print",
- CellTags->"Info3564482244-3035831"],
-Cell[77920, 1570, 125, 1, 23, "Print"],
-Cell[78048, 1573, 309, 5, 61, "Print",
- CellTags->"Info3564482245-3035831"]
+Cell[80449, 1623, 159, 2, 23, "Print"],
+Cell[80611, 1627, 280, 5, 62, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[80894, 1634, 155, 2, 23, "Print"],
+Cell[81052, 1638, 265, 5, 62, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[81320, 1645, 159, 2, 23, "Print"],
+Cell[81482, 1649, 273, 5, 62, "Print",
+ CellTags->"Info3566729877-1208992"],
+Cell[81758, 1656, 151, 2, 23, "Print"],
+Cell[81912, 1660, 257, 5, 43, "Print",
+ CellTags->"Info3566729877-1208992"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[78418, 1585, 248, 3, 74, "Section"],
-Cell[78669, 1590, 227, 5, 30, "Input"]
+Cell[82230, 1672, 240, 3, 74, "Section"],
+Cell[CellGroupData[{
+Cell[82495, 1679, 214, 4, 30, "Input"],
+Cell[CellGroupData[{
+Cell[82734, 1687, 153, 2, 23, "Print"],
+Cell[82890, 1691, 224, 4, 43, "Print",
+ CellTags->"Info3566729878-1208992"],
+Cell[83117, 1697, 150, 2, 23, "Print"],
+Cell[83270, 1701, 340, 6, 62, "Print",
+ CellTags->"Info3566729878-1208992"],
+Cell[83613, 1709, 154, 2, 23, "Print"],
+Cell[83770, 1713, 251, 4, 43, "Print",
+ CellTags->"Info3566729878-1208992"],
+Cell[84024, 1719, 152, 2, 23, "Print"],
+Cell[84179, 1723, 286, 5, 62, "Print",
+ CellTags->"Info3566729878-1208992"],
+Cell[84468, 1730, 152, 2, 23, "Print"],
+Cell[84623, 1734, 309, 5, 61, "Print",
+ CellTags->"Info3566729878-1208992"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[84993, 1746, 248, 3, 74, "Section"],
+Cell[85244, 1751, 227, 5, 30, "Input"]
 }, Open  ]]
 }, Open  ]]
 }
