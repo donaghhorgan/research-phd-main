@@ -485,7 +485,7 @@ AnnamalaiNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Nume
 ]
 
 
-Options[AnnamalaiNakagamiLimit] = {DiversityType->OptionValue[AnnamalaiNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
+Options[AnnamalaiNakagamiLimit] = {DiversityType->OptionValue[AnnamalaiNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,Tolerance]};
 AnnamalaiNakagamiLimit::usage = GenerateTruncationHelp[AnnamalaiNakagamiLimit, "Annamalai"];
 AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},AnnamalaiNakagamiLimit[M,\[Gamma],\[Lambda],m,n,DiversityType->"None",Tolerance->OptionValue[Tolerance]]]
 AnnamalaiNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], f},
@@ -678,7 +678,7 @@ HerathNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?Numeric
 ]
 
 
-Options[HerathNakagamiLimit] = {DiversityType->OptionValue[HerathNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
+Options[HerathNakagamiLimit] = {DiversityType->OptionValue[HerathNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,Tolerance]};
 HerathNakagamiLimit::usage = GenerateTruncationHelp[HerathNakagamiLimit, "Herath"];
 HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},HerathNakagamiLimit[M,\[Gamma],\[Lambda],m,n,Tolerance->OptionValue[Tolerance]]]
 HerathNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, \[Gamma]0, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType], \[Psi]},
@@ -782,7 +782,7 @@ SunNakagamiProbabilityOfDetection[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n
 ]
 
 
-Options[SunNakagamiLimit] = {DiversityType->OptionValue[SunNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,DiversityType]};
+Options[SunNakagamiLimit] = {DiversityType->OptionValue[SunNakagamiProbabilityOfDetection,DiversityType], Tolerance->OptionValue[NakagamiLimit,Tolerance]};
 SunNakagamiLimit::usage = GenerateTruncationHelp[SunNakagamiLimit, "Sun"];
 SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,OptionsPattern[]]:=Module[{n = 1},SunNakagamiLimit[M,\[Gamma],\[Lambda],m,n,Tolerance->OptionValue[Tolerance]]]
 SunNakagamiLimit[M_?NumericQ,\[Gamma]_,\[Lambda]_,m_?NumericQ,n_?IntegerQ,OptionsPattern[]]:=Module[{\[Gamma]t, j, j0, tol = OptionValue[Tolerance], diversityType = OptionValue[DiversityType]},
