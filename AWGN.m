@@ -10,7 +10,7 @@
 
 (* ::Text:: *)
 (*Mathematica function definitions for cooperative energy detection in AWGN channels.*)
-(*Copyright (C) 2012 Donagh Horgan.*)
+(*Copyright (C) 2012-2013 Donagh Horgan.*)
 (*Email: donaghh@rennes.ucc.ie.*)
 (**)
 (*This program is free software : you can redistribute it and/or modify*)
@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*14/12/2012*)
-(*1.32*)
+(*19/02/2013*)
+(*1.40*)
 
 
 (* ::Subsection:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.40: Added low SNR assumption error bounds.*)
 (*Version 1.32: Various bug fixes.*)
 (*Version 1.31: Removed LowSNR option in favour of new LowSNR approximate method and amalgamated Method and Algorithm options.*)
 (*Version 1.30: Added diversity reception support to the sample complexity function.*)
@@ -92,6 +93,20 @@ AWGNProbabilityOfDetection;
 
 
 \[Lambda];
+
+
+(* ::Subsection:: *)
+(*Decision probability error bounds*)
+
+
+(* ::Subsubsection::Closed:: *)
+(*Low SNR assumption error*)
+
+
+LowSNRAssumptionErrorAWGN;
+
+
+MaximumLowSNRAssumptionErrorAWGN;
 
 
 (* ::Subsection::Closed:: *)
@@ -284,6 +299,89 @@ Options[\[Lambda]] = {Method->"Exact", DiversityType->OptionValue[AWGNProbabilit
 		True,
 			Undefined
 	]
+]
+
+
+(* ::Subsection:: *)
+(*Decision probability error bounds*)
+
+
+(* ::Subsubsection::Closed:: *)
+(*Low SNR assumption error*)
+
+
+Options[LowSNRAssumptionErrorAWGN] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType], Method->"Exact"};
+LowSNRAssumptionErrorAWGN::usage="LowSNRAssumptionErrorAWGN[M, \[Gamma], \[Lambda], n] calculates the upper bound for the low SNR approximation error.\n\n"<>DiversityTypeHelp[LowSNRAssumptionErrorAWGN];
+LowSNRAssumptionErrorAWGN[M_,\[Gamma]_,\[Lambda]_] := Module[{n = 1},
+	LowSNRAssumptionErrorAWGN[M, \[Gamma], \[Lambda], n, DiversityType->"None", Method->OptionValue[Method]]
+]
+LowSNRAssumptionErrorAWGN[M_,\[Gamma]_,\[Lambda]_,n_,OptionsPattern[]] := Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, y, method, mn},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Convert lists of SNR values to averages or maxima, depending on the specified diversity type *)
+	\[Gamma]0 = ProcessSNR[\[Gamma], diversityType];
+
+	{method, mn} = ProcessMethod[OptionValue[Method]];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+	If[\[Gamma]0 == Undefined, Return[Undefined]];
+
+	Which[
+		diversityType == "None",
+			With[{a = (\[Lambda] - M) / (2 Sqrt[M]), b = Sqrt[M] / 2},
+				Which[
+					method == "Exact",
+						(1 / 2) (Erf[a - b \[Gamma]0] - Erf[(a - b \[Gamma]0) / Sqrt[1 + 2 \[Gamma]0]]),
+					method == "Approximate",
+						-(1 / Sqrt[\[Pi]]) Exp[-((a - b \[Gamma]0) / Sqrt[1 + 2 \[Gamma]0])^2] (a - b \[Gamma]0) (1 / Sqrt[1 + 2 \[Gamma]0] - 1),
+					True,
+						Undefined
+				]
+			],
+		diversityType == "MRC" || diversityType == "EGC",
+			With[{a = (\[Lambda] - M) / (2 Sqrt[M]), b = Sqrt[M] / 2},
+				Which[
+					method == "Exact",
+						(1 / 2) (Erf[a - b n \[Gamma]0] - Erf[(a - b n \[Gamma]0) / Sqrt[1 + 2 n \[Gamma]0]]),
+					method == "Approximate",
+						-(1 / Sqrt[\[Pi]]) Exp[-((a - b \[Gamma]0) / Sqrt[1 + 2 \[Gamma]0])^2] (a - b \[Gamma]0) (1 / Sqrt[1 + 2 \[Gamma]0] - 1),
+					True,
+						Undefined
+				]
+			],
+		diversityType == "SLC",
+			With[{a = (\[Lambda] - M n) / (2 Sqrt[M n]), b = Sqrt[M] / (2 Sqrt[n])},
+				Which[
+					method == "Exact",
+						(1 / 2) (Erf[a - b n \[Gamma]0] - Erf[(a - b n \[Gamma]0) / Sqrt[1 + 2 \[Gamma]0]]),
+					method == "Approximate",
+						-(1 / Sqrt[\[Pi]]) Exp[-((a - b \[Gamma]0) / Sqrt[1 + 2 \[Gamma]0 / n])^2] (a - b \[Gamma]0) (1 / Sqrt[1 + 2 \[Gamma]0 / n] - 1),
+					True,
+						Undefined
+				]
+			],
+		True,
+			Undefined
+	]
+]
+
+
+Options[MaximumLowSNRAssumptionErrorAWGN] = {DiversityType->OptionValue[AWGNProbabilityOfDetection,DiversityType]};
+MaximumLowSNRAssumptionErrorAWGN::usage="MaximumLowSNRAssumptionErrorAWGN[M, \[Gamma], \[Lambda], n] calculates the maximum low SNR approximation error.\n\n"<>DiversityTypeHelp[MaximumLowSNRAssumptionErrorAWGN];
+MaximumLowSNRAssumptionErrorAWGN[M_,\[Lambda]_] := MaximumLowSNRAssumptionErrorAWGN[M, \[Lambda]] = Module[{n = 1},
+	MaximumLowSNRAssumptionErrorAWGN[M, \[Lambda], n, DiversityType->"None"]
+]
+MaximumLowSNRAssumptionErrorAWGN[M_,\[Lambda]_,n_,OptionsPattern[]] := MaximumLowSNRAssumptionErrorAWGN[M, \[Lambda], n, DiversityType->OptionValue[DiversityType]] = Module[{diversityType = OptionValue[DiversityType], \[Gamma]t, \[Gamma]0, y},
+	(* Handle both lists and scalar values for diversityType *)
+	{diversityType, \[Gamma]t} = ProcessDiversityType[diversityType];
+
+	(* Check for invalid combinations of inputs *)
+	If[diversityType == "None" && n > 1, Return[Undefined]];
+
+	{NMaximize[{LowSNRAssumptionErrorAWGN[M, y, \[Lambda], n, DiversityType->diversityType], 0 <= y <= \[Infinity]}, y][[1]], NMinimize[{LowSNRAssumptionErrorAWGN[M, y, \[Lambda], n, DiversityType->diversityType], 0 <= y <= \[Infinity]}, y][[1]]}
+	
 ]
 
 
