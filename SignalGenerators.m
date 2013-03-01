@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*28/08/2012*)
-(*1.0*)
+(*01/03/2013*)
+(*1.01*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.01: Fixed bug in noise generator where signal power wasn't set correctly.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
 
@@ -49,6 +50,9 @@
 
 
 BeginPackage["SignalGenerators`"]; 
+
+
+Protect[ModulationScheme, SamplingFrequency];
 
 
 (* ::Subsection::Closed:: *)
@@ -93,12 +97,12 @@ Begin["`Private`"];
 BinarySignal::usage = "BinarySignal[n] generates a random binary signal of length n.
 BinarySignal[n, type] generates a binary signal of the specified type of length n. Type can be either \"Random\" or \"Alternating\". By default, the type is \"Random\".";
 BinarySignal[n_,type_:"Random"]:=Which[
-	type=="Random",
-	RandomInteger[1,n],
-	type=="Alternating",
-	Table[Mod[i,2],{i,n}],
+	type == "Random",
+		RandomInteger[1, n],
+	type == "Alternating",
+		Table[Mod[i, 2], {i, n}],
 	True,
-	Undefined
+		Undefined
 ]
 
 
@@ -108,17 +112,21 @@ BinarySignal[n_,type_:"Random"]:=Which[
 
 NoiseSignal::usage = "NoiseSignal[n, P] generates an AWGN signal of length n and power P.
 NoiseSignal[n, P, type] generates a noise signal of the specified type of length n and power P. Type can be either \"AWGN\" or \"White\". By default, the type is \"AWGN\".";
-NoiseSignal[n_,P_,type_:"AWGN"]:=Which[
-	type=="AWGN",
-	Sqrt[P] RandomReal[NormalDistribution[],n],
-	type=="White",
-	Sqrt[3P] RandomReal[{-1,1},n],
-	True,
-	Undefined
+NoiseSignal[n_,P_,type_:"AWGN"]:=Module[{temp},
+	Which[
+		type == "AWGN",
+			temp = RandomReal[NormalDistribution[], n];
+			Sqrt[P] ((temp - Mean[temp]) / StandardDeviation[temp]),
+		type == "White",
+			temp = RandomReal[{-1, 1}, n];
+			Sqrt[P] ((temp - Mean[temp]) / StandardDeviation[temp]),
+		True,
+			Undefined
+	]
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Modulators*)
 
 
@@ -131,14 +139,14 @@ ModulationScheme->\"BPSK\".";
 Modulate[signal_,power_,symbolPeriod_,frequency_,OptionsPattern[]]:=Module[{modulationScheme=OptionValue[ModulationScheme],Ts=symbolPeriod,fc=frequency,n=Length[signal],P=power,fs=If[OptionValue[SamplingFrequency]=="Default",2frequency,OptionValue[SamplingFrequency]]},
 	Which[
 		modulationScheme=="BPSK",
-			Flatten[Table[Sqrt[2 P]Cos[2\[Pi] fc t + \[Pi](1 - i)],{i,signal},{t,Range[0, Ts - 1 / fs, 1 / fs]}]],		
+			Flatten[Table[Sqrt[2 P] Cos[2\[Pi] fc t + \[Pi](1 - i)], {i, signal}, {t, Range[0, Ts - 1 / fs, 1 / fs]}]],		
 		True,
 			Undefined
 	]
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Demodulators*)
 
 
@@ -151,11 +159,11 @@ ModulationScheme->\"BPSK\".";
 Demodulate[signal_,power_,symbolPeriod_,frequency_,OptionsPattern[]]:=Module[{modulationScheme=OptionValue[ModulationScheme],Ts=symbolPeriod,fc=frequency,n=Length[signal],temp,P=power,fs=If[OptionValue[SamplingFrequency]=="Default",2frequency,OptionValue[SamplingFrequency]]},
 	Which[
 		modulationScheme=="BPSK",
-		temp = signal / P * Table[Cos[2\[Pi] fc t],{t,Range[0, (n - 1) / fs, 1 / fs]}];
-		temp = Table[Mean[temp[[(i - 1)Ts fs + 1 ;; i Ts fs]]],{i,n/(Ts fs)}];
-		Table[If[i<0,0,1],{i,temp}],
+			temp = signal / P * Table[Cos[2\[Pi] fc t], {t, Range[0, (n - 1) / fs, 1 / fs]}];
+			temp = Table[Mean[temp[[(i - 1) Ts fs + 1 ;; i Ts fs]]], {i, n / (Ts fs)}];
+			Table[If[i < 0, 0, 1], {i, temp}],
 		True,
-		Undefined
+			Undefined
 	]
 ]
 
