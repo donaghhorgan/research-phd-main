@@ -32,8 +32,8 @@
 
 
 (* ::Text:: *)
-(*01/03/2013*)
-(*1.01*)
+(*02/03/2013*)
+(*1.02*)
 
 
 (* ::Subsection::Closed:: *)
@@ -41,6 +41,7 @@
 
 
 (* ::Text:: *)
+(*Version 1.02: Fixed bug in signal generator where output power wasn't normalised.*)
 (*Version 1.01: Fixed bug in noise generator where signal power wasn't set correctly.*)
 (*Version 1.0: First working version, minor bug fixes to follow.*)
 
@@ -136,10 +137,11 @@ Modulate::usage="Modulate[signal] modulates the given binary signal using BPSK.
 The following options may be given for ModulationScheme:
 
 ModulationScheme->\"BPSK\".";
-Modulate[signal_,power_,symbolPeriod_,frequency_,OptionsPattern[]]:=Module[{modulationScheme=OptionValue[ModulationScheme],Ts=symbolPeriod,fc=frequency,n=Length[signal],P=power,fs=If[OptionValue[SamplingFrequency]=="Default",2frequency,OptionValue[SamplingFrequency]]},
+Modulate[signal_,power_,symbolPeriod_,frequency_,OptionsPattern[]]:=Module[{modulationScheme=OptionValue[ModulationScheme],Ts=symbolPeriod,fc=frequency,n=Length[signal],P=power,fs=If[OptionValue[SamplingFrequency]=="Default",2frequency,OptionValue[SamplingFrequency]], temp},
 	Which[
 		modulationScheme=="BPSK",
-			Flatten[Table[Sqrt[2 P] Cos[2\[Pi] fc t + \[Pi](1 - i)], {i, signal}, {t, Range[0, Ts - 1 / fs, 1 / fs]}]],		
+			temp = Flatten[Table[Sqrt[2 P] Cos[2\[Pi] fc t + \[Pi](1 - i)], {i, signal}, {t, Range[0, Ts - 1 / fs, 1 / fs]}]];
+			Sqrt[P] ((temp - Mean[temp]) / StandardDeviation[temp]),
 		True,
 			Undefined
 	]
